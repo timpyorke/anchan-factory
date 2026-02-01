@@ -1,10 +1,14 @@
 import SwiftUI
+import SwiftData
 
 @main
-struct anchanApp: App {
+struct AnchanApp: App {
+    private let container = AppModelContainer.make()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView()
         }
+        .modelContainer(container)
     }
 }
