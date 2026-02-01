@@ -3,13 +3,19 @@ enum InventoryUnit: String, CaseIterable, Identifiable, Codable {
 
     var id: Self { self }
 
+    /// Short symbol for compact display (e.g., "g", "kg")
+    var symbol: String {
+        rawValue.uppercased()
+    }
+
+    /// Full name for forms and pickers (e.g., "Grams", "Kilograms")
     var displayName: String {
         switch self {
-        case .g: return "grams"
-        case .kg: return "kilograms"
-        case .ml: return "milliliters"
-        case .l: return "liters"
-        case .pcs: return "pieces"
+        case .g: return "Grams (g)"
+        case .kg: return "Kilograms (kg)"
+        case .ml: return "Milliliters (ml)"
+        case .l: return "Liters (l)"
+        case .pcs: return "Pieces (pcs)"
         }
     }
 }
