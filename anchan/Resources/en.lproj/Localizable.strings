@@ -1,0 +1,104 @@
+/* Settings */
+"Settings" = "Settings";
+"Appearance" = "Appearance";
+"Theme" = "Theme";
+"System" = "System";
+"Light" = "Light";
+"Dark" = "Dark";
+"Language" = "Language";
+"Restart required to apply language change" = "Restart required to apply language change";
+"Restart Required" = "Restart Required";
+"Please restart the app to apply the language change." = "Please restart the app to apply the language change.";
+
+/* Custom Units */
+"Custom Units" = "Custom Units";
+"Add Custom Unit" = "Add Custom Unit";
+"Add custom measurement units for your inventory" = "Add custom measurement units for your inventory";
+"Symbol (e.g., cup, tbsp)" = "Symbol (e.g., cup, tbsp)";
+"Name (e.g., Cup, Tablespoon)" = "Name (e.g., Cup, Tablespoon)";
+"Unit Details" = "Unit Details";
+"Symbol will be displayed in uppercase" = "Symbol will be displayed in uppercase";
+
+/* Export */
+"Export" = "Export";
+"Export Manufacturing Data" = "Export Manufacturing Data";
+"Export Inventory Data" = "Export Inventory Data";
+"Export Recipe Data" = "Export Recipe Data";
+"Export data as CSV for Google Sheets or Excel" = "Export data as CSV for Google Sheets or Excel";
+
+/* Data Management */
+"Data Management" = "Data Management";
+"Clear All Data" = "Clear All Data";
+"Permanently delete all app data" = "Permanently delete all app data";
+"This will delete all recipes, inventory, and manufacturing data. This action cannot be undone." = "This will delete all recipes, inventory, and manufacturing data. This action cannot be undone.";
+"Clear" = "Clear";
+
+/* Common */
+"Cancel" = "Cancel";
+"Save" = "Save";
+"OK" = "OK";
+"Delete" = "Delete";
+
+/* Tabs */
+"Manufacturing" = "Manufacturing";
+"Recipe" = "Recipe";
+"Inventory" = "Inventory";
+
+/* Home */
+"New Manufacturing" = "New Manufacturing";
+"Select a recipe to start" = "Select a recipe to start";
+"In Progress" = "In Progress";
+"Recently Completed" = "Recently Completed";
+"No Manufacturing Yet" = "No Manufacturing Yet";
+"Tap the button above to start manufacturing a recipe" = "Tap the button above to start manufacturing a recipe";
+"Low Stock" = "Low Stock";
+"View All" = "View All";
+"Restock" = "Restock";
+
+/* Recipe */
+"Recipes" = "Recipes";
+"New Recipe" = "New Recipe";
+"Edit Recipe" = "Edit Recipe";
+"Recipe Name" = "Recipe Name";
+"Category (optional)" = "Category (optional)";
+"Notes (optional)" = "Notes (optional)";
+"Basic Info" = "Basic Info";
+"Batch Output" = "Batch Output";
+"Batch Size" = "Batch Size";
+"How many units does one batch of this recipe produce?" = "How many units does one batch of this recipe produce?";
+"Ingredients" = "Ingredients";
+"Add Ingredient" = "Add Ingredient";
+"Steps" = "Steps";
+"Add Step" = "Add Step";
+"Estimated Cost" = "Estimated Cost";
+"Total Time" = "Total Time";
+"Delete Recipe" = "Delete Recipe";
+"Are you sure you want to delete this recipe? This action cannot be undone." = "Are you sure you want to delete this recipe? This action cannot be undone.";
+
+/* Inventory */
+"New Item" = "New Item";
+"Edit Item" = "Edit Item";
+"Item Details" = "Item Details";
+"Name" = "Name";
+"Unit & Pricing" = "Unit & Pricing";
+"Unit" = "Unit";
+"Current stock" = "Current stock";
+"Restock Alert" = "Restock Alert";
+"Minimum stock" = "Minimum stock";
+"Get notified when stock falls below this level" = "Get notified when stock falls below this level";
+"Delete Item" = "Delete Item";
+
+/* Manufacturing */
+"Batch Number" = "Batch Number";
+"Batches" = "Batches";
+"Total Units" = "Total Units";
+"Total Cost" = "Total Cost";
+"Cost per Unit" = "Cost per Unit";
+"Completed" = "Completed";
+"Step" = "Step";
+"Complete Step" = "Complete Step";
+"Manufacturing Complete!" = "Manufacturing Complete!";
+"All steps have been completed successfully." = "All steps have been completed successfully.";
+"Cancel Manufacturing" = "Cancel Manufacturing";
+"Are you sure you want to cancel this manufacturing process?" = "Are you sure you want to cancel this manufacturing process?";
+"Continue" = "Continue";

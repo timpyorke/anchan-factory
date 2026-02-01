@@ -4,112 +4,221 @@ import SwiftData
 struct SettingView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel = SettingViewModel()
-    @State private var showExportSheet = false
-    @State private var exportURL: URL?
+
+    @Query(sort: \CustomUnitEntity.name)
+    private var customUnits: [CustomUnitEntity]
 
     var body: some View {
         Form {
-            Section {
-                Toggle("Dark Mode", isOn: $viewModel.isDarkMode)
-            }
-
-            Section {
-                Button {
-                    exportManufacturingData()
-                } label: {
-                    Label("Export Manufacturing Data", systemImage: "tablecells")
-                }
-            } header: {
-                Text("Export")
-            } footer: {
-                Text("Export all manufacturing records as CSV for Google Sheets")
-            }
+            appearanceSection
+            languageSection
+            customUnitsSection
+            exportSection
+            dataSection
         }
-        .navigationTitle("Setting")
-        .sheet(isPresented: $showExportSheet) {
-            if let url = exportURL {
+        .navigationTitle(String(localized: "Settings"))
+        .sheet(isPresented: $viewModel.showExportSheet) {
+            if let url = viewModel.exportURL {
                 ShareSheet(items: [url])
             }
         }
+        .sheet(isPresented: $viewModel.showAddUnitSheet) {
+            AddCustomUnitSheet()
+        }
+        .alert(String(localized: "Clear All Data"), isPresented: $viewModel.showClearDataAlert) {
+            Button(String(localized: "Cancel"), role: .cancel) { }
+            Button(String(localized: "Clear"), role: .destructive) {
+                viewModel.clearAllData()
+            }
+        } message: {
+            Text(String(localized: "This will delete all recipes, inventory, and manufacturing data. This action cannot be undone."))
+        }
+        .alert(String(localized: "Restart Required"), isPresented: $viewModel.showRestartAlert) {
+            Button(String(localized: "OK")) { }
+        } message: {
+            Text(String(localized: "Please restart the app to apply the language change."))
+        }
+        .onAppear {
+            viewModel.setup(modelContext: modelContext)
+        }
     }
 
-    private func exportManufacturingData() {
-        let descriptor = FetchDescriptor<ManufacturingEntity>(
-            sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
+    // MARK: - Appearance Section
+
+    private var appearanceSection: some View {
+        Section {
+            Picker(selection: Bindable(viewModel.settings).theme) {
+                ForEach(AppTheme.allCases) { theme in
+                    Label(theme.displayName, systemImage: theme.icon)
+                        .tag(theme)
+                }
+            } label: {
+                Label(String(localized: "Theme"), systemImage: "paintbrush.fill")
+            }
+        } header: {
+            Text(String(localized: "Appearance"))
+        }
+    }
+
+    // MARK: - Language Section
+
+    private var languageSection: some View {
+        Section {
+            Picker(selection: Bindable(viewModel.settings).language) {
+                ForEach(AppLanguage.allCases) { lang in
+                    Text("\(lang.flag) \(lang.displayName)")
+                        .tag(lang)
+                }
+            } label: {
+                Label(String(localized: "Language"), systemImage: "globe")
+            }
+            .onChange(of: viewModel.settings.language) { _, _ in
+                viewModel.showRestartAlert = true
+            }
+        } header: {
+            Text(String(localized: "Language"))
+        } footer: {
+            Text(String(localized: "Restart required to apply language change"))
+        }
+    }
+
+    // MARK: - Custom Units Section
+
+    private var customUnitsSection: some View {
+        Section {
+            ForEach(customUnits, id: \.persistentModelID) { unit in
+                HStack {
+                    Text(unit.name)
+                    Spacer()
+                    Text(unit.symbol.uppercased())
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .onDelete { offsets in
+                viewModel.deleteUnits(at: offsets, from: customUnits)
+            }
+
+            Button {
+                viewModel.showAddUnitSheet = true
+            } label: {
+                Label(String(localized: "Add Custom Unit"), systemImage: "plus.circle.fill")
+            }
+        } header: {
+            Text(String(localized: "Custom Units"))
+        } footer: {
+            Text(String(localized: "Add custom measurement units for your inventory"))
+        }
+    }
+
+    // MARK: - Export Section
+
+    private var exportSection: some View {
+        Section {
+            Button {
+                viewModel.exportManufacturingData()
+            } label: {
+                Label(String(localized: "Export Manufacturing Data"), systemImage: "tablecells")
+            }
+
+            Button {
+                viewModel.exportInventoryData()
+            } label: {
+                Label(String(localized: "Export Inventory Data"), systemImage: "shippingbox")
+            }
+
+            Button {
+                viewModel.exportRecipeData()
+            } label: {
+                Label(String(localized: "Export Recipe Data"), systemImage: "book")
+            }
+        } header: {
+            Text(String(localized: "Export"))
+        } footer: {
+            Text(String(localized: "Export data as CSV for Google Sheets or Excel"))
+        }
+    }
+
+    // MARK: - Data Section
+
+    private var dataSection: some View {
+        Section {
+            Button(role: .destructive) {
+                viewModel.showClearDataAlert = true
+            } label: {
+                Label(String(localized: "Clear All Data"), systemImage: "trash.fill")
+            }
+        } header: {
+            Text(String(localized: "Data Management"))
+        } footer: {
+            Text(String(localized: "Permanently delete all app data"))
+        }
+    }
+}
+
+// MARK: - Add Custom Unit Sheet
+
+private struct AddCustomUnitSheet: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var symbol = ""
+    @State private var name = ""
+
+    private var canSave: Bool {
+        !symbol.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !name.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField(String(localized: "Symbol (e.g., cup, tbsp)"), text: $symbol)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+
+                    TextField(String(localized: "Name (e.g., Cup, Tablespoon)"), text: $name)
+                        .textInputAutocapitalization(.words)
+                } header: {
+                    Text(String(localized: "Unit Details"))
+                } footer: {
+                    Text(String(localized: "Symbol will be displayed in uppercase"))
+                }
+            }
+            .navigationTitle(String(localized: "Add Custom Unit"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(String(localized: "Cancel")) {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(String(localized: "Save")) {
+                        saveUnit()
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(!canSave)
+                }
+            }
+        }
+    }
+
+    private func saveUnit() {
+        let unit = CustomUnitEntity(
+            symbol: symbol.trimmingCharacters(in: .whitespaces),
+            name: name.trimmingCharacters(in: .whitespaces)
         )
-        guard let allManufacturing = try? modelContext.fetch(descriptor) else { return }
-
-        if allManufacturing.isEmpty {
-            return
-        }
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-
-        let shortDateFormatter = DateFormatter()
-        shortDateFormatter.dateFormat = "yyyyMMdd_HHmmss"
-
-        // CSV Header
-        var csv = "Batch Number,Recipe,Category,Status,Started,Completed,Duration,Batches,Batch Size,Total Units,Total Cost,Cost Per Unit\n"
-
-        // Add each manufacturing record
-        for m in allManufacturing {
-            let status = m.status.rawValue.capitalized
-            let started = dateFormatter.string(from: m.startedAt)
-            let completed = m.completedAt.map { dateFormatter.string(from: $0) } ?? "-"
-            let duration = m.isCompleted ? formatDuration(m.totalDuration) : "-"
-            let category = m.recipe.category ?? "-"
-
-            csv += "\(m.batchNumber),"
-            csv += "\"\(m.recipe.name.replacingOccurrences(of: "\"", with: "\"\""))\","
-            csv += "\"\(category.replacingOccurrences(of: "\"", with: "\"\""))\","
-            csv += "\(status),"
-            csv += "\(started),"
-            csv += "\(completed),"
-            csv += "\(duration),"
-            csv += "\(m.quantity),"
-            csv += "\(m.recipe.batchSize) \(m.recipe.batchUnit),"
-            csv += "\(m.totalUnits),"
-            csv += "฿\(String(format: "%.2f", m.totalCost)),"
-            csv += "฿\(String(format: "%.2f", m.costPerUnit))\n"
-        }
-
-        // Summary section
-        let completedCount = allManufacturing.filter { $0.status == .completed }.count
-        let inProgressCount = allManufacturing.filter { $0.status == .inProgress }.count
-        let totalCost = allManufacturing.reduce(0.0) { $0 + $1.totalCost }
-        let totalUnits = allManufacturing.reduce(0) { $0 + $1.totalUnits }
-
-        csv += "\n"
-        csv += "SUMMARY\n"
-        csv += "Total Records,\(allManufacturing.count)\n"
-        csv += "Completed,\(completedCount)\n"
-        csv += "In Progress,\(inProgressCount)\n"
-        csv += "Total Units Produced,\(totalUnits)\n"
-        csv += "Total Cost,฿\(String(format: "%.2f", totalCost))\n"
-
-        // Save to file
-        let fileName = "Manufacturing_Report_\(shortDateFormatter.string(from: Date.now)).csv"
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-
-        do {
-            try csv.write(to: tempURL, atomically: true, encoding: .utf8)
-            exportURL = tempURL
-            showExportSheet = true
-        } catch {
-            print("Failed to export: \(error)")
-        }
+        modelContext.insert(unit)
+        dismiss()
     }
+}
 
-    private func formatDuration(_ interval: TimeInterval) -> String {
-        let totalSeconds = Int(interval)
-        let hours = totalSeconds / 3600
-        let minutes = (totalSeconds % 3600) / 60
-
-        if hours > 0 {
-            return "\(hours)h \(minutes)m"
-        } else {
-            return "\(minutes)m"
-        }
+#Preview {
+    NavigationStack {
+        SettingView()
     }
+    .modelContainer(AppModelContainer.make())
 }

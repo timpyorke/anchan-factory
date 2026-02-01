@@ -17,7 +17,7 @@ struct IngredientInput: Identifiable {
     var inventoryId: PersistentIdentifier
     var inventoryName: String
     var quantity: Double
-    var unit: InventoryUnit
+    var unitSymbol: String
     var note: String
 }
 
@@ -54,7 +54,13 @@ struct RecipeEditView: View {
     private var totalCost: Double {
         ingredients.reduce(0.0) { total, ingredient in
             if let inventory = modelContext.model(for: ingredient.inventoryId) as? InventoryEntity {
-                let quantityInBaseUnit = ingredient.unit.convert(ingredient.quantity, to: inventory.baseUnit) ?? ingredient.quantity
+                // Try to convert if both are built-in units
+                var quantityInBaseUnit = ingredient.quantity
+                if let fromUnit = InventoryUnit(rawValue: ingredient.unitSymbol.lowercased()),
+                   let toUnit = inventory.builtInUnit,
+                   let converted = fromUnit.convert(ingredient.quantity, to: toUnit) {
+                    quantityInBaseUnit = converted
+                }
                 return total + (quantityInBaseUnit * inventory.unitPrice)
             }
             return total
@@ -256,7 +262,7 @@ struct RecipeEditView: View {
                 inventoryId: ingredient.inventoryItem.persistentModelID,
                 inventoryName: ingredient.inventoryItem.name,
                 quantity: ingredient.quantity,
-                unit: ingredient.unit,
+                unitSymbol: ingredient.unitSymbol,
                 note: ingredient.note ?? ""
             )
         }
@@ -301,7 +307,7 @@ struct RecipeEditView: View {
                     let ingredient = IngredientEntity(
                         inventoryItem: inventory,
                         quantity: ingredientInput.quantity,
-                        unit: ingredientInput.unit,
+                        unitSymbol: ingredientInput.unitSymbol,
                         note: ingredientInput.note.isEmpty ? nil : ingredientInput.note,
                         recipe: recipe
                     )
@@ -335,7 +341,7 @@ struct RecipeEditView: View {
                     let ingredient = IngredientEntity(
                         inventoryItem: inventory,
                         quantity: ingredientInput.quantity,
-                        unit: ingredientInput.unit,
+                        unitSymbol: ingredientInput.unitSymbol,
                         note: ingredientInput.note.isEmpty ? nil : ingredientInput.note,
                         recipe: newRecipe
                     )
@@ -410,7 +416,7 @@ private struct IngredientRowView: View {
                 Text(ingredient.inventoryName)
                     .font(.headline)
 
-                Text("\(ingredient.quantity.clean) \(ingredient.unit.symbol)")
+                Text("\(ingredient.quantity.clean) \(ingredient.unitSymbol.uppercased())")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -442,10 +448,13 @@ private struct AddIngredientSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
+    @Query(sort: \CustomUnitEntity.name)
+    private var customUnits: [CustomUnitEntity]
+
     @State private var inventoryItems: [InventoryEntity] = []
     @State private var selectedInventory: InventoryEntity?
     @State private var quantity: Double = 1
-    @State private var unit: InventoryUnit = .g
+    @State private var unitSymbol: String = "g"
     @State private var note: String = ""
     @State private var searchText: String = ""
 
@@ -478,7 +487,7 @@ private struct AddIngredientSheet: View {
                         }
                         .onChange(of: selectedInventory) { _, newValue in
                             if let inventory = newValue {
-                                unit = inventory.baseUnit
+                                unitSymbol = inventory.unitSymbol
                             }
                         }
                     }
@@ -497,9 +506,16 @@ private struct AddIngredientSheet: View {
                                 .frame(width: 100)
                         }
 
-                        Picker("Unit", selection: $unit) {
-                            ForEach(InventoryUnit.allCases) { unitOption in
-                                Text(unitOption.displayName).tag(unitOption)
+                        Picker("Unit", selection: $unitSymbol) {
+                            ForEach(InventoryUnit.allCases) { unit in
+                                Text(unit.displayName).tag(unit.rawValue)
+                            }
+
+                            if !customUnits.isEmpty {
+                                Divider()
+                                ForEach(customUnits, id: \.persistentModelID) { unit in
+                                    Text("\(unit.name) (\(unit.symbol.uppercased()))").tag(unit.symbol)
+                                }
                             }
                         }
                     } header: {
@@ -530,7 +546,7 @@ private struct AddIngredientSheet: View {
                                 inventoryId: inventory.persistentModelID,
                                 inventoryName: inventory.name,
                                 quantity: quantity,
-                                unit: unit,
+                                unitSymbol: unitSymbol,
                                 note: note
                             )
                             onAdd(ingredient)

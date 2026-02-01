@@ -6,7 +6,7 @@ final class InventoryEntity {
 
     var name: String               // "Sugar"
     var category: String?          // "Baking"
-    var baseUnit: InventoryUnit    // g, ml, piece
+    var unitSymbol: String         // "g", "ml", "pcs", or custom like "cup"
     var unitPrice: Double          // price per base unit
     var stock: Double              // current stock
     var minStock: Double = 0       // minimum stock threshold for restock alert
@@ -14,17 +14,27 @@ final class InventoryEntity {
 
     init(
         name: String,
-        baseUnit: InventoryUnit,
+        unitSymbol: String,
         unitPrice: Double,
         stock: Double,
         minStock: Double = 0
     ) {
         self.name = name
-        self.baseUnit = baseUnit
+        self.unitSymbol = unitSymbol
         self.unitPrice = unitPrice
         self.stock = stock
         self.minStock = minStock
         self.createdAt = Date()
+    }
+
+    /// Get the InventoryUnit if it's a built-in unit, nil for custom units
+    var builtInUnit: InventoryUnit? {
+        InventoryUnit(rawValue: unitSymbol.lowercased())
+    }
+
+    /// Display symbol (uppercase)
+    var displaySymbol: String {
+        unitSymbol.uppercased()
     }
 
     /// Check if stock is below minimum threshold

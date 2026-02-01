@@ -101,8 +101,8 @@ private struct InventoryRowView: View {
                 }
 
                 HStack(spacing: 12) {
-                    Label("\(item.stock.clean) \(item.baseUnit.symbol)", systemImage: "shippingbox")
-                    Label("\(item.unitPrice.clean) / \(item.baseUnit.symbol)", systemImage: "tag")
+                    Label("\(item.stock.clean) \(item.displaySymbol)", systemImage: "shippingbox")
+                    Label("\(item.unitPrice.clean) / \(item.displaySymbol)", systemImage: "tag")
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

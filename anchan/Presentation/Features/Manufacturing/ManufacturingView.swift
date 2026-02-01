@@ -214,11 +214,11 @@ struct ManufacturingView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(ingredient.quantity.clean) \(ingredient.unit.symbol)")
+                Text("\(ingredient.quantity.clean) \(ingredient.displaySymbol)")
                     .foregroundStyle(.secondary)
 
                 if !hasStock {
-                    Text("Stock: \(ingredient.inventoryItem.stock.clean) \(ingredient.inventoryItem.baseUnit.symbol)")
+                    Text("Stock: \(ingredient.inventoryItem.stock.clean) \(ingredient.inventoryItem.displaySymbol)")
                         .font(.caption2)
                         .foregroundStyle(Color.orange)
                 }

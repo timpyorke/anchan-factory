@@ -1,0 +1,104 @@
+/* Settings */
+"Settings" = "ตั้งค่า";
+"Appearance" = "การแสดงผล";
+"Theme" = "ธีม";
+"System" = "ระบบ";
+"Light" = "สว่าง";
+"Dark" = "มืด";
+"Language" = "ภาษา";
+"Restart required to apply language change" = "ต้องรีสตาร์ทแอปเพื่อใช้ภาษาใหม่";
+"Restart Required" = "ต้องรีสตาร์ท";
+"Please restart the app to apply the language change." = "กรุณารีสตาร์ทแอปเพื่อใช้ภาษาใหม่";
+
+/* Custom Units */
+"Custom Units" = "หน่วยกำหนดเอง";
+"Add Custom Unit" = "เพิ่มหน่วยกำหนดเอง";
+"Add custom measurement units for your inventory" = "เพิ่มหน่วยวัดสำหรับสินค้าคงคลัง";
+"Symbol (e.g., cup, tbsp)" = "สัญลักษณ์ (เช่น ถ้วย, ช้อนโต๊ะ)";
+"Name (e.g., Cup, Tablespoon)" = "ชื่อ (เช่น ถ้วยตวง, ช้อนโต๊ะ)";
+"Unit Details" = "รายละเอียดหน่วย";
+"Symbol will be displayed in uppercase" = "สัญลักษณ์จะแสดงเป็นตัวพิมพ์ใหญ่";
+
+/* Export */
+"Export" = "ส่งออก";
+"Export Manufacturing Data" = "ส่งออกข้อมูลการผลิต";
+"Export Inventory Data" = "ส่งออกข้อมูลสินค้าคงคลัง";
+"Export Recipe Data" = "ส่งออกข้อมูลสูตร";
+"Export data as CSV for Google Sheets or Excel" = "ส่งออกข้อมูลเป็น CSV สำหรับ Google Sheets หรือ Excel";
+
+/* Data Management */
+"Data Management" = "จัดการข้อมูล";
+"Clear All Data" = "ลบข้อมูลทั้งหมด";
+"Permanently delete all app data" = "ลบข้อมูลแอปทั้งหมดอย่างถาวร";
+"This will delete all recipes, inventory, and manufacturing data. This action cannot be undone." = "การดำเนินการนี้จะลบสูตร, สินค้าคงคลัง และข้อมูลการผลิตทั้งหมด ไม่สามารถยกเลิกได้";
+"Clear" = "ลบ";
+
+/* Common */
+"Cancel" = "ยกเลิก";
+"Save" = "บันทึก";
+"OK" = "ตกลง";
+"Delete" = "ลบ";
+
+/* Tabs */
+"Manufacturing" = "การผลิต";
+"Recipe" = "สูตร";
+"Inventory" = "สินค้าคงคลัง";
+
+/* Home */
+"New Manufacturing" = "เริ่มผลิตใหม่";
+"Select a recipe to start" = "เลือกสูตรเพื่อเริ่มต้น";
+"In Progress" = "กำลังดำเนินการ";
+"Recently Completed" = "เสร็จสิ้นล่าสุด";
+"No Manufacturing Yet" = "ยังไม่มีการผลิต";
+"Tap the button above to start manufacturing a recipe" = "แตะปุ่มด้านบนเพื่อเริ่มผลิตสูตร";
+"Low Stock" = "สินค้าใกล้หมด";
+"View All" = "ดูทั้งหมด";
+"Restock" = "เติมสต็อก";
+
+/* Recipe */
+"Recipes" = "สูตรอาหาร";
+"New Recipe" = "สูตรใหม่";
+"Edit Recipe" = "แก้ไขสูตร";
+"Recipe Name" = "ชื่อสูตร";
+"Category (optional)" = "หมวดหมู่ (ไม่บังคับ)";
+"Notes (optional)" = "บันทึก (ไม่บังคับ)";
+"Basic Info" = "ข้อมูลพื้นฐาน";
+"Batch Output" = "ผลผลิตต่อชุด";
+"Batch Size" = "ขนาดชุด";
+"How many units does one batch of this recipe produce?" = "สูตรนี้ผลิตได้กี่หน่วยต่อชุด?";
+"Ingredients" = "วัตถุดิบ";
+"Add Ingredient" = "เพิ่มวัตถุดิบ";
+"Steps" = "ขั้นตอน";
+"Add Step" = "เพิ่มขั้นตอน";
+"Estimated Cost" = "ต้นทุนโดยประมาณ";
+"Total Time" = "เวลาทั้งหมด";
+"Delete Recipe" = "ลบสูตร";
+"Are you sure you want to delete this recipe? This action cannot be undone." = "คุณแน่ใจหรือไม่ว่าต้องการลบสูตรนี้? ไม่สามารถยกเลิกได้";
+
+/* Inventory */
+"New Item" = "รายการใหม่";
+"Edit Item" = "แก้ไขรายการ";
+"Item Details" = "รายละเอียดรายการ";
+"Name" = "ชื่อ";
+"Unit & Pricing" = "หน่วย & ราคา";
+"Unit" = "หน่วย";
+"Current stock" = "สต็อกปัจจุบัน";
+"Restock Alert" = "แจ้งเตือนเติมสต็อก";
+"Minimum stock" = "สต็อกขั้นต่ำ";
+"Get notified when stock falls below this level" = "รับการแจ้งเตือนเมื่อสต็อกต่ำกว่าระดับนี้";
+"Delete Item" = "ลบรายการ";
+
+/* Manufacturing */
+"Batch Number" = "หมายเลขชุด";
+"Batches" = "จำนวนชุด";
+"Total Units" = "จำนวนหน่วยทั้งหมด";
+"Total Cost" = "ต้นทุนรวม";
+"Cost per Unit" = "ต้นทุนต่อหน่วย";
+"Completed" = "เสร็จสิ้น";
+"Step" = "ขั้นตอน";
+"Complete Step" = "เสร็จสิ้นขั้นตอน";
+"Manufacturing Complete!" = "การผลิตเสร็จสิ้น!";
+"All steps have been completed successfully." = "ขั้นตอนทั้งหมดเสร็จสมบูรณ์";
+"Cancel Manufacturing" = "ยกเลิกการผลิต";
+"Are you sure you want to cancel this manufacturing process?" = "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการผลิตนี้?";
+"Continue" = "ดำเนินการต่อ";

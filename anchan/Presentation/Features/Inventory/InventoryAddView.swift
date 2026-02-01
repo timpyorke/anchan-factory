@@ -5,9 +5,12 @@ struct InventoryAddView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
+    @Query(sort: \CustomUnitEntity.name)
+    private var customUnits: [CustomUnitEntity]
+
     @State private var name: String = ""
     @State private var category: String = ""
-    @State private var unit: InventoryUnit = .g
+    @State private var unitSymbol: String = "g"
     @State private var unitPrice: String = ""
     @State private var stock: String = ""
     @State private var minStock: String = ""
@@ -19,6 +22,10 @@ struct InventoryAddView: View {
 
     private var canSave: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    private var displaySymbol: String {
+        unitSymbol.uppercased()
     }
 
     // MARK: - Init
@@ -42,14 +49,23 @@ struct InventoryAddView: View {
                 }
 
                 Section {
-                    Picker("Unit", selection: $unit) {
+                    Picker("Unit", selection: $unitSymbol) {
+                        // Built-in units
                         ForEach(InventoryUnit.allCases) { unit in
-                            Text(unit.displayName).tag(unit)
+                            Text(unit.displayName).tag(unit.rawValue)
+                        }
+
+                        // Custom units
+                        if !customUnits.isEmpty {
+                            Divider()
+                            ForEach(customUnits, id: \.persistentModelID) { unit in
+                                Text("\(unit.name) (\(unit.symbol.uppercased()))").tag(unit.symbol)
+                            }
                         }
                     }
 
                     HStack {
-                        Text("Price per \(unit.symbol)")
+                        Text("Price per \(displaySymbol)")
                         Spacer()
                         TextField("0", text: $unitPrice)
                             .keyboardType(.decimalPad)
@@ -64,7 +80,7 @@ struct InventoryAddView: View {
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
-                        Text(unit.symbol)
+                        Text(displaySymbol)
                             .foregroundStyle(.secondary)
                     }
                 } header: {
@@ -79,7 +95,7 @@ struct InventoryAddView: View {
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
-                        Text(unit.symbol)
+                        Text(displaySymbol)
                             .foregroundStyle(.secondary)
                     }
                 } header: {
@@ -131,7 +147,7 @@ struct InventoryAddView: View {
         guard let item = editingItem else { return }
         name = item.name
         category = item.category ?? ""
-        unit = item.baseUnit
+        unitSymbol = item.unitSymbol
         unitPrice = item.unitPrice > 0 ? String(item.unitPrice) : ""
         stock = item.stock > 0 ? String(item.stock) : ""
         minStock = item.minStock > 0 ? String(item.minStock) : ""
@@ -146,7 +162,7 @@ struct InventoryAddView: View {
             // Update existing
             item.name = name.trimmingCharacters(in: .whitespaces)
             item.category = category.isEmpty ? nil : category.trimmingCharacters(in: .whitespaces)
-            item.baseUnit = unit
+            item.unitSymbol = unitSymbol
             item.unitPrice = price
             item.stock = stockValue
             item.minStock = minStockValue
@@ -154,7 +170,7 @@ struct InventoryAddView: View {
             // Create new
             let item = InventoryEntity(
                 name: name.trimmingCharacters(in: .whitespaces),
-                baseUnit: unit,
+                unitSymbol: unitSymbol,
                 unitPrice: price,
                 stock: stockValue,
                 minStock: minStockValue

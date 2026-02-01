@@ -357,7 +357,7 @@ struct ManufacturingDetailView: View {
 
                         Spacer()
 
-                        Text("\(ingredient.quantity.clean) \(ingredient.unit.symbol)")
+                        Text("\(ingredient.quantity.clean) \(ingredient.displaySymbol)")
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -440,7 +440,7 @@ struct ManufacturingDetailView: View {
                 let subtotal = ingredient.quantityInBaseUnit * ingredient.inventoryItem.unitPrice
                 csv += "\(ingredient.inventoryItem.name),"
                 csv += "\(ingredient.quantity),"
-                csv += "\(ingredient.unit.symbol),"
+                csv += "\(ingredient.displaySymbol),"
                 csv += "฿\(String(format: "%.2f", ingredient.inventoryItem.unitPrice)),"
                 csv += "฿\(String(format: "%.2f", subtotal))\n"
             }

@@ -76,7 +76,7 @@ struct HomeView: View {
         } message: {
             if let recipe = selectedRecipe {
                 let items = recipe.insufficientIngredients
-                    .map { "\($0.inventoryItem.name) (need \($0.quantity.clean) \($0.unit.symbol), have \($0.inventoryItem.stock.clean) \($0.inventoryItem.baseUnit.symbol))" }
+                    .map { "\($0.inventoryItem.name) (need \($0.quantity.clean) \($0.displaySymbol), have \($0.inventoryItem.stock.clean) \($0.inventoryItem.displaySymbol))" }
                     .joined(separator: "\n")
                 Text("The following ingredients don't have enough stock:\n\n\(items)")
             }
@@ -476,7 +476,7 @@ private struct LowStockRow: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.primary)
 
-                    Text("\(item.stock.clean) / \(item.minStock.clean) \(item.baseUnit.symbol)")
+                    Text("\(item.stock.clean) / \(item.minStock.clean) \(item.displaySymbol)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -489,7 +489,7 @@ private struct LowStockRow: View {
                         .font(.caption2)
                         .foregroundStyle(.secondary)
 
-                    Text("+\(item.restockAmount.clean) \(item.baseUnit.symbol)")
+                    Text("+\(item.restockAmount.clean) \(item.displaySymbol)")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.orange)
                 }
