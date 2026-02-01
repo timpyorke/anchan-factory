@@ -4,6 +4,7 @@ import SwiftData
 struct RecipeDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(StackRouter.self) private var stackRouter
+    @State private var viewModel = RecipeDetailViewModel()
 
     let id: PersistentIdentifier
 

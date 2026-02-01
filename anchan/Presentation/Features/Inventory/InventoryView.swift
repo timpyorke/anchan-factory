@@ -25,13 +25,13 @@ struct InventoryView: View {
             }
         }
         .sheet(isPresented: $viewModel.isShowingAddSheet) {
-            AddInventoryView {
+            InventoryAddView {
                 viewModel.loadItems()
             }
         }
         .sheet(isPresented: $viewModel.isShowingEditSheet) {
             if let item = viewModel.editingItem {
-                AddInventoryView(editingItem: item) {
+                InventoryAddView(editingItem: item) {
                     viewModel.loadItems()
                 }
             }

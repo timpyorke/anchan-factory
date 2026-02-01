@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-struct AddInventoryView: View {
+struct InventoryAddView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -157,6 +157,6 @@ struct AddInventoryView: View {
 }
 
 #Preview("Add") {
-    AddInventoryView()
+    InventoryAddView()
         .modelContainer(AppModelContainer.make())
 }

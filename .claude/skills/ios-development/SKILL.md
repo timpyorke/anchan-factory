@@ -1,46 +1,69 @@
 ---
 name: ios-development
-description: Guides modern iOS app development with SwiftUI. Use when building iOS apps, implementing SwiftUI views, managing state, or when the user asks about iOS/SwiftUI best practices.
+description: Guides iOS app development for the Anchan project using SwiftUI, Swift Data, and @Observable. Use when building features, adding views, creating entities, or implementing navigation.
 ---
 
-When developing modern iOS applications with SwiftUI, always follow these practices:
+Follow the **Anchan** project architecture and conventions:
 
-1. **Use SwiftUI-First Architecture**:
-   - Prefer **MVVM** with `@Observable` (iOS 17+) or `ObservableObject`
-   - Use **Swift Data** for persistence (replaces Core Data)
-   - Leverage **Swift Concurrency** (`async/await`, actors) over Combine
+## Project Structure
 
-2. **Modern State Management**:
-   - `@State` → Local view state
-   - `@Binding` → Two-way connection to parent state
-   - `@Observable` → Modern observation (iOS 17+)
-   - `@Environment` → Dependency injection via environment
-   - `@Query` → Swift Data fetching
+```
+anchan/
+├── App/                    # App entry point (AnchanApp.swift)
+├── Core/                   # Shared infrastructure
+│   ├── Database/           # AppModelContainer
+│   ├── Extension/          # Swift extensions
+│   ├── Navigation/         # Routers (StackRouter, TabRouter, AppRoute)
+│   └── Widget/             # Reusable UI components
+├── Data/                   # Data layer
+│   ├── Const/              # Constants
+│   ├── Entity/             # Swift Data @Model entities
+│   └── Repositories/       # Repository pattern for data access
+├── Presentation/           # UI layer
+│   └── Features/           # Feature modules (View + ViewModel pairs)
+└── Resources/              # Assets, fonts, etc.
+```
 
-3. **SwiftUI View Composition**:
-   - Extract reusable views as separate structs
-   - Use `ViewModifier` for reusable styling
-   - Prefer `@ViewBuilder` for conditional content
-   - Use `PreviewProvider` / `#Preview` macro for live previews
+## Conventions
 
-4. **Navigation & Routing**:
-   - Use `NavigationStack` with `.navigationDestination(for:)`
-   - Implement type-safe navigation with enums
-   - Manage navigation state in ViewModel for deep linking
+### 1. Navigation (StackRouter + TabRouter)
+- Use `@Observable` classes for routing state
+- Define routes in `AppRoute` enum with associated values
+- Pass `StackRouter` to views that need navigation
+- Use `.navigationDestination(for: AppRoute.self)` for routing
 
-5. **Modern Concurrency**:
-   - Use `.task { }` modifier for async work on view appear
-   - Leverage `@MainActor` for UI updates
-   - Use `TaskGroup` for parallel operations
+### 2. Swift Data Entities
+- Name entities with `Entity` suffix (e.g., `RecipeEntity`)
+- Use `@Model` macro
+- Define relationships with `@Relationship(deleteRule:)`
+- Add computed properties for derived data
 
-6. **Accessibility & Localization**:
-   - Add `.accessibilityLabel()` and `.accessibilityHint()`
-   - Use `String(localized:)` for all user-facing text
-   - Support Dynamic Type with built-in text styles
+### 3. Repositories
+- Create protocol first (e.g., `RecipeRepositoryProtocol`)
+- Mark implementation with `@MainActor`
+- Inject `ModelContext` via initializer
+- Use `FetchDescriptor` with `#Predicate` for queries
 
-7. **Testing Strategy**:
-   - Unit test ViewModels with Swift Testing framework
-   - Use `@Testable import` for internal access
-   - Mock dependencies with protocols
+### 4. ViewModels
+- Use `@Observable` + `@MainActor` macros
+- Mark state properties with `private(set)` for read-only access
+- Create `setup(modelContext:)` method for dependency injection
+- Use `// MARK:` comments for organization (State, Dependencies, Computed, Actions)
 
-**Gotcha**: When using `@Observable`, don't wrap properties in `@Published`—observation is automatic!
+### 5. Views
+- Use `@State` for local ViewModel instances
+- Call `viewModel.setup(modelContext:)` in `.onAppear`
+- Pass routers via initializer, not environment
+- Extract reusable widgets to `Core/Widget/`
+
+## Quick Reference
+
+| Pattern | Example |
+|---------|---------|
+| New Entity | `Data/Entity/[Name]Entity.swift` with `@Model` |
+| New Repository | `Data/Repositories/[Name]Repository.swift` with protocol |
+| New Feature | `Presentation/Features/[Name]/` with View + ViewModel |
+| New Route | Add case to `AppRoute` enum, handle in `MainView` |
+| New Widget | `Core/Widget/[Name]View.swift` |
+
+**Gotcha**: Always use `PersistentIdentifier` (not the entity directly) when passing Swift Data models through navigation routes!
