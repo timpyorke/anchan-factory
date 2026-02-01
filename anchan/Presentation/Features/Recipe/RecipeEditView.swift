@@ -52,7 +52,8 @@ struct RecipeEditView: View {
     private var totalCost: Double {
         ingredients.reduce(0.0) { total, ingredient in
             if let inventory = modelContext.model(for: ingredient.inventoryId) as? InventoryEntity {
-                return total + (ingredient.quantity * inventory.unitPrice)
+                let quantityInBaseUnit = ingredient.unit.convert(ingredient.quantity, to: inventory.baseUnit) ?? ingredient.quantity
+                return total + (quantityInBaseUnit * inventory.unitPrice)
             }
             return total
         }

@@ -38,7 +38,7 @@ final class RecipeEntity {
 
     var totalCost: Double {
         ingredients.reduce(0.0) { total, ingredient in
-            total + (ingredient.quantity * ingredient.inventoryItem.unitPrice)
+            total + (ingredient.quantityInBaseUnit * ingredient.inventoryItem.unitPrice)
         }
     }
 

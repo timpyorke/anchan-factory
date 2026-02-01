@@ -28,13 +28,18 @@ final class IngredientEntity {
         self.recipe = recipe
     }
 
-    /// Check if inventory has enough stock for this ingredient
-    var hasEnoughStock: Bool {
-        inventoryItem.stock >= quantity
+    /// Quantity converted to the inventory's base unit
+    var quantityInBaseUnit: Double {
+        unit.convert(quantity, to: inventoryItem.baseUnit) ?? quantity
     }
 
-    /// How much is missing (negative means enough, positive means shortage)
+    /// Check if inventory has enough stock for this ingredient
+    var hasEnoughStock: Bool {
+        inventoryItem.stock >= quantityInBaseUnit
+    }
+
+    /// How much is missing (in base unit) - zero means enough, positive means shortage
     var shortage: Double {
-        max(0, quantity - inventoryItem.stock)
+        max(0, quantityInBaseUnit - inventoryItem.stock)
     }
 }

@@ -224,7 +224,7 @@ struct RecipeDetailView: View {
 
     private func ingredientRow(_ ingredient: IngredientEntity) -> some View {
         let hasStock = ingredient.hasEnoughStock
-        let cost = ingredient.quantity * ingredient.inventoryItem.unitPrice
+        let cost = ingredient.quantityInBaseUnit * ingredient.inventoryItem.unitPrice
         return HStack {
             Image(systemName: hasStock ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                 .font(.system(size: 12))
@@ -240,7 +240,7 @@ struct RecipeDetailView: View {
                     .foregroundStyle(.secondary)
 
                 if !hasStock {
-                    Text("Stock: \(ingredient.inventoryItem.stock.clean)")
+                    Text("Stock: \(ingredient.inventoryItem.stock.clean) \(ingredient.inventoryItem.baseUnit.symbol)")
                         .font(.caption2)
                         .foregroundStyle(Color.orange)
                 } else if cost > 0 {

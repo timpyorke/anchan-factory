@@ -64,7 +64,7 @@ struct HomeView: View {
         } message: {
             if let recipe = selectedRecipe {
                 let items = recipe.insufficientIngredients
-                    .map { "\($0.inventoryItem.name) (need \($0.quantity.clean), have \($0.inventoryItem.stock.clean))" }
+                    .map { "\($0.inventoryItem.name) (need \($0.quantity.clean) \($0.unit.symbol), have \($0.inventoryItem.stock.clean) \($0.inventoryItem.baseUnit.symbol))" }
                     .joined(separator: "\n")
                 Text("The following ingredients don't have enough stock:\n\n\(items)")
             }

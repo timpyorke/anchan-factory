@@ -206,7 +206,7 @@ struct ManufacturingView: View {
                     .foregroundStyle(.secondary)
 
                 if !hasStock {
-                    Text("Stock: \(ingredient.inventoryItem.stock.clean)")
+                    Text("Stock: \(ingredient.inventoryItem.stock.clean) \(ingredient.inventoryItem.baseUnit.symbol)")
                         .font(.caption2)
                         .foregroundStyle(Color.orange)
                 }
