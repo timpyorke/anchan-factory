@@ -42,6 +42,10 @@ struct MainView: View {
                     RecipeEditView(id: id)
                 case .recipeAdd:
                     RecipeEditView(id: nil)
+                case .manufacturingProcess(let id):
+                    ManufacturingView(id: id)
+                case .manufacturingDetail(let id):
+                    ManufacturingDetailView(id: id)
                 }
             }
         }

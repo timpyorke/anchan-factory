@@ -7,7 +7,8 @@ enum AppModelContainer {
             RecipeEntity.self,
             RecipeStepEntity.self,
             InventoryEntity.self,
-            IngredientEntity.self
+            IngredientEntity.self,
+            ManufacturingEntity.self
         ])
 
         let config = ModelConfiguration(
