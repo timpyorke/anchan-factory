@@ -9,6 +9,8 @@ struct ManufacturingDetailView: View {
 
     @State private var manufacturing: ManufacturingEntity?
     @State private var showDeleteAlert = false
+    @State private var showShareSheet = false
+    @State private var exportURL: URL?
 
     var body: some View {
         Group {
@@ -23,6 +25,14 @@ struct ManufacturingDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
+                    Button {
+                        exportToCSV()
+                    } label: {
+                        Label("Export to Sheets", systemImage: "tablecells")
+                    }
+
+                    Divider()
+
                     Button(role: .destructive) {
                         showDeleteAlert = true
                     } label: {
@@ -40,6 +50,11 @@ struct ManufacturingDetailView: View {
             }
         } message: {
             Text("Are you sure you want to delete this manufacturing record?")
+        }
+        .sheet(isPresented: $showShareSheet) {
+            if let url = exportURL {
+                ShareSheet(items: [url])
+            }
         }
         .onAppear {
             loadManufacturing()
@@ -382,6 +397,99 @@ struct ManufacturingDetailView: View {
         }
         stackRouter.pop()
     }
+
+    private func exportToCSV() {
+        guard let manufacturing else { return }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+
+        var csv = "Manufacturing Report\n"
+        csv += "Generated:,\(dateFormatter.string(from: Date.now))\n\n"
+
+        // Summary Section
+        csv += "SUMMARY\n"
+        csv += "Batch Number,\(manufacturing.batchNumber)\n"
+        csv += "Recipe,\(manufacturing.recipe.name)\n"
+        csv += "Status,\(manufacturing.status.rawValue.capitalized)\n"
+        csv += "Started,\(dateFormatter.string(from: manufacturing.startedAt))\n"
+        if let completedAt = manufacturing.completedAt {
+            csv += "Completed,\(dateFormatter.string(from: completedAt))\n"
+            csv += "Duration,\(formatDuration(manufacturing.totalDuration))\n"
+        }
+        csv += "\n"
+
+        // Production Section
+        csv += "PRODUCTION\n"
+        csv += "Batches,\(manufacturing.quantity)\n"
+        csv += "Batch Size,\(manufacturing.recipe.batchSize) \(manufacturing.recipe.batchUnit)\n"
+        csv += "Total Units,\(manufacturing.totalUnits) \(manufacturing.recipe.batchUnit)\n"
+        csv += "\n"
+
+        // Cost Section
+        csv += "COSTS\n"
+        csv += "Total Cost,฿\(String(format: "%.2f", manufacturing.totalCost))\n"
+        csv += "Cost per Unit,฿\(String(format: "%.2f", manufacturing.costPerUnit))\n"
+        csv += "\n"
+
+        // Ingredients Section
+        if !manufacturing.recipe.ingredients.isEmpty {
+            csv += "INGREDIENTS\n"
+            csv += "Item,Quantity,Unit,Unit Price,Subtotal\n"
+            for ingredient in manufacturing.recipe.ingredients {
+                let subtotal = ingredient.quantityInBaseUnit * ingredient.inventoryItem.unitPrice
+                csv += "\(ingredient.inventoryItem.name),"
+                csv += "\(ingredient.quantity),"
+                csv += "\(ingredient.unit.symbol),"
+                csv += "฿\(String(format: "%.2f", ingredient.inventoryItem.unitPrice)),"
+                csv += "฿\(String(format: "%.2f", subtotal))\n"
+            }
+            csv += "\n"
+        }
+
+        // Steps Section
+        if !manufacturing.recipe.steps.isEmpty {
+            csv += "STEPS\n"
+            csv += "Step,Title,Est. Time,Actual Time,Completed At\n"
+            for (index, step) in manufacturing.recipe.sortedSteps.enumerated() {
+                let actualTime = index < manufacturing.stepCompletionTimes.count
+                    ? formatDuration(manufacturing.stepDuration(at: index))
+                    : "-"
+                let completedAt = manufacturing.stepCompletionTime(at: index)
+                    .map { dateFormatter.string(from: $0) } ?? "-"
+
+                csv += "\(index + 1),"
+                csv += "\"\(step.title.replacingOccurrences(of: "\"", with: "\"\""))\","
+                csv += "\(step.time)m,"
+                csv += "\(actualTime),"
+                csv += "\(completedAt)\n"
+            }
+        }
+
+        // Save to file
+        let fileName = "Manufacturing_\(manufacturing.batchNumber).csv"
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+        do {
+            try csv.write(to: tempURL, atomically: true, encoding: .utf8)
+            exportURL = tempURL
+            showShareSheet = true
+        } catch {
+            print("Failed to export: \(error)")
+        }
+    }
+}
+
+// MARK: - Share Sheet
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {
