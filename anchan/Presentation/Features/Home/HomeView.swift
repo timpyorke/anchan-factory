@@ -210,7 +210,8 @@ struct HomeView: View {
     }
 
     private func startManufacturing(with recipe: RecipeEntity) {
-        let manufacturing = ManufacturingEntity(recipe: recipe)
+        let batchNumber = ManufacturingEntity.generateBatchNumber(existingBatches: allManufacturing)
+        let manufacturing = ManufacturingEntity(recipe: recipe, batchNumber: batchNumber)
         modelContext.insert(manufacturing)
 
         // Navigate to manufacturing view
@@ -229,9 +230,19 @@ private struct ManufacturingCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(manufacturing.recipe.name)
-                            .font(.headline)
-                            .foregroundStyle(.primary)
+                        HStack(spacing: 8) {
+                            Text(manufacturing.recipe.name)
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+
+                            Text("#\(manufacturing.batchNumber)")
+                                .font(.caption.monospaced())
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.accentColor.opacity(0.15))
+                                .foregroundStyle(Color.accentColor)
+                                .clipShape(Capsule())
+                        }
 
                         Text("Step \(manufacturing.currentStepIndex + 1) of \(manufacturing.totalSteps)")
                             .font(.caption)
@@ -287,9 +298,15 @@ private struct CompletedManufacturingRow: View {
                     .foregroundStyle(.green)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(manufacturing.recipe.name)
-                        .font(.subheadline)
-                        .foregroundStyle(.primary)
+                    HStack(spacing: 6) {
+                        Text(manufacturing.recipe.name)
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+
+                        Text("#\(manufacturing.batchNumber)")
+                            .font(.caption2.monospaced())
+                            .foregroundStyle(.secondary)
+                    }
 
                     if let completedAt = manufacturing.completedAt {
                         Text(completedAt, format: .dateTime.month().day().hour().minute())

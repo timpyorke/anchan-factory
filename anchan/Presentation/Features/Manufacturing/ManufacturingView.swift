@@ -87,6 +87,24 @@ struct ManufacturingView: View {
 
     private func progressHeader(_ manufacturing: ManufacturingEntity) -> some View {
         VStack(spacing: 12) {
+            // Batch Number
+            HStack {
+                Text("Batch")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("#\(manufacturing.batchNumber)")
+                    .font(.subheadline.bold().monospaced())
+                    .foregroundStyle(Color.accentColor)
+
+                Spacer()
+
+                if manufacturing.recipe.totalTime > 0 {
+                    Label(manufacturing.recipe.totalTime.formattedTime, systemImage: "clock")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             // Progress Bar
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
@@ -109,12 +127,6 @@ struct ManufacturingView: View {
                     .foregroundStyle(.secondary)
 
                 Spacer()
-
-                if manufacturing.recipe.totalTime > 0 {
-                    Label(manufacturing.recipe.totalTime.formattedTime, systemImage: "clock")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
             }
         }
         .padding()

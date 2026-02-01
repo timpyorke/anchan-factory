@@ -55,10 +55,14 @@ struct ManufacturingDetailView: View {
                 summaryHeader(manufacturing)
 
                 // Time Summary
-                timeSummary(manufacturing)
+                if !manufacturing.recipe.steps.isEmpty {
+                    timeSummary(manufacturing)
+                }
 
                 // Steps List
-                stepsSection(manufacturing)
+                if !manufacturing.recipe.steps.isEmpty {
+                    stepsSection(manufacturing)
+                }
 
                 // Ingredients Used
                 if !manufacturing.recipe.ingredients.isEmpty {
@@ -71,13 +75,29 @@ struct ManufacturingDetailView: View {
 
     private func summaryHeader(_ manufacturing: ManufacturingEntity) -> some View {
         VStack(alignment: .leading, spacing: 12) {
+            // Batch Number Header
             HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Batch Number")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("#\(manufacturing.batchNumber)")
+                        .font(.title2.bold().monospaced())
+                        .foregroundStyle(Color.accentColor)
+                }
+
+                Spacer()
+
                 Image(systemName: manufacturing.isCompleted ? "checkmark.circle.fill" : "clock.fill")
                     .foregroundStyle(manufacturing.isCompleted ? .green : .orange)
-                    .font(.title2)
+                    .font(.title)
+            }
 
+            Divider()
+
+            HStack {
                 Text(manufacturing.isCompleted ? "Completed" : "In Progress")
-                    .font(.headline)
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(manufacturing.isCompleted ? .green : .orange)
 
                 Spacer()
@@ -109,6 +129,52 @@ struct ManufacturingDetailView: View {
             }
             .font(.caption)
             .foregroundStyle(.secondary)
+
+            // Batch & Cost Info
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Batches")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("\(manufacturing.quantity)x")
+                        .font(.headline)
+                }
+
+                Divider()
+                    .frame(height: 30)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Total Units")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("\(manufacturing.totalUnits) \(manufacturing.recipe.batchUnit)")
+                        .font(.headline)
+                }
+
+                Divider()
+                    .frame(height: 30)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Total Cost")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("฿\(manufacturing.totalCost.clean)")
+                        .font(.headline)
+                        .foregroundStyle(Color.accentColor)
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("Per Unit")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("฿\(manufacturing.costPerUnit.clean)")
+                        .font(.headline)
+                        .foregroundStyle(.green)
+                }
+            }
+            .padding(.top, 8)
         }
         .padding()
         .background(.fill.quinary)

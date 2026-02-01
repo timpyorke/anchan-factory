@@ -33,6 +33,8 @@ struct RecipeEditView: View {
     @State private var name: String = ""
     @State private var note: String = ""
     @State private var category: String = ""
+    @State private var batchSize: Int = 1
+    @State private var batchUnit: String = "pcs"
     @State private var steps: [StepInput] = []
     @State private var ingredients: [IngredientInput] = []
     @State private var isAddingStep: Bool = false
@@ -62,6 +64,7 @@ struct RecipeEditView: View {
     var body: some View {
         Form {
             basicInfoSection
+            batchSection
             ingredientsSection
             stepsSection
 
@@ -124,6 +127,29 @@ struct RecipeEditView: View {
                 .lineLimit(2...4)
         } header: {
             Text("Basic Info")
+        }
+    }
+
+    private var batchSection: some View {
+        Section {
+            Stepper("Batch Size: \(batchSize)", value: $batchSize, in: 1...1000)
+
+            TextField("Unit (e.g., pcs, bottles)", text: $batchUnit)
+                .textInputAutocapitalization(.never)
+
+            if totalCost > 0 && batchSize > 0 {
+                HStack {
+                    Text("Cost per \(batchUnit)")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("฿\((totalCost / Double(batchSize)).clean)")
+                        .fontWeight(.medium)
+                }
+            }
+        } header: {
+            Text("Batch Output")
+        } footer: {
+            Text("How many units does one batch of this recipe produce?")
         }
     }
 
@@ -220,6 +246,8 @@ struct RecipeEditView: View {
         name = recipe.name
         note = recipe.note
         category = recipe.category ?? ""
+        batchSize = recipe.batchSize
+        batchUnit = recipe.batchUnit
         steps = recipe.sortedSteps.map { step in
             StepInput(title: step.title, note: step.note, time: step.time)
         }
@@ -240,6 +268,8 @@ struct RecipeEditView: View {
             recipe.name = name.trimmingCharacters(in: .whitespaces)
             recipe.note = note
             recipe.category = category.isEmpty ? nil : category.trimmingCharacters(in: .whitespaces)
+            recipe.batchSize = batchSize
+            recipe.batchUnit = batchUnit.isEmpty ? "pcs" : batchUnit.trimmingCharacters(in: .whitespaces)
 
             // Remove old steps
             for step in recipe.steps {
@@ -283,7 +313,9 @@ struct RecipeEditView: View {
             let newRecipe = RecipeEntity(
                 name: name.trimmingCharacters(in: .whitespaces),
                 note: note,
-                category: category.isEmpty ? nil : category.trimmingCharacters(in: .whitespaces)
+                category: category.isEmpty ? nil : category.trimmingCharacters(in: .whitespaces),
+                batchSize: batchSize,
+                batchUnit: batchUnit.isEmpty ? "pcs" : batchUnit.trimmingCharacters(in: .whitespaces)
             )
 
             for (index, stepInput) in steps.enumerated() {

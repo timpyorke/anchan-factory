@@ -11,6 +11,7 @@ enum ManufacturingStatus: String, Codable {
 @Model
 final class ManufacturingEntity {
 
+    var batchNumber: String = ""    // e.g., "250201-001"
     var status: ManufacturingStatus = ManufacturingStatus.pending
     var currentStepIndex: Int = 0
     var quantity: Int = 1
@@ -23,15 +24,36 @@ final class ManufacturingEntity {
 
     init(
         recipe: RecipeEntity,
-        quantity: Int = 1
+        quantity: Int = 1,
+        batchNumber: String
     ) {
         self.recipe = recipe
         self.quantity = quantity
+        self.batchNumber = batchNumber
         self.status = .inProgress
         self.currentStepIndex = 0
         self.startedAt = Date.now
         self.completedAt = nil
         self.stepCompletionTimes = []
+    }
+
+    /// Generate a batch number based on date and sequence
+    /// Format: YYMMDD-XXX (e.g., 250201-001)
+    static func generateBatchNumber(existingBatches: [ManufacturingEntity]) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyMMdd"
+        let datePrefix = formatter.string(from: Date.now)
+
+        // Find today's batches and get the next sequence
+        let todayBatches = existingBatches.filter { $0.batchNumber.hasPrefix(datePrefix) }
+        let maxSequence = todayBatches.compactMap { batch -> Int? in
+            let parts = batch.batchNumber.split(separator: "-")
+            guard parts.count == 2, let seq = Int(parts[1]) else { return nil }
+            return seq
+        }.max() ?? 0
+
+        let nextSequence = maxSequence + 1
+        return String(format: "%@-%03d", datePrefix, nextSequence)
     }
 
     var progress: Double {
@@ -51,6 +73,21 @@ final class ManufacturingEntity {
 
     var totalSteps: Int {
         recipe.steps.count
+    }
+
+    /// Total cost for this manufacturing run (based on quantity of batches)
+    var totalCost: Double {
+        recipe.cost(forBatches: quantity)
+    }
+
+    /// Total units that will be produced
+    var totalUnits: Int {
+        recipe.units(forBatches: quantity)
+    }
+
+    /// Cost per unit for this run
+    var costPerUnit: Double {
+        recipe.costPerUnit
     }
 
     var totalDuration: TimeInterval {

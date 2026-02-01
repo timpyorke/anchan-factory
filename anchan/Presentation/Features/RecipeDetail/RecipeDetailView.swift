@@ -115,16 +115,44 @@ struct RecipeDetailView: View {
                     }
                 }
 
-                if recipe.totalCost > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "banknote")
-                        Text("฿\(recipe.totalCost.clean)")
-                    }
+                HStack(spacing: 4) {
+                    Image(systemName: "shippingbox")
+                    Text("\(recipe.batchSize) \(recipe.batchUnit)")
                 }
             }
             .font(.subheadline)
             .foregroundStyle(.secondary)
+
+            // Cost breakdown
+            if recipe.totalCost > 0 {
+                costBreakdownView(recipe)
+            }
         }
+    }
+
+    private func costBreakdownView(_ recipe: RecipeEntity) -> some View {
+        VStack(spacing: 8) {
+            HStack {
+                Text("Batch Cost")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text("฿\(recipe.totalCost.clean)")
+                    .fontWeight(.medium)
+            }
+
+            HStack {
+                Text("Cost per \(recipe.batchUnit)")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text("฿\(recipe.costPerUnit.clean)")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.accentColor)
+            }
+        }
+        .font(.subheadline)
+        .padding()
+        .background(.fill.quinary)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     private func stepsSection(_ recipe: RecipeEntity) -> some View {
