@@ -41,4 +41,19 @@ final class RecipeEntity {
             total + (ingredient.quantity * ingredient.inventoryItem.unitPrice)
         }
     }
+
+    /// Check if all ingredients have enough stock
+    var hasEnoughInventory: Bool {
+        ingredients.allSatisfy { $0.hasEnoughStock }
+    }
+
+    /// Get list of ingredients with insufficient stock
+    var insufficientIngredients: [IngredientEntity] {
+        ingredients.filter { !$0.hasEnoughStock }
+    }
+
+    /// Count of ingredients with insufficient stock
+    var insufficientCount: Int {
+        insufficientIngredients.count
+    }
 }

@@ -8,6 +8,8 @@ struct HomeView: View {
 
     @State private var viewModel = HomeViewModel()
     @State private var showRecipeSelection = false
+    @State private var showInsufficientAlert = false
+    @State private var selectedRecipe: RecipeEntity?
 
     @Query(sort: \ManufacturingEntity.startedAt, order: .reverse)
     private var allManufacturing: [ManufacturingEntity]
@@ -46,7 +48,25 @@ struct HomeView: View {
         .navigationTitle("Manufacturing")
         .sheet(isPresented: $showRecipeSelection) {
             RecipeSelectionSheet { recipe in
-                startManufacturing(with: recipe)
+                handleRecipeSelection(recipe)
+            }
+        }
+        .alert("Insufficient Inventory", isPresented: $showInsufficientAlert) {
+            Button("Cancel", role: .cancel) {
+                selectedRecipe = nil
+            }
+            Button("Start Anyway", role: .destructive) {
+                if let recipe = selectedRecipe {
+                    startManufacturing(with: recipe)
+                    selectedRecipe = nil
+                }
+            }
+        } message: {
+            if let recipe = selectedRecipe {
+                let items = recipe.insufficientIngredients
+                    .map { "\($0.inventoryItem.name) (need \($0.quantity.clean), have \($0.inventoryItem.stock.clean))" }
+                    .joined(separator: "\n")
+                Text("The following ingredients don't have enough stock:\n\n\(items)")
             }
         }
     }
@@ -136,6 +156,15 @@ struct HomeView: View {
     }
 
     // MARK: - Actions
+
+    private func handleRecipeSelection(_ recipe: RecipeEntity) {
+        if recipe.hasEnoughInventory {
+            startManufacturing(with: recipe)
+        } else {
+            selectedRecipe = recipe
+            showInsufficientAlert = true
+        }
+    }
 
     private func startManufacturing(with recipe: RecipeEntity) {
         let manufacturing = ManufacturingEntity(recipe: recipe)
@@ -309,9 +338,18 @@ private struct RecipeSelectionRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(recipe.name)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
+                HStack(spacing: 6) {
+                    Text(recipe.name)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+
+                    // Warning badge for insufficient inventory
+                    if !recipe.hasEnoughInventory {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
 
                 HStack(spacing: 12) {
                     if recipe.totalTime > 0 {
@@ -326,6 +364,16 @@ private struct RecipeSelectionRow: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+                // Show insufficient ingredients warning
+                if !recipe.hasEnoughInventory {
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.circle")
+                        Text("\(recipe.insufficientCount) ingredient\(recipe.insufficientCount > 1 ? "s" : "") insufficient")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                }
             }
 
             Spacer()

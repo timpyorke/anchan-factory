@@ -183,6 +183,11 @@ struct RecipeDetailView: View {
                 Text("Ingredients")
                     .font(.title2.bold())
 
+                if !recipe.hasEnoughInventory {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                }
+
                 Spacer()
 
                 if recipe.totalCost > 0 {
@@ -192,34 +197,58 @@ struct RecipeDetailView: View {
                 }
             }
 
+            // Warning banner if insufficient
+            if !recipe.hasEnoughInventory {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                    Text("\(recipe.insufficientCount) ingredient\(recipe.insufficientCount > 1 ? "s" : "") with insufficient stock")
+                }
+                .font(.caption)
+                .foregroundStyle(.orange)
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.orange.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(recipe.ingredients, id: \.persistentModelID) { ingredient in
-                    HStack {
-                        Image(systemName: "circle.fill")
-                            .font(.system(size: 6))
-                            .foregroundStyle(.secondary)
-
-                        Text(ingredient.inventoryItem.name)
-
-                        Spacer()
-
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("\(ingredient.quantity.clean) \(ingredient.unit.symbol)")
-                                .foregroundStyle(.secondary)
-
-                            let cost = ingredient.quantity * ingredient.inventoryItem.unitPrice
-                            if cost > 0 {
-                                Text("฿\(cost.clean)")
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
-                            }
-                        }
-                    }
+                ForEach(Array(recipe.ingredients), id: \.persistentModelID) { ingredient in
+                    ingredientRow(ingredient)
                 }
             }
             .padding()
             .background(.fill.quinary)
             .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
+    private func ingredientRow(_ ingredient: IngredientEntity) -> some View {
+        let hasStock = ingredient.hasEnoughStock
+        let cost = ingredient.quantity * ingredient.inventoryItem.unitPrice
+        return HStack {
+            Image(systemName: hasStock ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(hasStock ? Color.green : Color.orange)
+
+            Text(ingredient.inventoryItem.name)
+                .foregroundStyle(hasStock ? Color.primary : Color.orange)
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(ingredient.quantity.clean) \(ingredient.unit.symbol)")
+                    .foregroundStyle(.secondary)
+
+                if !hasStock {
+                    Text("Stock: \(ingredient.inventoryItem.stock.clean)")
+                        .font(.caption2)
+                        .foregroundStyle(Color.orange)
+                } else if cost > 0 {
+                    Text("฿\(cost.clean)")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
         }
     }
 

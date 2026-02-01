@@ -165,29 +165,53 @@ struct ManufacturingView: View {
 
     private func ingredientsCard(_ recipe: RecipeEntity) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Ingredients Needed")
-                .font(.headline)
+            HStack {
+                Text("Ingredients Needed")
+                    .font(.headline)
+
+                Spacer()
+
+                if !recipe.hasEnoughInventory {
+                    Label("\(recipe.insufficientCount) low", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+            }
 
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(recipe.ingredients, id: \.persistentModelID) { ingredient in
-                    HStack {
-                        Image(systemName: "circle.fill")
-                            .font(.system(size: 6))
-                            .foregroundStyle(.secondary)
-
-                        Text(ingredient.inventoryItem.name)
-
-                        Spacer()
-
-                        Text("\(ingredient.quantity.clean) \(ingredient.unit.symbol)")
-                            .foregroundStyle(.secondary)
-                    }
+                ForEach(Array(recipe.ingredients), id: \.persistentModelID) { ingredient in
+                    ingredientRow(ingredient)
                 }
             }
         }
         .padding()
         .background(.fill.quinary)
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func ingredientRow(_ ingredient: IngredientEntity) -> some View {
+        let hasStock = ingredient.hasEnoughStock
+        return HStack {
+            Image(systemName: hasStock ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(hasStock ? Color.green : Color.orange)
+
+            Text(ingredient.inventoryItem.name)
+                .foregroundStyle(hasStock ? Color.primary : Color.orange)
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(ingredient.quantity.clean) \(ingredient.unit.symbol)")
+                    .foregroundStyle(.secondary)
+
+                if !hasStock {
+                    Text("Stock: \(ingredient.inventoryItem.stock.clean)")
+                        .font(.caption2)
+                        .foregroundStyle(Color.orange)
+                }
+            }
+        }
     }
 
     private func completeButton(_ manufacturing: ManufacturingEntity) -> some View {
