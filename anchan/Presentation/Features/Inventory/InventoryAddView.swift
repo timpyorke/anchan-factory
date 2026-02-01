@@ -10,6 +10,7 @@ struct InventoryAddView: View {
     @State private var unit: InventoryUnit = .g
     @State private var unitPrice: String = ""
     @State private var stock: String = ""
+    @State private var minStock: String = ""
 
     private let editingItem: InventoryEntity?
     var onSave: (() -> Void)?
@@ -70,6 +71,23 @@ struct InventoryAddView: View {
                     Text("Unit & Pricing")
                 }
 
+                Section {
+                    HStack {
+                        Text("Minimum stock")
+                        Spacer()
+                        TextField("0", text: $minStock)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                        Text(unit.symbol)
+                            .foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Text("Restock Alert")
+                } footer: {
+                    Text("Get notified when stock falls below this level")
+                }
+
                 if isEditing {
                     Section {
                         Button(role: .destructive) {
@@ -116,11 +134,13 @@ struct InventoryAddView: View {
         unit = item.baseUnit
         unitPrice = item.unitPrice > 0 ? String(item.unitPrice) : ""
         stock = item.stock > 0 ? String(item.stock) : ""
+        minStock = item.minStock > 0 ? String(item.minStock) : ""
     }
 
     private func saveItem() {
         let price = Double(unitPrice) ?? 0
         let stockValue = Double(stock) ?? 0
+        let minStockValue = Double(minStock) ?? 0
 
         if let item = editingItem {
             // Update existing
@@ -129,13 +149,15 @@ struct InventoryAddView: View {
             item.baseUnit = unit
             item.unitPrice = price
             item.stock = stockValue
+            item.minStock = minStockValue
         } else {
             // Create new
             let item = InventoryEntity(
                 name: name.trimmingCharacters(in: .whitespaces),
                 baseUnit: unit,
                 unitPrice: price,
-                stock: stockValue
+                stock: stockValue,
+                minStock: minStockValue
             )
             if !category.isEmpty {
                 item.category = category.trimmingCharacters(in: .whitespaces)

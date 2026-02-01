@@ -14,6 +14,9 @@ struct HomeView: View {
     @Query(sort: \ManufacturingEntity.startedAt, order: .reverse)
     private var allManufacturing: [ManufacturingEntity]
 
+    @Query(sort: \InventoryEntity.name)
+    private var allInventory: [InventoryEntity]
+
     private var activeManufacturing: [ManufacturingEntity] {
         allManufacturing.filter { $0.status == .inProgress }
     }
@@ -22,9 +25,18 @@ struct HomeView: View {
         allManufacturing.filter { $0.status == .completed }
     }
 
+    private var lowStockItems: [InventoryEntity] {
+        allInventory.filter { $0.isLowStock }.sorted { $0.stockLevel < $1.stockLevel }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
+                // Low Stock Alert Section
+                if !lowStockItems.isEmpty {
+                    lowStockSection
+                }
+
                 // New Manufacturing Button
                 newManufacturingButton
 
@@ -39,7 +51,7 @@ struct HomeView: View {
                 }
 
                 // Empty State
-                if activeManufacturing.isEmpty && completedManufacturing.isEmpty {
+                if activeManufacturing.isEmpty && completedManufacturing.isEmpty && lowStockItems.isEmpty {
                     emptyState
                 }
             }
@@ -99,6 +111,37 @@ struct HomeView: View {
             .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
+    }
+
+    private var lowStockSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                Text("Low Stock")
+                    .font(.title3.bold())
+
+                Spacer()
+
+                Button {
+                    tabRouter.go(to: .inventory)
+                } label: {
+                    Text("View All")
+                        .font(.subheadline)
+                }
+            }
+
+            VStack(spacing: 8) {
+                ForEach(lowStockItems.prefix(5), id: \.persistentModelID) { item in
+                    LowStockRow(item: item) {
+                        tabRouter.go(to: .inventory)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(.orange.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
     private var activeSection: some View {
@@ -382,6 +425,71 @@ private struct RecipeSelectionRow: View {
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Low Stock Row
+
+private struct LowStockRow: View {
+    let item: InventoryEntity
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                // Stock level indicator
+                ZStack {
+                    Circle()
+                        .stroke(.gray.opacity(0.3), lineWidth: 3)
+                        .frame(width: 36, height: 36)
+
+                    Circle()
+                        .trim(from: 0, to: item.stockLevel)
+                        .stroke(stockColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        .frame(width: 36, height: 36)
+                        .rotationEffect(.degrees(-90))
+
+                    Text("\(Int(item.stockLevel * 100))")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(stockColor)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.name)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.primary)
+
+                    Text("\(item.stock.clean) / \(item.minStock.clean) \(item.baseUnit.symbol)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                // Restock suggestion
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("Restock")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+
+                    Text("+\(item.restockAmount.clean) \(item.baseUnit.symbol)")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.orange)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var stockColor: Color {
+        if item.stockLevel < 0.25 {
+            return .red
+        } else if item.stockLevel < 0.5 {
+            return .orange
+        } else {
+            return .yellow
+        }
     }
 }
 
