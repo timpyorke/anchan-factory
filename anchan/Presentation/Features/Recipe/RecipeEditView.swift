@@ -10,6 +10,17 @@ struct StepInput: Identifiable {
     var time: Int
 }
 
+// MARK: - Ingredient Input Model
+
+struct IngredientInput: Identifiable {
+    let id = UUID()
+    var inventoryId: PersistentIdentifier
+    var inventoryName: String
+    var quantity: Double
+    var unit: InventoryUnit
+    var note: String
+}
+
 // MARK: - Recipe Edit View
 
 struct RecipeEditView: View {
@@ -23,7 +34,9 @@ struct RecipeEditView: View {
     @State private var note: String = ""
     @State private var category: String = ""
     @State private var steps: [StepInput] = []
+    @State private var ingredients: [IngredientInput] = []
     @State private var isAddingStep: Bool = false
+    @State private var isAddingIngredient: Bool = false
     @State private var showDeleteAlert: Bool = false
 
     private var isEditing: Bool { id != nil }
@@ -36,9 +49,19 @@ struct RecipeEditView: View {
         steps.reduce(0) { $0 + $1.time }
     }
 
+    private var totalCost: Double {
+        ingredients.reduce(0.0) { total, ingredient in
+            if let inventory = modelContext.model(for: ingredient.inventoryId) as? InventoryEntity {
+                return total + (ingredient.quantity * inventory.unitPrice)
+            }
+            return total
+        }
+    }
+
     var body: some View {
         Form {
             basicInfoSection
+            ingredientsSection
             stepsSection
 
             if isEditing {
@@ -68,6 +91,11 @@ struct RecipeEditView: View {
                 steps.append(newStep)
             }
         }
+        .sheet(isPresented: $isAddingIngredient) {
+            AddIngredientSheet { newIngredient in
+                ingredients.append(newIngredient)
+            }
+        }
         .alert("Delete Recipe", isPresented: $showDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
@@ -95,6 +123,39 @@ struct RecipeEditView: View {
                 .lineLimit(2...4)
         } header: {
             Text("Basic Info")
+        }
+    }
+
+    private var ingredientsSection: some View {
+        Section {
+            if ingredients.isEmpty {
+                Text("No ingredients added")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(ingredients.indices, id: \.self) { index in
+                    IngredientRowView(ingredient: ingredients[index]) {
+                        ingredients.remove(at: index)
+                    }
+                }
+
+                if totalCost > 0 {
+                    HStack {
+                        Text("Estimated Cost")
+                            .fontWeight(.medium)
+                        Spacer()
+                        Text("฿\(totalCost.clean)")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            Button {
+                isAddingIngredient = true
+            } label: {
+                Label("Add Ingredient", systemImage: "plus.circle.fill")
+            }
+        } header: {
+            Text("Ingredients")
         }
     }
 
@@ -161,6 +222,15 @@ struct RecipeEditView: View {
         steps = recipe.sortedSteps.map { step in
             StepInput(title: step.title, note: step.note, time: step.time)
         }
+        ingredients = recipe.ingredients.map { ingredient in
+            IngredientInput(
+                inventoryId: ingredient.inventoryItem.persistentModelID,
+                inventoryName: ingredient.inventoryItem.name,
+                quantity: ingredient.quantity,
+                unit: ingredient.unit,
+                note: ingredient.note ?? ""
+            )
+        }
     }
 
     private func saveRecipe() {
@@ -176,6 +246,12 @@ struct RecipeEditView: View {
             }
             recipe.steps.removeAll()
 
+            // Remove old ingredients
+            for ingredient in recipe.ingredients {
+                modelContext.delete(ingredient)
+            }
+            recipe.ingredients.removeAll()
+
             // Add new steps
             for (index, stepInput) in steps.enumerated() {
                 let step = RecipeStepEntity(
@@ -186,6 +262,20 @@ struct RecipeEditView: View {
                 )
                 step.recipe = recipe
                 recipe.steps.append(step)
+            }
+
+            // Add new ingredients
+            for ingredientInput in ingredients {
+                if let inventory = modelContext.model(for: ingredientInput.inventoryId) as? InventoryEntity {
+                    let ingredient = IngredientEntity(
+                        inventoryItem: inventory,
+                        quantity: ingredientInput.quantity,
+                        unit: ingredientInput.unit,
+                        note: ingredientInput.note.isEmpty ? nil : ingredientInput.note,
+                        recipe: recipe
+                    )
+                    recipe.ingredients.append(ingredient)
+                }
             }
         } else {
             // Create new
@@ -204,6 +294,20 @@ struct RecipeEditView: View {
                 )
                 step.recipe = newRecipe
                 newRecipe.steps.append(step)
+            }
+
+            // Add ingredients to new recipe
+            for ingredientInput in ingredients {
+                if let inventory = modelContext.model(for: ingredientInput.inventoryId) as? InventoryEntity {
+                    let ingredient = IngredientEntity(
+                        inventoryItem: inventory,
+                        quantity: ingredientInput.quantity,
+                        unit: ingredientInput.unit,
+                        note: ingredientInput.note.isEmpty ? nil : ingredientInput.note,
+                        recipe: newRecipe
+                    )
+                    newRecipe.ingredients.append(ingredient)
+                }
             }
 
             modelContext.insert(newRecipe)
@@ -258,6 +362,163 @@ private struct StepRowView: View {
             .buttonStyle(.borderless)
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Ingredient Row View
+
+private struct IngredientRowView: View {
+    let ingredient: IngredientInput
+    let onDelete: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(ingredient.inventoryName)
+                    .font(.headline)
+
+                Text("\(ingredient.quantity.clean) \(ingredient.unit.symbol)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                if !ingredient.note.isEmpty {
+                    Text(ingredient.note)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            Button(role: .destructive) {
+                onDelete()
+            } label: {
+                Image(systemName: "trash")
+                    .font(.caption)
+            }
+            .buttonStyle(.borderless)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Add Ingredient Sheet
+
+private struct AddIngredientSheet: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var inventoryItems: [InventoryEntity] = []
+    @State private var selectedInventory: InventoryEntity?
+    @State private var quantity: Double = 1
+    @State private var unit: InventoryUnit = .g
+    @State private var note: String = ""
+    @State private var searchText: String = ""
+
+    let onAdd: (IngredientInput) -> Void
+
+    private var canAdd: Bool {
+        selectedInventory != nil && quantity > 0
+    }
+
+    private var filteredItems: [InventoryEntity] {
+        if searchText.isEmpty {
+            return inventoryItems
+        }
+        return inventoryItems.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    if inventoryItems.isEmpty {
+                        Text("No inventory items available")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Picker("Select Item", selection: $selectedInventory) {
+                            Text("Select an item").tag(nil as InventoryEntity?)
+                            ForEach(filteredItems, id: \.persistentModelID) { item in
+                                Text(item.name).tag(item as InventoryEntity?)
+                            }
+                        }
+                        .onChange(of: selectedInventory) { _, newValue in
+                            if let inventory = newValue {
+                                unit = inventory.baseUnit
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Inventory Item")
+                }
+
+                if selectedInventory != nil {
+                    Section {
+                        HStack {
+                            Text("Quantity")
+                            Spacer()
+                            TextField("Amount", value: $quantity, format: .number)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 100)
+                        }
+
+                        Picker("Unit", selection: $unit) {
+                            ForEach(InventoryUnit.allCases) { unitOption in
+                                Text(unitOption.displayName).tag(unitOption)
+                            }
+                        }
+                    } header: {
+                        Text("Amount")
+                    }
+
+                    Section {
+                        TextField("Note (optional)", text: $note, axis: .vertical)
+                            .lineLimit(2...3)
+                    } header: {
+                        Text("Additional Info")
+                    }
+                }
+            }
+            .navigationTitle("Add Ingredient")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") {
+                        if let inventory = selectedInventory {
+                            let ingredient = IngredientInput(
+                                inventoryId: inventory.persistentModelID,
+                                inventoryName: inventory.name,
+                                quantity: quantity,
+                                unit: unit,
+                                note: note
+                            )
+                            onAdd(ingredient)
+                            dismiss()
+                        }
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(!canAdd)
+                }
+            }
+            .onAppear {
+                loadInventoryItems()
+            }
+        }
+    }
+
+    private func loadInventoryItems() {
+        let descriptor = FetchDescriptor<InventoryEntity>(
+            sortBy: [SortDescriptor(\.name)]
+        )
+        inventoryItems = (try? modelContext.fetch(descriptor)) ?? []
     }
 }
 

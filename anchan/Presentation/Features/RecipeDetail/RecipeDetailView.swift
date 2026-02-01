@@ -107,14 +107,23 @@ struct RecipeDetailView: View {
                 }
             }
 
-            if recipe.totalTime > 0 {
-                HStack(spacing: 8) {
-                    Image(systemName: "clock")
-                    Text("Total: \(recipe.totalTime.formattedTime)")
+            HStack(spacing: 16) {
+                if recipe.totalTime > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                        Text(recipe.totalTime.formattedTime)
+                    }
                 }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+
+                if recipe.totalCost > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "banknote")
+                        Text("฿\(recipe.totalCost.clean)")
+                    }
+                }
             }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
         }
     }
 
@@ -170,8 +179,18 @@ struct RecipeDetailView: View {
 
     private func ingredientsSection(_ recipe: RecipeEntity) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Ingredients")
-                .font(.title2.bold())
+            HStack {
+                Text("Ingredients")
+                    .font(.title2.bold())
+
+                Spacer()
+
+                if recipe.totalCost > 0 {
+                    Text("฿\(recipe.totalCost.clean)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
 
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(recipe.ingredients, id: \.persistentModelID) { ingredient in
@@ -184,8 +203,17 @@ struct RecipeDetailView: View {
 
                         Spacer()
 
-                        Text("\(ingredient.quantity.clean) \(ingredient.unit.symbol)")
-                            .foregroundStyle(.secondary)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("\(ingredient.quantity.clean) \(ingredient.unit.symbol)")
+                                .foregroundStyle(.secondary)
+
+                            let cost = ingredient.quantity * ingredient.inventoryItem.unitPrice
+                            if cost > 0 {
+                                Text("฿\(cost.clean)")
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
                     }
                 }
             }

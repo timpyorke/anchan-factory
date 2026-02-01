@@ -35,4 +35,10 @@ final class RecipeEntity {
     var sortedSteps: [RecipeStepEntity] {
         steps.sorted { $0.order < $1.order }
     }
+
+    var totalCost: Double {
+        ingredients.reduce(0.0) { total, ingredient in
+            total + (ingredient.quantity * ingredient.inventoryItem.unitPrice)
+        }
+    }
 }
