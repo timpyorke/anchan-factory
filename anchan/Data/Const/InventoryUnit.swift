@@ -1,3 +1,5 @@
+import Foundation
+
 enum InventoryUnit: String, CaseIterable, Identifiable, Codable {
     case g, kg, ml, l, pcs
 
@@ -11,11 +13,11 @@ enum InventoryUnit: String, CaseIterable, Identifiable, Codable {
     /// Full name for forms and pickers (e.g., "Grams", "Kilograms")
     var displayName: String {
         switch self {
-        case .g: return "Grams (g)"
-        case .kg: return "Kilograms (kg)"
-        case .ml: return "Milliliters (ml)"
-        case .l: return "Liters (l)"
-        case .pcs: return "Pieces (pcs)"
+        case .g: return NSLocalizedString("Grams (g)", comment: "")
+        case .kg: return NSLocalizedString("Kilograms (kg)", comment: "")
+        case .ml: return NSLocalizedString("Milliliters (ml)", comment: "")
+        case .l: return NSLocalizedString("Liters (l)", comment: "")
+        case .pcs: return NSLocalizedString("Pieces (pcs)", comment: "")
         }
     }
 

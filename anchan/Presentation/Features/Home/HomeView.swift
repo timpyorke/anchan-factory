@@ -36,17 +36,17 @@ struct HomeView: View {
             }
             .padding()
         }
-        .navigationTitle("Manufacturing")
+        .navigationTitle(String(localized: "Manufacturing"))
         .sheet(isPresented: $viewModel.showRecipeSelection) {
             RecipeSelectionSheet { recipe in
                 handleRecipeSelection(recipe)
             }
         }
-        .alert("Insufficient Inventory", isPresented: $viewModel.showInsufficientAlert) {
-            Button("Cancel", role: .cancel) {
+        .alert(String(localized: "Insufficient Inventory"), isPresented: $viewModel.showInsufficientAlert) {
+            Button(String(localized: "Cancel"), role: .cancel) {
                 viewModel.selectedRecipe = nil
             }
-            Button("Start Anyway", role: .destructive) {
+            Button(String(localized: "Start Anyway"), role: .destructive) {
                 if let recipe = viewModel.selectedRecipe {
                     let id = viewModel.startManufacturing(with: recipe)
                     stackRouter.push(.manufacturingProcess(id: id))
@@ -77,9 +77,9 @@ struct HomeView: View {
                     .font(.title2)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("New Manufacturing")
+                    Text(String(localized: "New Manufacturing"))
                         .font(.headline)
-                    Text("Select a recipe to start")
+                    Text(String(localized: "Select a recipe to start"))
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.8))
                 }
@@ -101,7 +101,7 @@ struct HomeView: View {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(.orange)
-                Text("Low Stock")
+                Text(String(localized: "Low Stock"))
                     .font(.title3.bold())
 
                 Spacer()
@@ -109,7 +109,7 @@ struct HomeView: View {
                 Button {
                     tabRouter.go(to: .inventory)
                 } label: {
-                    Text("View All")
+                    Text(String(localized: "View All"))
                         .font(.subheadline)
                 }
             }
@@ -129,7 +129,7 @@ struct HomeView: View {
 
     private var activeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("In Progress")
+            Text(String(localized: "In Progress"))
                 .font(.title3.bold())
 
             ForEach(viewModel.activeManufacturing, id: \.persistentModelID) { item in
@@ -143,13 +143,13 @@ struct HomeView: View {
     private var completedSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Recently Completed")
+                Text(String(localized: "Recently Completed"))
                     .font(.title3.bold())
 
                 Spacer()
 
                 if viewModel.completedManufacturing.count > 5 {
-                    Button("See All") {
+                    Button(String(localized: "See All")) {
                         // Future: Show all completed
                     }
                     .font(.subheadline)
@@ -170,10 +170,10 @@ struct HomeView: View {
                 .font(.system(size: 50))
                 .foregroundStyle(.secondary)
 
-            Text("No Manufacturing Yet")
+            Text(String(localized: "No Manufacturing Yet"))
                 .font(.headline)
 
-            Text("Tap the button above to start manufacturing a recipe")
+            Text(String(localized: "Tap the button above to start manufacturing a recipe"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -218,7 +218,7 @@ private struct ManufacturingCard: View {
                                 .clipShape(Capsule())
                         }
 
-                        Text("Step \(manufacturing.currentStepIndex + 1) of \(manufacturing.totalSteps)")
+                        Text(String(localized: "Step \(manufacturing.currentStepIndex + 1) of \(manufacturing.totalSteps)"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -316,9 +316,9 @@ private struct RecipeSelectionSheet: View {
             Group {
                 if viewModel.recipes.isEmpty {
                     ContentUnavailableView(
-                        "No Recipes",
+                        String(localized: "No Recipes"),
                         systemImage: "book",
-                        description: Text("Create a recipe first to start manufacturing")
+                        description: Text(String(localized: "Create a recipe first to start manufacturing"))
                     )
                 } else {
                     List(viewModel.filteredRecipes, id: \.persistentModelID) { recipe in
@@ -330,14 +330,14 @@ private struct RecipeSelectionSheet: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    .searchable(text: $viewModel.searchText, prompt: "Search recipes")
+                    .searchable(text: $viewModel.searchText, prompt: String(localized: "Search recipes"))
                 }
             }
-            .navigationTitle("Select Recipe")
+            .navigationTitle(String(localized: "Select Recipe"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(String(localized: "Cancel")) {
                         dismiss()
                     }
                 }
@@ -375,7 +375,7 @@ private struct RecipeSelectionRow: View {
                         Label(recipe.totalTime.formattedTime, systemImage: "clock")
                     }
 
-                    Label("\(recipe.steps.count) steps", systemImage: "list.number")
+                    Label("\(recipe.steps.count) \(String(localized: "steps"))", systemImage: "list.number")
 
                     if recipe.totalCost > 0 {
                         Label("฿\(recipe.totalCost.clean)", systemImage: "banknote")
@@ -388,7 +388,8 @@ private struct RecipeSelectionRow: View {
                 if !recipe.hasEnoughInventory {
                     HStack(spacing: 4) {
                         Image(systemName: "exclamationmark.circle")
-                        Text("\(recipe.insufficientCount) ingredient\(recipe.insufficientCount > 1 ? "s" : "") insufficient")
+                        let pluralSuffix = recipe.insufficientCount > 1 ? "s" : ""
+                        Text(String(localized: "\(recipe.insufficientCount) ingredient\(pluralSuffix) insufficient"))
                     }
                     .font(.caption)
                     .foregroundStyle(.orange)
@@ -444,7 +445,7 @@ private struct LowStockRow: View {
 
                 // Restock suggestion
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("Restock")
+                    Text(String(localized: "Restock"))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
 

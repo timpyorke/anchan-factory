@@ -13,10 +13,10 @@ struct RecipeDetailView: View {
             if let recipe = viewModel.recipe {
                 recipeContent(recipe)
             } else {
-                ContentUnavailableView("Recipe Not Found", systemImage: "book")
+                ContentUnavailableView(String(localized: "Recipe Not Found"), systemImage: "book")
             }
         }
-        .navigationTitle(viewModel.recipe?.name ?? "Recipe")
+        .navigationTitle(viewModel.recipe?.name ?? String(localized: "Recipe"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             if viewModel.recipe != nil {
@@ -25,14 +25,14 @@ struct RecipeDetailView: View {
                         Button {
                             stackRouter.push(.recipeEdit(id: id))
                         } label: {
-                            Label("Edit", systemImage: "pencil")
+                            Label(String(localized: "Edit"), systemImage: "pencil")
                         }
 
                         Button {
                             viewModel.toggleFavorite()
                         } label: {
                             Label(
-                                viewModel.recipe?.isFavorite == true ? "Unfavorite" : "Favorite",
+                                viewModel.recipe?.isFavorite == true ? String(localized: "Unfavorite") : String(localized: "Favorite"),
                                 systemImage: viewModel.recipe?.isFavorite == true ? "heart.slash" : "heart"
                             )
                         }
@@ -42,7 +42,7 @@ struct RecipeDetailView: View {
                         Button(role: .destructive) {
                             viewModel.showDeleteAlert = true
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Label(String(localized: "Delete"), systemImage: "trash")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -50,15 +50,15 @@ struct RecipeDetailView: View {
                 }
             }
         }
-        .alert("Delete Recipe", isPresented: $viewModel.showDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
+        .alert(String(localized: "Delete Recipe"), isPresented: $viewModel.showDeleteAlert) {
+            Button(String(localized: "Cancel"), role: .cancel) { }
+            Button(String(localized: "Delete"), role: .destructive) {
                 viewModel.deleteRecipe {
                     stackRouter.pop()
                 }
             }
         } message: {
-            Text("Are you sure you want to delete this recipe?")
+            Text(String(localized: "Are you sure you want to delete this recipe?"))
         }
         .onAppear {
             viewModel.setup(modelContext: modelContext, recipeId: id)
@@ -132,7 +132,7 @@ struct RecipeDetailView: View {
     private func costBreakdownView(_ recipe: RecipeEntity) -> some View {
         VStack(spacing: 8) {
             HStack {
-                Text("Batch Cost")
+                Text(String(localized: "Batch Cost"))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text("฿\(recipe.totalCost.clean)")
@@ -140,7 +140,7 @@ struct RecipeDetailView: View {
             }
 
             HStack {
-                Text("Cost per \(recipe.batchUnit)")
+                Text(String(localized: "Cost per \(recipe.batchUnit)"))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text("฿\(recipe.costPerUnit.clean)")
@@ -156,7 +156,7 @@ struct RecipeDetailView: View {
 
     private func stepsSection(_ recipe: RecipeEntity) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Steps")
+            Text(String(localized: "Steps"))
                 .font(.title2.bold())
 
             VStack(spacing: 0) {
@@ -207,7 +207,7 @@ struct RecipeDetailView: View {
     private func ingredientsSection(_ recipe: RecipeEntity) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Ingredients")
+                Text(String(localized: "Ingredients"))
                     .font(.title2.bold())
 
                 if !recipe.hasEnoughInventory {
@@ -228,7 +228,8 @@ struct RecipeDetailView: View {
             if !recipe.hasEnoughInventory {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                    Text("\(recipe.insufficientCount) ingredient\(recipe.insufficientCount > 1 ? "s" : "") with insufficient stock")
+                    let pluralSuffix = recipe.insufficientCount > 1 ? "s" : ""
+                    Text(String(localized: "\(recipe.insufficientCount) ingredient\(pluralSuffix) with insufficient stock"))
                 }
                 .font(.caption)
                 .foregroundStyle(.orange)
@@ -267,7 +268,7 @@ struct RecipeDetailView: View {
                     .foregroundStyle(.secondary)
 
                 if !hasStock {
-                    Text("Stock: \(ingredient.inventoryItem.stock.clean) \(ingredient.inventoryItem.displaySymbol)")
+                    Text(String(localized: "Stock: \(ingredient.inventoryItem.stock.clean) \(ingredient.inventoryItem.displaySymbol)"))
                         .font(.caption2)
                         .foregroundStyle(Color.orange)
                 } else if cost > 0 {
@@ -281,7 +282,7 @@ struct RecipeDetailView: View {
 
     private func notesSection(_ recipe: RecipeEntity) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Notes")
+            Text(String(localized: "Notes"))
                 .font(.title2.bold())
 
             Text(recipe.note)

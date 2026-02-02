@@ -2,11 +2,9 @@ import Foundation
 import SwiftData
 
 enum AppRoute: Hashable {
-    case recipeDetail(id: PersistentIdentifier)
-    case recipeEdit(id: PersistentIdentifier)
     case recipeAdd
-
-    // Manufacturing
+    case recipeEdit(id: PersistentIdentifier)
+    case recipeDetail(id: PersistentIdentifier)
     case manufacturingProcess(id: PersistentIdentifier)
     case manufacturingDetail(id: PersistentIdentifier)
 }

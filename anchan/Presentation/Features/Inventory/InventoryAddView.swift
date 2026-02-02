@@ -19,17 +19,17 @@ struct InventoryAddView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Name", text: $viewModel.name)
+                    TextField(String(localized: "Name"), text: $viewModel.name)
                         .textInputAutocapitalization(.words)
 
-                    TextField("Category (optional)", text: $viewModel.category)
+                    TextField(String(localized: "Category (optional)"), text: $viewModel.category)
                         .textInputAutocapitalization(.words)
                 } header: {
-                    Text("Item Details")
+                    Text(String(localized: "Item Details"))
                 }
 
                 Section {
-                    Picker("Unit", selection: $viewModel.unitSymbol) {
+                    Picker(String(localized: "Unit"), selection: $viewModel.unitSymbol) {
                         // Built-in units
                         ForEach(InventoryUnit.allCases) { unit in
                             Text(unit.displayName).tag(unit.rawValue)
@@ -45,7 +45,7 @@ struct InventoryAddView: View {
                     }
 
                     HStack {
-                        Text("Price per \(viewModel.displaySymbol)")
+                        Text(String(localized: "Price per \(viewModel.displaySymbol)"))
                         Spacer()
                         TextField("0", text: $viewModel.unitPrice)
                             .keyboardType(.decimalPad)
@@ -54,7 +54,7 @@ struct InventoryAddView: View {
                     }
 
                     HStack {
-                        Text("Current stock")
+                        Text(String(localized: "Current stock"))
                         Spacer()
                         TextField("0", text: $viewModel.stock)
                             .keyboardType(.decimalPad)
@@ -64,12 +64,12 @@ struct InventoryAddView: View {
                             .foregroundStyle(.secondary)
                     }
                 } header: {
-                    Text("Unit & Pricing")
+                    Text(String(localized: "Unit & Pricing"))
                 }
 
                 Section {
                     HStack {
-                        Text("Minimum stock")
+                        Text(String(localized: "Minimum stock"))
                         Spacer()
                         TextField("0", text: $viewModel.minStock)
                             .keyboardType(.decimalPad)
@@ -79,9 +79,9 @@ struct InventoryAddView: View {
                             .foregroundStyle(.secondary)
                     }
                 } header: {
-                    Text("Restock Alert")
+                    Text(String(localized: "Restock Alert"))
                 } footer: {
-                    Text("Get notified when stock falls below this level")
+                    Text(String(localized: "Get notified when stock falls below this level"))
                 }
 
                 if viewModel.isEditing {
@@ -94,24 +94,24 @@ struct InventoryAddView: View {
                         } label: {
                             HStack {
                                 Spacer()
-                                Text("Delete Item")
+                                Text(String(localized: "Delete Item"))
                                 Spacer()
                             }
                         }
                     }
                 }
             }
-            .navigationTitle(viewModel.isEditing ? "Edit Item" : "New Item")
+            .navigationTitle(viewModel.isEditing ? String(localized: "Edit Item") : String(localized: "New Item"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(String(localized: "Cancel")) {
                         dismiss()
                     }
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(String(localized: "Save")) {
                         viewModel.saveItem {
                             onSave?()
                             dismiss()

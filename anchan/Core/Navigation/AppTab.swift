@@ -8,10 +8,10 @@ enum AppTab: Hashable {
 
     var title: String {
         switch self {
-        case .home: return "Home"
-        case .recipe: return "Recipe"
-        case .inventory: return "Inventory"
-        case .setting: return "Setting"
+        case .home: return String(localized: "Home")
+        case .recipe: return String(localized: "Recipe")
+        case .inventory: return String(localized: "Inventory")
+        case .setting: return String(localized: "Setting")
         }
     }
 

@@ -42,18 +42,18 @@ struct RecipeEditView: View {
                 deleteSection
             }
         }
-        .navigationTitle(viewModel.isEditing ? "Edit Recipe" : "New Recipe")
+        .navigationTitle(viewModel.isEditing ? String(localized: "Edit Recipe") : String(localized: "New Recipe"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button(String(localized: "Cancel")) {
                     stackRouter.pop()
                 }
             }
 
             ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
+                Button(String(localized: "Save")) {
                     viewModel.saveRecipe {
                         stackRouter.pop()
                     }
@@ -72,15 +72,15 @@ struct RecipeEditView: View {
                 viewModel.addIngredient(newIngredient)
             }
         }
-        .alert("Delete Recipe", isPresented: $viewModel.showDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
+        .alert(String(localized: "Delete Recipe"), isPresented: $viewModel.showDeleteAlert) {
+            Button(String(localized: "Cancel"), role: .cancel) { }
+            Button(String(localized: "Delete"), role: .destructive) {
                 viewModel.deleteRecipe {
                     stackRouter.popToRoot()
                 }
             }
         } message: {
-            Text("Are you sure you want to delete this recipe? This action cannot be undone.")
+            Text(String(localized: "Are you sure you want to delete this recipe? This action cannot be undone."))
         }
         .onAppear {
             viewModel.setup(modelContext: modelContext, recipeId: id)
@@ -91,29 +91,29 @@ struct RecipeEditView: View {
 
     private var basicInfoSection: some View {
         Section {
-            TextField("Recipe Name", text: $viewModel.name)
+            TextField(String(localized: "Recipe Name"), text: $viewModel.name)
                 .textInputAutocapitalization(.words)
 
-            TextField("Category (optional)", text: $viewModel.category)
+            TextField(String(localized: "Category (optional)"), text: $viewModel.category)
                 .textInputAutocapitalization(.words)
 
-            TextField("Notes (optional)", text: $viewModel.note, axis: .vertical)
+            TextField(String(localized: "Notes (optional)"), text: $viewModel.note, axis: .vertical)
                 .lineLimit(2...4)
         } header: {
-            Text("Basic Info")
+            Text(String(localized: "Basic Info"))
         }
     }
 
     private var batchSection: some View {
         Section {
-            Stepper("Batch Size: \(viewModel.batchSize)", value: $viewModel.batchSize, in: 1...1000)
+            Stepper(String(localized: "Batch Size") + ": \(viewModel.batchSize)", value: $viewModel.batchSize, in: 1...1000)
 
-            TextField("Unit (e.g., pcs, bottles)", text: $viewModel.batchUnit)
+            TextField(String(localized: "Unit (e.g., pcs, bottles)"), text: $viewModel.batchUnit)
                 .textInputAutocapitalization(.never)
 
             if viewModel.totalCost > 0 && viewModel.batchSize > 0 {
                 HStack {
-                    Text("Cost per \(viewModel.batchUnit)")
+                    Text(String(localized: "Cost per \(viewModel.batchUnit)"))
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text("฿\((viewModel.totalCost / Double(viewModel.batchSize)).clean)")
@@ -121,16 +121,16 @@ struct RecipeEditView: View {
                 }
             }
         } header: {
-            Text("Batch Output")
+            Text(String(localized: "Batch Output"))
         } footer: {
-            Text("How many units does one batch of this recipe produce?")
+            Text(String(localized: "How many units does one batch of this recipe produce?"))
         }
     }
 
     private var ingredientsSection: some View {
         Section {
             if viewModel.ingredients.isEmpty {
-                Text("No ingredients added")
+                Text(String(localized: "No ingredients added"))
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(viewModel.ingredients.indices, id: \.self) { index in
@@ -141,7 +141,7 @@ struct RecipeEditView: View {
 
                 if viewModel.totalCost > 0 {
                     HStack {
-                        Text("Estimated Cost")
+                        Text(String(localized: "Estimated Cost"))
                             .fontWeight(.medium)
                         Spacer()
                         Text("฿\(viewModel.totalCost.clean)")
@@ -153,17 +153,17 @@ struct RecipeEditView: View {
             Button {
                 viewModel.isAddingIngredient = true
             } label: {
-                Label("Add Ingredient", systemImage: "plus.circle.fill")
+                Label(String(localized: "Add Ingredient"), systemImage: "plus.circle.fill")
             }
         } header: {
-            Text("Ingredients")
+            Text(String(localized: "Ingredients"))
         }
     }
 
     private var stepsSection: some View {
         Section {
             if viewModel.steps.isEmpty {
-                Text("No steps added")
+                Text(String(localized: "No steps added"))
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(viewModel.steps.indices, id: \.self) { index in
@@ -177,7 +177,7 @@ struct RecipeEditView: View {
 
                 if viewModel.totalTime > 0 {
                     HStack {
-                        Text("Total Time")
+                        Text(String(localized: "Total Time"))
                             .fontWeight(.medium)
                         Spacer()
                         Text(viewModel.totalTime.formattedTime)
@@ -189,10 +189,10 @@ struct RecipeEditView: View {
             Button {
                 viewModel.isAddingStep = true
             } label: {
-                Label("Add Step", systemImage: "plus.circle.fill")
+                Label(String(localized: "Add Step"), systemImage: "plus.circle.fill")
             }
         } header: {
-            Text("Steps")
+            Text(String(localized: "Steps"))
         }
     }
 
@@ -203,7 +203,7 @@ struct RecipeEditView: View {
             } label: {
                 HStack {
                     Spacer()
-                    Text("Delete Recipe")
+                    Text(String(localized: "Delete Recipe"))
                     Spacer()
                 }
             }
@@ -324,11 +324,11 @@ private struct AddIngredientSheet: View {
             Form {
                 Section {
                     if inventoryItems.isEmpty {
-                        Text("No inventory items available")
+                        Text(String(localized: "No inventory items available"))
                             .foregroundStyle(.secondary)
                     } else {
-                        Picker("Select Item", selection: $selectedInventory) {
-                            Text("Select an item").tag(nil as InventoryEntity?)
+                        Picker(String(localized: "Select Item"), selection: $selectedInventory) {
+                            Text(String(localized: "Select an item")).tag(nil as InventoryEntity?)
                             ForEach(filteredItems, id: \.persistentModelID) { item in
                                 Text(item.name).tag(item as InventoryEntity?)
                             }
@@ -340,21 +340,21 @@ private struct AddIngredientSheet: View {
                         }
                     }
                 } header: {
-                    Text("Inventory Item")
+                    Text(String(localized: "Inventory Item"))
                 }
 
                 if selectedInventory != nil {
                     Section {
                         HStack {
-                            Text("Quantity")
+                            Text(String(localized: "Quantity"))
                             Spacer()
-                            TextField("Amount", value: $quantity, format: .number)
+                            TextField(String(localized: "Amount"), value: $quantity, format: .number)
                                 .keyboardType(.decimalPad)
                                 .multilineTextAlignment(.trailing)
                                 .frame(width: 100)
                         }
 
-                        Picker("Unit", selection: $unitSymbol) {
+                        Picker(String(localized: "Unit"), selection: $unitSymbol) {
                             ForEach(InventoryUnit.allCases) { unit in
                                 Text(unit.displayName).tag(unit.rawValue)
                             }
@@ -367,28 +367,28 @@ private struct AddIngredientSheet: View {
                             }
                         }
                     } header: {
-                        Text("Amount")
+                        Text(String(localized: "Amount"))
                     }
 
                     Section {
-                        TextField("Note (optional)", text: $note, axis: .vertical)
+                        TextField(String(localized: "Note (optional)"), text: $note, axis: .vertical)
                             .lineLimit(2...3)
                     } header: {
-                        Text("Additional Info")
+                        Text(String(localized: "Additional Info"))
                     }
                 }
             }
-            .navigationTitle("Add Ingredient")
+            .navigationTitle(String(localized: "Add Ingredient"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(String(localized: "Cancel")) {
                         dismiss()
                     }
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
+                    Button(String(localized: "Add")) {
                         if let inventory = selectedInventory {
                             let ingredient = IngredientInput(
                                 inventoryId: inventory.persistentModelID,
@@ -438,32 +438,32 @@ private struct AddStepSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Step Title", text: $title)
+                    TextField(String(localized: "Step Title"), text: $title)
                         .textInputAutocapitalization(.words)
 
-                    TextField("Description (optional)", text: $note, axis: .vertical)
+                    TextField(String(localized: "Description (optional)"), text: $note, axis: .vertical)
                         .lineLimit(2...4)
                 } header: {
-                    Text("Step Info")
+                    Text(String(localized: "Step Info"))
                 }
 
                 Section {
-                    TimePickerView(title: "Duration", minutes: $time)
+                    TimePickerView(title: String(localized: "Duration"), minutes: $time)
                 } header: {
-                    Text("Time")
+                    Text(String(localized: "Time"))
                 }
             }
-            .navigationTitle("Add Step")
+            .navigationTitle(String(localized: "Add Step"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(String(localized: "Cancel")) {
                         dismiss()
                     }
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
+                    Button(String(localized: "Add")) {
                         let step = StepInput(
                             title: title.trimmingCharacters(in: .whitespaces),
                             note: note,

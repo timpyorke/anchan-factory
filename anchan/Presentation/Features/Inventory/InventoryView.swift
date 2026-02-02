@@ -7,7 +7,7 @@ struct InventoryView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            AppBarView(title: "Inventory") {
+            AppBarView(title: String(localized: "Inventory")) {
                 EmptyView()
             } trailing: {
                 Button {
@@ -45,14 +45,14 @@ struct InventoryView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("No Items", systemImage: "archivebox")
+            Label(String(localized: "No Items"), systemImage: "archivebox")
         } description: {
-            Text("Add your first inventory item to get started.")
+            Text(String(localized: "Add your first inventory item to get started."))
         } actions: {
             Button {
                 viewModel.isShowingAddSheet = true
             } label: {
-                Text("Add Item")
+                Text(String(localized: "Add Item"))
                     .fontWeight(.semibold)
             }
             .buttonStyle(.borderedProminent)
@@ -74,7 +74,7 @@ struct InventoryView: View {
             .onDelete(perform: viewModel.deleteItems)
         }
         .listStyle(.plain)
-        .searchable(text: $viewModel.searchText, prompt: "Search inventory")
+        .searchable(text: $viewModel.searchText, prompt: String(localized: "Search inventory"))
     }
 }
 

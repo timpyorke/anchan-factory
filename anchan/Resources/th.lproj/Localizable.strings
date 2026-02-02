@@ -1,5 +1,6 @@
 /* Settings */
 "Settings" = "ตั้งค่า";
+"Setting" = "ตั้งค่า";
 "Appearance" = "การแสดงผล";
 "Theme" = "ธีม";
 "System" = "ระบบ";
@@ -38,8 +39,14 @@
 "Save" = "บันทึก";
 "OK" = "ตกลง";
 "Delete" = "ลบ";
+"Done" = "เสร็จสิ้น";
+"Add" = "เพิ่ม";
+"Edit" = "แก้ไข";
+"Favorite" = "ชื่นชอบ";
+"Unfavorite" = "ยกเลิกชื่นชอบ";
 
 /* Tabs */
+"Home" = "หน้าแรก";
 "Manufacturing" = "การผลิต";
 "Recipe" = "สูตร";
 "Inventory" = "สินค้าคงคลัง";
@@ -54,6 +61,10 @@
 "Low Stock" = "สินค้าใกล้หมด";
 "View All" = "ดูทั้งหมด";
 "Restock" = "เติมสต็อก";
+"Insufficient Inventory" = "วัตถุดิบไม่เพียงพอ";
+"Start Anyway" = "เริ่มต้นต่อไป";
+"The following ingredients don't have enough stock:" = "วัตถุดิบต่อไปนี้มีสต็อกไม่เพียงพอ:";
+"See All" = "ดูทั้งหมด";
 
 /* Recipe */
 "Recipes" = "สูตรอาหาร";
@@ -74,6 +85,22 @@
 "Total Time" = "เวลาทั้งหมด";
 "Delete Recipe" = "ลบสูตร";
 "Are you sure you want to delete this recipe? This action cannot be undone." = "คุณแน่ใจหรือไม่ว่าต้องการลบสูตรนี้? ไม่สามารถยกเลิกได้";
+"No Recipes" = "ไม่มีสูตร";
+"Add your first recipe to get started." = "เพิ่มสูตรแรกของคุณเพื่อเริ่มต้น";
+"Add Recipe" = "เพิ่มสูตร";
+"Search recipes" = "ค้นหาสูตร";
+"No ingredients added" = "ยังไม่ได้เพิ่มวัตถุดิบ";
+"No steps added" = "ยังไม่ได้เพิ่มขั้นตอน";
+"Recipe Not Found" = "ไม่พบสูตร";
+"Are you sure you want to delete this recipe?" = "คุณแน่ใจหรือไม่ว่าต้องการลบสูตรนี้?";
+"Batch Cost" = "ต้นทุนต่อชุด";
+"Cost per %@" = "ต้นทุนต่อ %@";
+"Select Recipe" = "เลือกสูตร";
+"Create a recipe first to start manufacturing" = "สร้างสูตรก่อนเพื่อเริ่มผลิต";
+"%@ ingredient%@ insufficient" = "วัตถุดิบ %@ รายการ%@ไม่เพียงพอ";
+"%@ ingredient%@ with insufficient stock" = "วัตถุดิบ %@ รายการ%@มีสต็อกไม่เพียงพอ";
+"Stock: %@ %@" = "สต็อก: %@ %@";
+"Notes" = "บันทึก";
 
 /* Inventory */
 "New Item" = "รายการใหม่";
@@ -87,18 +114,58 @@
 "Minimum stock" = "สต็อกขั้นต่ำ";
 "Get notified when stock falls below this level" = "รับการแจ้งเตือนเมื่อสต็อกต่ำกว่าระดับนี้";
 "Delete Item" = "ลบรายการ";
+"No Items" = "ไม่มีรายการ";
+"Add your first inventory item to get started." = "เพิ่มรายการสินค้าคงคลังแรกของคุณเพื่อเริ่มต้น";
+"Add Item" = "เพิ่มรายการ";
+"Search inventory" = "ค้นหาสินค้าคงคลัง";
+"Price per %@" = "ราคาต่อ %@";
+
+/* Inventory Units */
+"Grams (g)" = "กรัม (g)";
+"Kilograms (kg)" = "กิโลกรัม (kg)";
+"Milliliters (ml)" = "มิลลิลิตร (ml)";
+"Liters (l)" = "ลิตร (l)";
+"Pieces (pcs)" = "ชิ้น (pcs)";
 
 /* Manufacturing */
 "Batch Number" = "หมายเลขชุด";
+"Batch" = "ชุด";
 "Batches" = "จำนวนชุด";
 "Total Units" = "จำนวนหน่วยทั้งหมด";
 "Total Cost" = "ต้นทุนรวม";
 "Cost per Unit" = "ต้นทุนต่อหน่วย";
 "Completed" = "เสร็จสิ้น";
 "Step" = "ขั้นตอน";
+"Step %@ of %@" = "ขั้นตอน %@ จาก %@";
 "Complete Step" = "เสร็จสิ้นขั้นตอน";
 "Manufacturing Complete!" = "การผลิตเสร็จสิ้น!";
 "All steps have been completed successfully." = "ขั้นตอนทั้งหมดเสร็จสมบูรณ์";
 "Cancel Manufacturing" = "ยกเลิกการผลิต";
 "Are you sure you want to cancel this manufacturing process?" = "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการผลิตนี้?";
 "Continue" = "ดำเนินการต่อ";
+"Not Found" = "ไม่พบ";
+"Ingredients Needed" = "วัตถุดิบที่ต้องการ";
+"%@ low" = "เหลือน้อย %@ รายการ";
+"Next Step" = "ขั้นตอนถัดไป";
+"Complete Manufacturing" = "เสร็จสิ้นการผลิต";
+
+/* Recipe Edit */
+"Unit (e.g., pcs, bottles)" = "หน่วย (เช่น ชิ้น, ขวด)";
+"Inventory Item" = "รายการสินค้าคงคลัง";
+"No inventory items available" = "ไม่มีรายการสินค้าคงคลัง";
+"Select Item" = "เลือกรายการ";
+"Select an item" = "เลือกรายการ";
+"Amount" = "จำนวน";
+"Quantity" = "ปริมาณ";
+"Note (optional)" = "บันทึก (ไม่บังคับ)";
+"Additional Info" = "ข้อมูลเพิ่มเติม";
+"Step Info" = "ข้อมูลขั้นตอน";
+"Step Title" = "ชื่อขั้นตอน";
+"Description (optional)" = "รายละเอียด (ไม่บังคับ)";
+"Time" = "เวลา";
+"Duration" = "ระยะเวลา";
+
+/* Formatting */
+"steps" = "ขั้นตอน";
+"ingredient" = "วัตถุดิบ";
+"ingredients" = "วัตถุดิบ";

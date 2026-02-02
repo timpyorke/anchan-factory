@@ -18,16 +18,16 @@ struct ManufacturingView: View {
                     stepView(manufacturing)
                 }
             } else {
-                ContentUnavailableView("Not Found", systemImage: "exclamationmark.triangle")
+                ContentUnavailableView(String(localized: "Not Found"), systemImage: "exclamationmark.triangle")
             }
         }
-        .navigationTitle(viewModel.manufacturing?.recipe.name ?? "Manufacturing")
+        .navigationTitle(viewModel.manufacturing?.recipe.name ?? String(localized: "Manufacturing"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 if viewModel.manufacturing?.isCompleted == false {
-                    Button("Cancel") {
+                    Button(String(localized: "Cancel")) {
                         viewModel.showCancelAlert = true
                     }
                 }
@@ -35,29 +35,29 @@ struct ManufacturingView: View {
 
             ToolbarItem(placement: .confirmationAction) {
                 if viewModel.manufacturing?.isCompleted == true {
-                    Button("Done") {
+                    Button(String(localized: "Done")) {
                         stackRouter.pop()
                     }
                     .fontWeight(.semibold)
                 }
             }
         }
-        .alert("Cancel Manufacturing", isPresented: $viewModel.showCancelAlert) {
-            Button("Continue", role: .cancel) { }
-            Button("Cancel", role: .destructive) {
+        .alert(String(localized: "Cancel Manufacturing"), isPresented: $viewModel.showCancelAlert) {
+            Button(String(localized: "Continue"), role: .cancel) { }
+            Button(String(localized: "Cancel"), role: .destructive) {
                 viewModel.cancelManufacturing {
                     stackRouter.pop()
                 }
             }
         } message: {
-            Text("Are you sure you want to cancel this manufacturing process?")
+            Text(String(localized: "Are you sure you want to cancel this manufacturing process?"))
         }
-        .alert("Manufacturing Complete!", isPresented: $viewModel.showCompletionAlert) {
-            Button("OK") {
+        .alert(String(localized: "Manufacturing Complete!"), isPresented: $viewModel.showCompletionAlert) {
+            Button(String(localized: "OK")) {
                 stackRouter.pop()
             }
         } message: {
-            Text("All steps have been completed successfully.")
+            Text(String(localized: "All steps have been completed successfully."))
         }
         .onAppear {
             viewModel.setup(modelContext: modelContext, id: id)
@@ -89,7 +89,7 @@ struct ManufacturingView: View {
         VStack(spacing: 12) {
             // Batch Number
             HStack {
-                Text("Batch")
+                Text(String(localized: "Batch"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Text("#\(manufacturing.batchNumber)")
@@ -122,7 +122,7 @@ struct ManufacturingView: View {
 
             // Step Counter
             HStack {
-                Text("Step \(manufacturing.currentStepIndex + 1) of \(manufacturing.totalSteps)")
+                Text(String(localized: "Step \(manufacturing.currentStepIndex + 1) of \(manufacturing.totalSteps)"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -137,7 +137,7 @@ struct ManufacturingView: View {
             VStack(alignment: .leading, spacing: 20) {
                 // Step Number Badge
                 HStack {
-                    Text("Step \(manufacturing.currentStepIndex + 1)")
+                    Text(String(localized: "Step") + " \(manufacturing.currentStepIndex + 1)")
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(.white)
@@ -178,13 +178,13 @@ struct ManufacturingView: View {
     private func ingredientsCard(_ recipe: RecipeEntity) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Ingredients Needed")
+                Text(String(localized: "Ingredients Needed"))
                     .font(.headline)
 
                 Spacer()
 
                 if !recipe.hasEnoughInventory {
-                    Label("\(recipe.insufficientCount) low", systemImage: "exclamationmark.triangle.fill")
+                    Label(String(localized: "\(recipe.insufficientCount) low"), systemImage: "exclamationmark.triangle.fill")
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
@@ -218,7 +218,7 @@ struct ManufacturingView: View {
                     .foregroundStyle(.secondary)
 
                 if !hasStock {
-                    Text("Stock: \(ingredient.inventoryItem.stock.clean) \(ingredient.inventoryItem.displaySymbol)")
+                    Text(String(localized: "Stock: \(ingredient.inventoryItem.stock.clean) \(ingredient.inventoryItem.displaySymbol)"))
                         .font(.caption2)
                         .foregroundStyle(Color.orange)
                 }
@@ -236,10 +236,10 @@ struct ManufacturingView: View {
                 HStack {
                     if manufacturing.currentStepIndex + 1 >= manufacturing.totalSteps {
                         Image(systemName: "checkmark.circle.fill")
-                        Text("Complete Manufacturing")
+                        Text(String(localized: "Complete Manufacturing"))
                     } else {
                         Image(systemName: "arrow.right.circle.fill")
-                        Text("Next Step")
+                        Text(String(localized: "Next Step"))
                     }
                 }
                 .font(.headline)
@@ -265,7 +265,7 @@ struct ManufacturingView: View {
                 .foregroundStyle(.green)
 
             VStack(spacing: 8) {
-                Text("Manufacturing Complete!")
+                Text(String(localized: "Manufacturing Complete!"))
                     .font(.title.bold())
 
                 Text(manufacturing.recipe.name)
@@ -275,7 +275,7 @@ struct ManufacturingView: View {
 
             if let completedAt = manufacturing.completedAt {
                 VStack(spacing: 4) {
-                    Text("Completed")
+                    Text(String(localized: "Completed"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
 

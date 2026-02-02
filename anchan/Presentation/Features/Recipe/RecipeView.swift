@@ -8,7 +8,7 @@ struct RecipeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            AppBarView(title: "Recipes") {
+            AppBarView(title: String(localized: "Recipes")) {
                 EmptyView()
             } trailing: {
                 Button {
@@ -34,14 +34,14 @@ struct RecipeView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("No Recipes", systemImage: "book")
+            Label(String(localized: "No Recipes"), systemImage: "book")
         } description: {
-            Text("Add your first recipe to get started.")
+            Text(String(localized: "Add your first recipe to get started."))
         } actions: {
             Button {
                 stackRouter.push(.recipeAdd)
             } label: {
-                Text("Add Recipe")
+                Text(String(localized: "Add Recipe"))
                     .fontWeight(.semibold)
             }
             .buttonStyle(.borderedProminent)
@@ -71,7 +71,7 @@ struct RecipeView: View {
             .onDelete(perform: viewModel.deleteRecipes)
         }
         .listStyle(.plain)
-        .searchable(text: $viewModel.searchText, prompt: "Search recipes")
+        .searchable(text: $viewModel.searchText, prompt: String(localized: "Search recipes"))
     }
 }
 
@@ -109,7 +109,7 @@ private struct RecipeRowView: View {
                     }
 
                     if !recipe.steps.isEmpty {
-                        Label("\(recipe.steps.count) steps", systemImage: "list.number")
+                        Label("\(recipe.steps.count) \(String(localized: "steps"))", systemImage: "list.number")
                     }
                 }
                 .font(.caption)
