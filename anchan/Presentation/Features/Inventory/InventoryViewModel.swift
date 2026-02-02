@@ -57,7 +57,8 @@ final class InventoryViewModel {
         case .success(let fetchedItems):
             items = fetchedItems
         case .failure(let error):
-            handleError(error)
+            print("[InventoryViewModel] Failed to load items: \(error)")
+            items = []
         }
     }
 

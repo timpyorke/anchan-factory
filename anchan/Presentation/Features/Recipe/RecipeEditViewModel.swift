@@ -90,7 +90,8 @@ final class RecipeEditViewModel {
                 )
             }
         case .failure(let error):
-            handleError(error)
+            print("[RecipeEditViewModel] Failed to load recipe: \(error)")
+            recipe = nil
         }
     }
 

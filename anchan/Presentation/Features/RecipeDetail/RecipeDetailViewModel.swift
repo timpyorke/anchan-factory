@@ -41,7 +41,8 @@ final class RecipeDetailViewModel {
         case .success(let fetchedRecipe):
             recipe = fetchedRecipe
         case .failure(let error):
-            handleError(error)
+            print("[RecipeDetailViewModel] Failed to load recipe: \(error)")
+            recipe = nil
         }
     }
 

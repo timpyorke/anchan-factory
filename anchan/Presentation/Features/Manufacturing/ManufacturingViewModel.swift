@@ -41,7 +41,8 @@ final class ManufacturingViewModel {
         case .success(let item):
             manufacturing = item
         case .failure(let error):
-            handleError(error)
+            print("[ManufacturingViewModel] Failed to load manufacturing: \(error)")
+            manufacturing = nil
         }
     }
 

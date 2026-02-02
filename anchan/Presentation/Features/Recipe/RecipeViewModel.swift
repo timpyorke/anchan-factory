@@ -50,7 +50,8 @@ final class RecipeViewModel {
         case .success(let items):
             recipes = items
         case .failure(let error):
-            handleError(error)
+            print("[RecipeViewModel] Failed to load recipes: \(error)")
+            recipes = []
         }
     }
 

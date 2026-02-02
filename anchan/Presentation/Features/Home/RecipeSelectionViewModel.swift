@@ -49,7 +49,8 @@ final class RecipeSelectionViewModel {
         case .success(let items):
             recipes = items
         case .failure(let error):
-            handleError(error)
+            print("[RecipeSelectionViewModel] Failed to load recipes: \(error)")
+            recipes = []
         }
     }
 

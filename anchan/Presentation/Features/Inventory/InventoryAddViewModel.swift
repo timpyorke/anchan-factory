@@ -69,7 +69,8 @@ final class InventoryAddViewModel {
         case .success(let units):
             customUnits = units
         case .failure(let error):
-            handleError(error)
+            print("[InventoryAddViewModel] Failed to load custom units: \(error)")
+            customUnits = []
         }
     }
 

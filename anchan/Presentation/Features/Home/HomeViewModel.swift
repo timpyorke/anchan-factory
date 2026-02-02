@@ -47,33 +47,36 @@ final class HomeViewModel {
         isLoading = true
         defer { isLoading = false }
 
-        // Fetch active manufacturing
+        // Fetch active manufacturing (silent fail on error)
         if let result = manufacturingRepository?.fetchActive() {
             switch result {
             case .success(let items):
                 activeManufacturing = items
             case .failure(let error):
-                handleError(error)
+                print("[HomeViewModel] Failed to load active manufacturing: \(error)")
+                activeManufacturing = []
             }
         }
 
-        // Fetch completed manufacturing
+        // Fetch completed manufacturing (silent fail on error)
         if let result = manufacturingRepository?.fetchCompleted() {
             switch result {
             case .success(let items):
                 completedManufacturing = items
             case .failure(let error):
-                handleError(error)
+                print("[HomeViewModel] Failed to load completed manufacturing: \(error)")
+                completedManufacturing = []
             }
         }
 
-        // Fetch inventory
+        // Fetch inventory (silent fail on error)
         if let result = inventoryRepository?.fetchAll() {
             switch result {
             case .success(let items):
                 allInventory = items
             case .failure(let error):
-                handleError(error)
+                print("[HomeViewModel] Failed to load inventory: \(error)")
+                allInventory = []
             }
         }
     }
