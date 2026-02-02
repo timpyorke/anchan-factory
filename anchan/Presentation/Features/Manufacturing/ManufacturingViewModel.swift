@@ -60,6 +60,11 @@ final class ManufacturingViewModel {
         let isCompleted = manufacturing.isCompleted
         print("[ManufacturingViewModel] After completion - isCompleted: \(isCompleted)")
 
+        // Deduct inventory if completed
+        if isCompleted {
+            deductInventory(for: manufacturing)
+        }
+
         // Save the changes to the database
         switch repository.update() {
         case .success:
@@ -71,6 +76,23 @@ final class ManufacturingViewModel {
             print("[ManufacturingViewModel] ❌ Failed to save: \(error)")
             handleError(error)
         }
+    }
+
+    private func deductInventory(for manufacturing: ManufacturingEntity) {
+        print("[ManufacturingViewModel] 📦 Deducting inventory for \(manufacturing.quantity) batch(es)")
+
+        let recipe = manufacturing.recipe
+        for ingredient in recipe.ingredients {
+            let quantityToDeduct = ingredient.quantityInBaseUnit * Double(manufacturing.quantity)
+            let inventoryItem = ingredient.inventoryItem
+            let oldStock = inventoryItem.stock
+
+            inventoryItem.stock -= quantityToDeduct
+
+            print("[ManufacturingViewModel]   - \(inventoryItem.name): \(oldStock) → \(inventoryItem.stock) \(inventoryItem.displaySymbol) (-\(quantityToDeduct))")
+        }
+
+        print("[ManufacturingViewModel] ✅ Inventory deducted successfully")
     }
 
     func cancelManufacturing(onComplete: () -> Void) {
