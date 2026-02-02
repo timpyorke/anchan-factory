@@ -11,6 +11,12 @@ final class RecipeSelectionViewModel {
     private(set) var recipes: [RecipeEntity] = []
     var searchText: String = ""
 
+    // MARK: - UI State
+
+    var isLoading = false
+    var errorMessage: String?
+    var showError = false
+
     // MARK: - Dependencies
 
     private var repository: RecipeRepository?
@@ -34,6 +40,23 @@ final class RecipeSelectionViewModel {
     // MARK: - Actions
 
     func loadRecipes() {
-        recipes = repository?.fetchAll() ?? []
+        guard let repository else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        switch repository.fetchAll() {
+        case .success(let items):
+            recipes = items
+        case .failure(let error):
+            handleError(error)
+        }
+    }
+
+    // MARK: - Error Handling
+
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }

@@ -47,8 +47,8 @@ struct HomeView: View {
                 viewModel.selectedRecipe = nil
             }
             Button(String(localized: "Start Anyway"), role: .destructive) {
-                if let recipe = viewModel.selectedRecipe {
-                    let id = viewModel.startManufacturing(with: recipe)
+                if let recipe = viewModel.selectedRecipe,
+                   let id = viewModel.startManufacturing(with: recipe) {
                     stackRouter.push(.manufacturingProcess(id: id))
                     viewModel.selectedRecipe = nil
                 }
@@ -185,8 +185,9 @@ struct HomeView: View {
 
     private func handleRecipeSelection(_ recipe: RecipeEntity) {
         if viewModel.handleRecipeSelection(recipe) {
-            let id = viewModel.startManufacturing(with: recipe)
-            stackRouter.push(.manufacturingProcess(id: id))
+            if let id = viewModel.startManufacturing(with: recipe) {
+                stackRouter.push(.manufacturingProcess(id: id))
+            }
         } else {
             viewModel.showInsufficientAlert = true
         }
