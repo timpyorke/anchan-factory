@@ -5,33 +5,13 @@ struct InventoryAddView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @Query(sort: \CustomUnitEntity.name)
-    private var customUnits: [CustomUnitEntity]
-
-    @State private var name: String = ""
-    @State private var category: String = ""
-    @State private var unitSymbol: String = "g"
-    @State private var unitPrice: String = ""
-    @State private var stock: String = ""
-    @State private var minStock: String = ""
-
-    private let editingItem: InventoryEntity?
+    @State private var viewModel: InventoryAddViewModel
     var onSave: (() -> Void)?
-
-    private var isEditing: Bool { editingItem != nil }
-
-    private var canSave: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-
-    private var displaySymbol: String {
-        unitSymbol.uppercased()
-    }
 
     // MARK: - Init
 
     init(editingItem: InventoryEntity? = nil, onSave: (() -> Void)? = nil) {
-        self.editingItem = editingItem
+        _viewModel = State(initialValue: InventoryAddViewModel(editingItem: editingItem))
         self.onSave = onSave
     }
 
@@ -39,35 +19,35 @@ struct InventoryAddView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Name", text: $name)
+                    TextField("Name", text: $viewModel.name)
                         .textInputAutocapitalization(.words)
 
-                    TextField("Category (optional)", text: $category)
+                    TextField("Category (optional)", text: $viewModel.category)
                         .textInputAutocapitalization(.words)
                 } header: {
                     Text("Item Details")
                 }
 
                 Section {
-                    Picker("Unit", selection: $unitSymbol) {
+                    Picker("Unit", selection: $viewModel.unitSymbol) {
                         // Built-in units
                         ForEach(InventoryUnit.allCases) { unit in
                             Text(unit.displayName).tag(unit.rawValue)
                         }
 
                         // Custom units
-                        if !customUnits.isEmpty {
+                        if !viewModel.customUnits.isEmpty {
                             Divider()
-                            ForEach(customUnits, id: \.persistentModelID) { unit in
+                            ForEach(viewModel.customUnits, id: \.persistentModelID) { unit in
                                 Text("\(unit.name) (\(unit.symbol.uppercased()))").tag(unit.symbol)
                             }
                         }
                     }
 
                     HStack {
-                        Text("Price per \(displaySymbol)")
+                        Text("Price per \(viewModel.displaySymbol)")
                         Spacer()
-                        TextField("0", text: $unitPrice)
+                        TextField("0", text: $viewModel.unitPrice)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 100)
@@ -76,11 +56,11 @@ struct InventoryAddView: View {
                     HStack {
                         Text("Current stock")
                         Spacer()
-                        TextField("0", text: $stock)
+                        TextField("0", text: $viewModel.stock)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
-                        Text(displaySymbol)
+                        Text(viewModel.displaySymbol)
                             .foregroundStyle(.secondary)
                     }
                 } header: {
@@ -91,11 +71,11 @@ struct InventoryAddView: View {
                     HStack {
                         Text("Minimum stock")
                         Spacer()
-                        TextField("0", text: $minStock)
+                        TextField("0", text: $viewModel.minStock)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
-                        Text(displaySymbol)
+                        Text(viewModel.displaySymbol)
                             .foregroundStyle(.secondary)
                     }
                 } header: {
@@ -104,10 +84,13 @@ struct InventoryAddView: View {
                     Text("Get notified when stock falls below this level")
                 }
 
-                if isEditing {
+                if viewModel.isEditing {
                     Section {
                         Button(role: .destructive) {
-                            deleteItem()
+                            viewModel.deleteItem {
+                                onSave?()
+                                dismiss()
+                            }
                         } label: {
                             HStack {
                                 Spacer()
@@ -118,7 +101,7 @@ struct InventoryAddView: View {
                     }
                 }
             }
-            .navigationTitle(isEditing ? "Edit Item" : "New Item")
+            .navigationTitle(viewModel.isEditing ? "Edit Item" : "New Item")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -129,69 +112,21 @@ struct InventoryAddView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        saveItem()
+                        viewModel.saveItem {
+                            onSave?()
+                            dismiss()
+                        }
                     }
                     .fontWeight(.semibold)
-                    .disabled(!canSave)
+                    .disabled(!viewModel.canSave)
                 }
             }
             .onAppear {
-                loadEditingItem()
+                viewModel.setup(modelContext: modelContext)
             }
         }
     }
 
-    // MARK: - Actions
-
-    private func loadEditingItem() {
-        guard let item = editingItem else { return }
-        name = item.name
-        category = item.category ?? ""
-        unitSymbol = item.unitSymbol
-        unitPrice = item.unitPrice > 0 ? String(item.unitPrice) : ""
-        stock = item.stock > 0 ? String(item.stock) : ""
-        minStock = item.minStock > 0 ? String(item.minStock) : ""
-    }
-
-    private func saveItem() {
-        let price = Double(unitPrice) ?? 0
-        let stockValue = Double(stock) ?? 0
-        let minStockValue = Double(minStock) ?? 0
-
-        if let item = editingItem {
-            // Update existing
-            item.name = name.trimmingCharacters(in: .whitespaces)
-            item.category = category.isEmpty ? nil : category.trimmingCharacters(in: .whitespaces)
-            item.unitSymbol = unitSymbol
-            item.unitPrice = price
-            item.stock = stockValue
-            item.minStock = minStockValue
-        } else {
-            // Create new
-            let item = InventoryEntity(
-                name: name.trimmingCharacters(in: .whitespaces),
-                unitSymbol: unitSymbol,
-                unitPrice: price,
-                stock: stockValue,
-                minStock: minStockValue
-            )
-            if !category.isEmpty {
-                item.category = category.trimmingCharacters(in: .whitespaces)
-            }
-            modelContext.insert(item)
-        }
-
-        onSave?()
-        dismiss()
-    }
-
-    private func deleteItem() {
-        if let item = editingItem {
-            modelContext.delete(item)
-        }
-        onSave?()
-        dismiss()
-    }
 }
 
 #Preview("Add") {

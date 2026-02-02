@@ -8,21 +8,18 @@ struct RecipeDetailView: View {
 
     let id: PersistentIdentifier
 
-    @State private var recipe: RecipeEntity?
-    @State private var showDeleteAlert = false
-
     var body: some View {
         Group {
-            if let recipe {
+            if let recipe = viewModel.recipe {
                 recipeContent(recipe)
             } else {
                 ContentUnavailableView("Recipe Not Found", systemImage: "book")
             }
         }
-        .navigationTitle(recipe?.name ?? "Recipe")
+        .navigationTitle(viewModel.recipe?.name ?? "Recipe")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
-            if recipe != nil {
+            if viewModel.recipe != nil {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button {
@@ -32,18 +29,18 @@ struct RecipeDetailView: View {
                         }
 
                         Button {
-                            recipe?.isFavorite.toggle()
+                            viewModel.toggleFavorite()
                         } label: {
                             Label(
-                                recipe?.isFavorite == true ? "Unfavorite" : "Favorite",
-                                systemImage: recipe?.isFavorite == true ? "heart.slash" : "heart"
+                                viewModel.recipe?.isFavorite == true ? "Unfavorite" : "Favorite",
+                                systemImage: viewModel.recipe?.isFavorite == true ? "heart.slash" : "heart"
                             )
                         }
 
                         Divider()
 
                         Button(role: .destructive) {
-                            showDeleteAlert = true
+                            viewModel.showDeleteAlert = true
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
@@ -53,16 +50,18 @@ struct RecipeDetailView: View {
                 }
             }
         }
-        .alert("Delete Recipe", isPresented: $showDeleteAlert) {
+        .alert("Delete Recipe", isPresented: $viewModel.showDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
-                deleteRecipe()
+                viewModel.deleteRecipe {
+                    stackRouter.pop()
+                }
             }
         } message: {
             Text("Are you sure you want to delete this recipe?")
         }
         .onAppear {
-            loadRecipe()
+            viewModel.setup(modelContext: modelContext, recipeId: id)
         }
     }
 
@@ -293,16 +292,6 @@ struct RecipeDetailView: View {
 
     // MARK: - Actions
 
-    private func loadRecipe() {
-        recipe = modelContext.model(for: id) as? RecipeEntity
-    }
-
-    private func deleteRecipe() {
-        if let recipe {
-            modelContext.delete(recipe)
-        }
-        stackRouter.pop()
-    }
 }
 
 #Preview {

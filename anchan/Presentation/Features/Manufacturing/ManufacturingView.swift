@@ -7,13 +7,11 @@ struct ManufacturingView: View {
 
     let id: PersistentIdentifier
 
-    @State private var manufacturing: ManufacturingEntity?
-    @State private var showCancelAlert = false
-    @State private var showCompletionAlert = false
+    @State private var viewModel = ManufacturingViewModel()
 
     var body: some View {
         Group {
-            if let manufacturing {
+            if let manufacturing = viewModel.manufacturing {
                 if manufacturing.isCompleted {
                     completedView(manufacturing)
                 } else {
@@ -23,20 +21,20 @@ struct ManufacturingView: View {
                 ContentUnavailableView("Not Found", systemImage: "exclamationmark.triangle")
             }
         }
-        .navigationTitle(manufacturing?.recipe.name ?? "Manufacturing")
+        .navigationTitle(viewModel.manufacturing?.recipe.name ?? "Manufacturing")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                if manufacturing?.isCompleted == false {
+                if viewModel.manufacturing?.isCompleted == false {
                     Button("Cancel") {
-                        showCancelAlert = true
+                        viewModel.showCancelAlert = true
                     }
                 }
             }
 
             ToolbarItem(placement: .confirmationAction) {
-                if manufacturing?.isCompleted == true {
+                if viewModel.manufacturing?.isCompleted == true {
                     Button("Done") {
                         stackRouter.pop()
                     }
@@ -44,15 +42,17 @@ struct ManufacturingView: View {
                 }
             }
         }
-        .alert("Cancel Manufacturing", isPresented: $showCancelAlert) {
+        .alert("Cancel Manufacturing", isPresented: $viewModel.showCancelAlert) {
             Button("Continue", role: .cancel) { }
             Button("Cancel", role: .destructive) {
-                cancelManufacturing()
+                viewModel.cancelManufacturing {
+                    stackRouter.pop()
+                }
             }
         } message: {
             Text("Are you sure you want to cancel this manufacturing process?")
         }
-        .alert("Manufacturing Complete!", isPresented: $showCompletionAlert) {
+        .alert("Manufacturing Complete!", isPresented: $viewModel.showCompletionAlert) {
             Button("OK") {
                 stackRouter.pop()
             }
@@ -60,7 +60,7 @@ struct ManufacturingView: View {
             Text("All steps have been completed successfully.")
         }
         .onAppear {
-            loadManufacturing()
+            viewModel.setup(modelContext: modelContext, id: id)
         }
     }
 
@@ -231,7 +231,7 @@ struct ManufacturingView: View {
             Divider()
 
             Button {
-                completeCurrentStep(manufacturing)
+                viewModel.completeCurrentStep()
             } label: {
                 HStack {
                     if manufacturing.currentStepIndex + 1 >= manufacturing.totalSteps {
@@ -295,24 +295,6 @@ struct ManufacturingView: View {
 
     // MARK: - Actions
 
-    private func loadManufacturing() {
-        manufacturing = modelContext.model(for: id) as? ManufacturingEntity
-    }
-
-    private func completeCurrentStep(_ manufacturing: ManufacturingEntity) {
-        manufacturing.completeCurrentStep()
-
-        if manufacturing.isCompleted {
-            showCompletionAlert = true
-        }
-    }
-
-    private func cancelManufacturing() {
-        if let manufacturing {
-            manufacturing.status = .cancelled
-        }
-        stackRouter.pop()
-    }
 }
 
 #Preview {
