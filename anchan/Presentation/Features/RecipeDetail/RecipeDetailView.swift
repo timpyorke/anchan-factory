@@ -60,6 +60,11 @@ struct RecipeDetailView: View {
         } message: {
             Text(String(localized: "Are you sure you want to delete this recipe?"))
         }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK") { }
+        } message: {
+            Text(viewModel.errorMessage ?? "An unknown error occurred")
+        }
         .onAppear {
             viewModel.setup(modelContext: modelContext, recipeId: id)
         }
@@ -135,7 +140,7 @@ struct RecipeDetailView: View {
                 Text(String(localized: "Batch Cost"))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("฿\(recipe.totalCost.clean)")
+                Text(CurrencyFormatter.format(recipe.totalCost))
                     .fontWeight(.medium)
             }
 
@@ -143,7 +148,7 @@ struct RecipeDetailView: View {
                 Text(String(localized: "Cost per \(recipe.batchUnit)"))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("฿\(recipe.costPerUnit.clean)")
+                Text(CurrencyFormatter.format(recipe.costPerUnit))
                     .fontWeight(.semibold)
                     .foregroundStyle(Color.accentColor)
             }
@@ -218,7 +223,7 @@ struct RecipeDetailView: View {
                 Spacer()
 
                 if recipe.totalCost > 0 {
-                    Text("฿\(recipe.totalCost.clean)")
+                    Text(CurrencyFormatter.format(recipe.totalCost))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -264,15 +269,15 @@ struct RecipeDetailView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(ingredient.quantity.clean) \(ingredient.displaySymbol)")
+                Text("\(AppNumberFormatter.format(ingredient.quantity)) \(ingredient.displaySymbol)")
                     .foregroundStyle(.secondary)
 
                 if !hasStock {
-                    Text(String(localized: "Stock: \(ingredient.inventoryItem.stock.clean) \(ingredient.inventoryItem.displaySymbol)"))
+                    Text(String(localized: "Stock: \(AppNumberFormatter.format(ingredient.inventoryItem.stock)) \(ingredient.inventoryItem.displaySymbol)"))
                         .font(.caption2)
                         .foregroundStyle(Color.orange)
                 } else if cost > 0 {
-                    Text("฿\(cost.clean)")
+                    Text(CurrencyFormatter.format(cost))
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }

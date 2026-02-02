@@ -116,7 +116,7 @@ struct RecipeEditView: View {
                     Text(String(localized: "Cost per \(viewModel.batchUnit)"))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text("฿\((viewModel.totalCost / Double(viewModel.batchSize)).clean)")
+                    Text(CurrencyFormatter.format(viewModel.totalCost / Double(viewModel.batchSize)))
                         .fontWeight(.medium)
                 }
             }
@@ -144,7 +144,7 @@ struct RecipeEditView: View {
                         Text(String(localized: "Estimated Cost"))
                             .fontWeight(.medium)
                         Spacer()
-                        Text("฿\(viewModel.totalCost.clean)")
+                        Text(CurrencyFormatter.format(viewModel.totalCost))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -264,7 +264,7 @@ private struct IngredientRowView: View {
                 Text(ingredient.inventoryName)
                     .font(.headline)
 
-                Text("\(ingredient.quantity.clean) \(ingredient.unitSymbol.uppercased())")
+                Text("\(AppNumberFormatter.format(ingredient.quantity)) \(ingredient.unitSymbol.uppercased())")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 

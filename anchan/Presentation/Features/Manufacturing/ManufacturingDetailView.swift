@@ -177,7 +177,7 @@ struct ManufacturingDetailView: View {
                     Text("Total Cost")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text("฿\(manufacturing.totalCost.clean)")
+                    Text(CurrencyFormatter.format(manufacturing.totalCost))
                         .font(.headline)
                         .foregroundStyle(Color.accentColor)
                 }
@@ -188,7 +188,7 @@ struct ManufacturingDetailView: View {
                     Text("Per Unit")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text("฿\(manufacturing.costPerUnit.clean)")
+                    Text(CurrencyFormatter.format(manufacturing.costPerUnit))
                         .font(.headline)
                         .foregroundStyle(.green)
                 }
@@ -344,7 +344,7 @@ struct ManufacturingDetailView: View {
                 Spacer()
 
                 if recipe.totalCost > 0 {
-                    Text("฿\(recipe.totalCost.clean)")
+                    Text(CurrencyFormatter.format(recipe.totalCost))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -361,7 +361,7 @@ struct ManufacturingDetailView: View {
 
                         Spacer()
 
-                        Text("\(ingredient.quantity.clean) \(ingredient.displaySymbol)")
+                        Text("\(AppNumberFormatter.format(ingredient.quantity)) \(ingredient.displaySymbol)")
                             .foregroundStyle(.secondary)
                     }
                 }
