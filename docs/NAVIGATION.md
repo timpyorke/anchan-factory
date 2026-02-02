@@ -8,11 +8,15 @@ The app uses a dual navigation system:
 - **TabRouter** for bottom tab bar navigation
 - **StackRouter** for push/pop navigation within each tab
 
+Both routers use the `@Observable` macro for reactive state management and are injected into the view hierarchy via SwiftUI's `@Environment`.
+
 ## Tab Navigation
 
 ### AppTab
 
 Defines the available tabs in the application.
+
+**File:** `Core/Navigation/AppTab.swift`
 
 ```swift
 enum AppTab: Hashable, CaseIterable {
@@ -27,10 +31,10 @@ enum AppTab: Hashable, CaseIterable {
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `title` | String | Display name for the tab |
+| `title` | String | Localized display name |
 | `icon` | String | SF Symbol name |
 
-**Tab Icons:**
+**Tab Configuration:**
 
 | Tab | Icon | Title |
 |-----|------|-------|
@@ -43,9 +47,11 @@ enum AppTab: Hashable, CaseIterable {
 
 Manages the currently selected tab.
 
+**File:** `Core/Navigation/TabRouter.swift`
+
 ```swift
 @Observable
-class TabRouter {
+final class TabRouter {
     var selectedTab: AppTab = .home
 
     func go(to tab: AppTab) {
@@ -63,9 +69,13 @@ struct MainView: View {
     var body: some View {
         TabView(selection: $tabRouter.selectedTab) {
             HomeView()
+                .tabItem {
+                    Label(AppTab.home.title, systemImage: AppTab.home.icon)
+                }
                 .tag(AppTab.home)
-            // ...
+            // ... other tabs
         }
+        .environment(tabRouter)
     }
 }
 ```
@@ -76,19 +86,35 @@ struct MainView: View {
 
 Defines navigation destinations for detail screens.
 
+**File:** `Core/Navigation/AppRoute.swift`
+
 ```swift
 enum AppRoute: Hashable {
-    case recipeDetail(id: UUID)
+    case recipeAdd
+    case recipeEdit(id: PersistentIdentifier)
+    case recipeDetail(id: PersistentIdentifier)
+    case manufacturingProcess(id: PersistentIdentifier)
+    case manufacturingDetail(id: PersistentIdentifier)
 }
 ```
+
+**Routes:**
+
+| Route | Parameters | Description |
+|-------|------------|-------------|
+| `recipeAdd` | None | Create new recipe |
+| `recipeEdit(id)` | PersistentIdentifier | Edit existing recipe |
+| `recipeDetail(id)` | PersistentIdentifier | View recipe details |
+| `manufacturingProcess(id)` | PersistentIdentifier | Active manufacturing view |
+| `manufacturingDetail(id)` | PersistentIdentifier | Completed manufacturing details |
 
 **Adding New Routes:**
 
 ```swift
 enum AppRoute: Hashable {
-    case recipeDetail(id: UUID)
-    case ingredientDetail(id: UUID)  // New route
-    case editRecipe(id: UUID)        // New route
+    // ... existing routes
+    case newFeatureDetail(id: PersistentIdentifier)
+    case newFeatureEdit(id: PersistentIdentifier)
 }
 ```
 
@@ -96,9 +122,11 @@ enum AppRoute: Hashable {
 
 Manages the navigation stack for detail views.
 
+**File:** `Core/Navigation/StackRouter.swift`
+
 ```swift
 @Observable
-class StackRouter {
+final class StackRouter {
     var path: [AppRoute] = []
 
     func push(_ route: AppRoute) {
@@ -117,6 +145,14 @@ class StackRouter {
 }
 ```
 
+**Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `push(_ route:)` | Navigate to a new screen |
+| `pop()` | Go back one screen |
+| `popToRoot()` | Return to root of current tab |
+
 **Usage:**
 
 ```swift
@@ -127,11 +163,25 @@ struct MainView: View {
         NavigationStack(path: $stackRouter.path) {
             ContentView()
                 .navigationDestination(for: AppRoute.self) { route in
-                    switch route {
-                    case .recipeDetail(let id):
-                        RecipeDetailView(id: id)
-                    }
+                    destinationView(for: route)
                 }
+        }
+        .environment(stackRouter)
+    }
+
+    @ViewBuilder
+    private func destinationView(for route: AppRoute) -> some View {
+        switch route {
+        case .recipeAdd:
+            RecipeEditView(mode: .create)
+        case .recipeEdit(let id):
+            RecipeEditView(mode: .edit(id: id))
+        case .recipeDetail(let id):
+            RecipeDetailView(id: id)
+        case .manufacturingProcess(let id):
+            ManufacturingView(id: id)
+        case .manufacturingDetail(let id):
+            ManufacturingDetailView(id: id)
         }
     }
 }
@@ -146,8 +196,12 @@ struct RecipeView: View {
     @Environment(StackRouter.self) var stackRouter
 
     var body: some View {
-        Button("View Recipe") {
-            stackRouter.push(.recipeDetail(id: recipe.id))
+        List(recipes) { recipe in
+            Button {
+                stackRouter.push(.recipeDetail(id: recipe.persistentModelID))
+            } label: {
+                RecipeRow(recipe: recipe)
+            }
         }
     }
 }
@@ -160,8 +214,17 @@ struct RecipeDetailView: View {
     @Environment(StackRouter.self) var stackRouter
 
     var body: some View {
-        Button("Back") {
-            stackRouter.pop()
+        VStack {
+            // Content
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    stackRouter.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                }
+            }
         }
     }
 }
@@ -174,9 +237,36 @@ struct HomeView: View {
     @Environment(TabRouter.self) var tabRouter
 
     var body: some View {
-        Button("Go to Inventory") {
+        Button("View Inventory") {
             tabRouter.go(to: .inventory)
         }
+    }
+}
+```
+
+### Navigating After an Action
+
+```swift
+struct RecipeEditView: View {
+    @Environment(StackRouter.self) var stackRouter
+
+    func saveRecipe() {
+        // Save logic...
+
+        // Navigate back after saving
+        stackRouter.pop()
+    }
+}
+```
+
+### Deep Navigation
+
+```swift
+struct HomeView: View {
+    @Environment(StackRouter.self) var stackRouter
+
+    func viewManufacturingDetails(batch: ManufacturingEntity) {
+        stackRouter.push(.manufacturingDetail(id: batch.persistentModelID))
     }
 }
 ```
@@ -187,7 +277,6 @@ The `MainView` combines both navigation systems:
 
 ```swift
 struct MainView: View {
-    @State var viewModel = MainViewModel()
     @State var tabRouter = TabRouter()
     @State var stackRouter = StackRouter()
 
@@ -211,10 +300,32 @@ struct MainView: View {
     }
 
     @ViewBuilder
+    private func tabContent(for tab: AppTab) -> some View {
+        switch tab {
+        case .home:
+            HomeView()
+        case .recipe:
+            RecipeView()
+        case .inventory:
+            InventoryView()
+        case .setting:
+            SettingView()
+        }
+    }
+
+    @ViewBuilder
     private func destinationView(for route: AppRoute) -> some View {
         switch route {
+        case .recipeAdd:
+            RecipeEditView(mode: .create)
+        case .recipeEdit(let id):
+            RecipeEditView(mode: .edit(id: id))
         case .recipeDetail(let id):
             RecipeDetailView(id: id)
+        case .manufacturingProcess(let id):
+            ManufacturingView(id: id)
+        case .manufacturingDetail(let id):
+            ManufacturingDetailView(id: id)
         }
     }
 }
@@ -225,25 +336,90 @@ struct MainView: View {
 1. **Use Environment for Router Access**
    ```swift
    @Environment(StackRouter.self) var stackRouter
+   @Environment(TabRouter.self) var tabRouter
    ```
 
 2. **Keep Routes Simple**
-   - Pass only IDs, not full objects
+   - Pass only `PersistentIdentifier`, not full objects
    - Let destination views fetch their own data
 
-3. **Programmatic Navigation**
-   - Use StackRouter methods for imperative navigation
-   - Use NavigationLink for declarative navigation
+3. **Use PersistentIdentifier**
+   - SwiftData's `PersistentIdentifier` is Hashable
+   - Enables proper state restoration
 
-4. **Deep Linking Support**
-   - Routes are Hashable for state restoration
-   - Path can be serialized/deserialized
+4. **Programmatic Navigation**
+   - Use StackRouter methods for imperative navigation
+   - Avoid NavigationLink for complex flows
+
+5. **Pop After Actions**
+   - Pop navigation stack after save/delete operations
+   - Provides clear user feedback
+
+6. **Tab + Stack Coordination**
+   - Both routers work independently
+   - Stack navigation persists across tab switches
+
+## Navigation Flow Examples
+
+### Creating a New Recipe
+
+```
+Home Tab
+    │
+    └── "New Recipe" button
+            │
+            └── stackRouter.push(.recipeAdd)
+                    │
+                    └── RecipeEditView (create mode)
+                            │
+                            └── Save → stackRouter.pop()
+                                    │
+                                    └── Back to Home Tab
+```
+
+### Viewing Manufacturing Details
+
+```
+Home Tab
+    │
+    └── Tap manufacturing batch
+            │
+            └── stackRouter.push(.manufacturingDetail(id: ...))
+                    │
+                    └── ManufacturingDetailView
+                            │
+                            └── Back button → stackRouter.pop()
+                                    │
+                                    └── Back to Home Tab
+```
+
+### Editing a Recipe from Detail
+
+```
+Recipe Tab
+    │
+    └── Tap recipe
+            │
+            └── stackRouter.push(.recipeDetail(id: ...))
+                    │
+                    └── RecipeDetailView
+                            │
+                            └── Edit button
+                                    │
+                                    └── stackRouter.push(.recipeEdit(id: ...))
+                                            │
+                                            └── RecipeEditView (edit mode)
+                                                    │
+                                                    └── Save → stackRouter.popToRoot()
+                                                            │
+                                                            └── Back to Recipe Tab
+```
 
 ## Adding a New Feature with Navigation
 
 1. Add route to `AppRoute.swift`:
    ```swift
-   case newFeature(id: UUID)
+   case newFeature(id: PersistentIdentifier)
    ```
 
 2. Add destination in `MainView`:
@@ -255,4 +431,11 @@ struct MainView: View {
 3. Navigate from any view:
    ```swift
    stackRouter.push(.newFeature(id: someId))
+   ```
+
+4. Handle back navigation in the new view:
+   ```swift
+   Button("Back") {
+       stackRouter.pop()
+   }
    ```

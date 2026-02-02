@@ -4,33 +4,39 @@ This document describes the architecture of the Anchan Factory iOS application.
 
 ## Overview
 
-Anchan Factory uses the **MVVM (Model-View-ViewModel)** architectural pattern with a clear separation of concerns across multiple layers.
+Anchan Factory uses the **MVVM (Model-View-ViewModel)** architectural pattern with Clean Architecture principles and a clear separation of concerns across multiple layers.
 
 ## Layer Structure
 
 ```
-┌─────────────────────────────────────────────────┐
-│                 Presentation                     │
-│  ┌──────────────────────────────────────────┐   │
-│  │              Views (SwiftUI)              │   │
-│  └──────────────────────────────────────────┘   │
-│  ┌──────────────────────────────────────────┐   │
-│  │          ViewModels (@Observable)         │   │
-│  └──────────────────────────────────────────┘   │
-├─────────────────────────────────────────────────┤
-│                     Core                         │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐   │
-│  │ Navigation │ │  Database  │ │  Widgets   │   │
-│  └────────────┘ └────────────┘ └────────────┘   │
-├─────────────────────────────────────────────────┤
-│                     Data                         │
-│  ┌──────────────────────────────────────────┐   │
-│  │         Entities (SwiftData @Model)       │   │
-│  └──────────────────────────────────────────┘   │
-│  ┌──────────────────────────────────────────┐   │
-│  │              Repositories                 │   │
-│  └──────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│                   Presentation                       │
+│  ┌────────────────────────────────────────────────┐ │
+│  │              Views (SwiftUI)                    │ │
+│  └────────────────────────────────────────────────┘ │
+│  ┌────────────────────────────────────────────────┐ │
+│  │          ViewModels (@Observable)               │ │
+│  └────────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────┤
+│                       Core                           │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐ │
+│  │Navigation│ │ Database │ │Formatters│ │Settings│ │
+│  └──────────┘ └──────────┘ └──────────┘ └────────┘ │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐            │
+│  │ Widgets  │ │Utilities │ │  State   │            │
+│  └──────────┘ └──────────┘ └──────────┘            │
+├─────────────────────────────────────────────────────┤
+│                       Data                           │
+│  ┌────────────────────────────────────────────────┐ │
+│  │          Entities (SwiftData @Model)            │ │
+│  └────────────────────────────────────────────────┘ │
+│  ┌────────────────────────────────────────────────┐ │
+│  │               Repositories                      │ │
+│  └────────────────────────────────────────────────┘ │
+│  ┌────────────────────────────────────────────────┐ │
+│  │                Services                         │ │
+│  └────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────┘
 ```
 
 ## Layers
@@ -44,20 +50,49 @@ The presentation layer contains all UI-related code following the MVVM pattern.
 - Declarative UI definitions
 - Bind to ViewModel state using `@State` and `@Bindable`
 - No business logic
+- Use `@Environment` for router access
 
 **ViewModels (`*ViewModel.swift`)**
 - Use `@Observable` macro for reactivity
+- Use `@MainActor` for thread safety
 - Contain view-specific state and logic
 - Handle user interactions
-- Communicate with repositories (future)
+- Communicate with repositories
+- Error handling with `AppError`
 
 ```swift
 @Observable
-class FeatureViewModel {
-    var state: State = .initial
+@MainActor
+final class FeatureViewModel {
+    // Data state
+    private(set) var items: [Entity] = []
 
-    func handleAction() {
-        // Business logic here
+    // UI state
+    var isLoading = false
+    var errorMessage: String?
+    var showError = false
+
+    // Dependencies
+    private var repository: Repository?
+
+    func setup(modelContext: ModelContext) {
+        self.repository = Repository(modelContext: modelContext)
+    }
+
+    func loadData() {
+        switch repository?.fetchAll() {
+        case .success(let data):
+            items = data
+        case .failure(let error):
+            handleError(error)
+        case .none:
+            break
+        }
+    }
+
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }
 ```
@@ -67,9 +102,7 @@ class FeatureViewModel {
 Shared infrastructure and utilities used across features.
 
 **Database**
-- `AppModelContainer.swift` - SwiftData configuration
-- Defines schema with all entities
-- Configures persistence storage
+- `AppModelContainer.swift` - SwiftData configuration with schema
 
 **Navigation**
 - `AppRoute.swift` - Route enum for detail navigation
@@ -77,31 +110,48 @@ Shared infrastructure and utilities used across features.
 - `StackRouter.swift` - NavigationStack management
 - `TabRouter.swift` - Tab selection management
 
+**Formatters**
+- `CurrencyFormatter.swift` - Thai Baht formatting (฿)
+- `TimeFormatter.swift` - Duration formatting (h, m)
+- `AppNumberFormatter.swift` - Decimal formatting
+
+**Utilities**
+- `QuantityCalculator.swift` - Unit conversions
+- `StringUtilities.swift` - String helpers
+
+**Constants**
+- `AppSettings.swift` - User preferences (singleton)
+- `AppTheme.swift` - Theme modes
+- `AppLanguage.swift` - Localization
+- `AppError.swift` - Error handling enum
+
 **Widgets**
-- Reusable UI components
 - `AppBarView.swift` - Custom navigation bar
+- `TimePickerView.swift` - Time input component
 
 **Extensions**
-- Swift extensions for common utilities
+- `IntExtension.swift` - Integer utilities
 - `DoubleExtension.swift` - Number formatting
 
 ### Data Layer
 
-Data persistence and business logic.
+Data persistence, access, and business logic.
 
 **Entities**
 - SwiftData models using `@Model` macro
 - Persisted to disk automatically
-- Define data structure
+- Define relationships with `@Relationship`
+- Computed properties for derived data
 
-**Constants**
-- Enums and static values
-- `InventoryUnit.swift` - Measurement units
-
-**Repositories** (Planned)
+**Repositories**
+- Protocol-based for testability
 - Abstract data access
 - Handle CRUD operations
-- Provide data to ViewModels
+- Return `Result<T, AppError>` for error handling
+- Use `@MainActor` for thread safety
+
+**Services**
+- `CSVExportService.swift` - Export data to CSV files
 
 ## Data Flow
 
@@ -119,12 +169,13 @@ User Action
 │  ViewModel  │ ───────▶│  State   │
 └─────────────┘ updates └──────────┘
      │
-     │ (future)
+     │ uses
      ▼
 ┌─────────────┐
 │ Repository  │
 └─────────────┘
      │
+     │ persists
      ▼
 ┌─────────────┐
 │  SwiftData  │
@@ -139,10 +190,26 @@ The app uses Swift's `@Observable` macro for reactive state management.
 
 ```swift
 @Observable
-class ExampleViewModel {
-    var items: [Item] = []
+@MainActor
+final class ExampleViewModel {
+    private(set) var items: [Item] = []
     var isLoading = false
-    var error: Error?
+    var searchText = ""
+    var showError = false
+    var errorMessage: String?
+
+    private var repository: ItemRepository?
+
+    func setup(modelContext: ModelContext) {
+        repository = ItemRepository(modelContext: modelContext)
+    }
+
+    var filteredItems: [Item] {
+        if searchText.isEmpty {
+            return items
+        }
+        return items.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    }
 }
 ```
 
@@ -151,10 +218,21 @@ class ExampleViewModel {
 ```swift
 struct ExampleView: View {
     @State var viewModel = ExampleViewModel()
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
-        List(viewModel.items) { item in
+        List(viewModel.filteredItems) { item in
             Text(item.name)
+        }
+        .searchable(text: $viewModel.searchText)
+        .onAppear {
+            viewModel.setup(modelContext: modelContext)
+            viewModel.loadData()
+        }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK") { }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
         }
     }
 }
@@ -191,7 +269,14 @@ struct ExampleView: View {
 │  │      (manages path array)          │  │
 │  └───────────────────────────────────┘  │
 │                                          │
-│  Path: [.recipeDetail(id: UUID)]        │
+│  Routes:                                 │
+│  - recipeAdd                            │
+│  - recipeEdit(id)                       │
+│  - recipeDetail(id)                     │
+│  - manufacturingProcess(id)             │
+│  - manufacturingDetail(id)              │
+│                                          │
+│  Path: [.recipeDetail(id)]              │
 │                    │                     │
 │                    ▼                     │
 │  ┌───────────────────────────────────┐  │
@@ -200,30 +285,118 @@ struct ExampleView: View {
 └─────────────────────────────────────────┘
 ```
 
+## Repository Pattern
+
+All repositories follow a consistent pattern:
+
+```swift
+protocol RecipeRepositoryProtocol {
+    func fetchAll() -> Result<[RecipeEntity], AppError>
+    func fetch(by id: PersistentIdentifier) -> Result<RecipeEntity, AppError>
+    func create(_ entity: RecipeEntity) -> Result<Void, AppError>
+    func delete(_ entity: RecipeEntity) -> Result<Void, AppError>
+}
+
+@MainActor
+final class RecipeRepository: RecipeRepositoryProtocol {
+    private let modelContext: ModelContext
+
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+    }
+
+    func fetchAll() -> Result<[RecipeEntity], AppError> {
+        let descriptor = FetchDescriptor<RecipeEntity>(
+            sortBy: [SortDescriptor(\.name)]
+        )
+        do {
+            let results = try modelContext.fetch(descriptor)
+            return .success(results)
+        } catch {
+            return .failure(.databaseError)
+        }
+    }
+    // ... other methods
+}
+```
+
+## Error Handling
+
+Centralized error management with `AppError`:
+
+```swift
+enum AppError: Error, LocalizedError {
+    case databaseError
+    case validationError
+    case exportError
+    case notFound
+    case insufficientStock
+    case unknown
+
+    var errorDescription: String? {
+        switch self {
+        case .databaseError:
+            return String(localized: "Database operation failed")
+        case .validationError:
+            return String(localized: "Invalid input")
+        case .exportError:
+            return String(localized: "Export failed")
+        case .notFound:
+            return String(localized: "Item not found")
+        case .insufficientStock:
+            return String(localized: "Insufficient stock")
+        case .unknown:
+            return String(localized: "An error occurred")
+        }
+    }
+
+    var recoverySuggestion: String? {
+        // Recovery suggestions for each error type
+    }
+}
+```
+
 ## Dependency Injection
 
-Currently, dependencies are created inline. Future improvements could include:
+Dependencies are injected via:
 
-- Protocol-based dependencies
-- Environment-based injection
-- Container-based DI
+1. **ModelContext** - Passed to ViewModels via `setup()` method
+2. **Environment** - Used for navigation routers
+3. **Constructor** - Repository injection
+
+```swift
+struct FeatureView: View {
+    @State var viewModel = FeatureViewModel()
+    @Environment(\.modelContext) private var modelContext
+    @Environment(StackRouter.self) var stackRouter
+
+    var body: some View {
+        // View content
+    }
+    .onAppear {
+        viewModel.setup(modelContext: modelContext)
+    }
+}
+```
 
 ## Testing Strategy
-
-Recommended testing approach:
 
 | Layer | Test Type |
 |-------|-----------|
 | ViewModel | Unit Tests |
-| Repository | Unit Tests |
+| Repository | Unit Tests (protocol-based mocking) |
 | Entity | Unit Tests |
 | View | UI Tests / Snapshot Tests |
 | Integration | Integration Tests |
 
-## Future Considerations
+## Implemented Features
 
-1. **Repository Pattern** - Implement for data access abstraction
-2. **Coordinator Pattern** - For complex navigation flows
-3. **Use Cases** - For complex business logic
-4. **Dependency Injection** - For better testability
-5. **Error Handling** - Centralized error management
+- [x] Repository Pattern for data access
+- [x] Error Handling with AppError enum
+- [x] Dependency Injection via setup methods
+- [x] Navigation with TabRouter and StackRouter
+- [x] CSV Export Service
+- [x] Formatters for currency, time, numbers
+- [x] Settings persistence with UserDefaults
+- [x] Localization (English/Thai)
+- [x] Theme support (System/Light/Dark)

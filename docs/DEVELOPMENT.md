@@ -8,14 +8,14 @@ This guide covers development practices and conventions for Anchan Factory.
 
 - macOS 15+ (Sequoia)
 - Xcode 16+
-- iOS 26.2+ Simulator or Device
+- iOS 26.2+ Simulator or Device (iPad)
 
 ### Setup
 
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd anchan-factory
+   cd anchan
    ```
 
 2. Open project:
@@ -23,7 +23,7 @@ This guide covers development practices and conventions for Anchan Factory.
    open anchan.xcodeproj
    ```
 
-3. Select a target device and run (⌘+R)
+3. Select an iPad target device and run (⌘+R)
 
 ## Project Conventions
 
@@ -35,7 +35,9 @@ This guide covers development practices and conventions for Anchan Factory.
 | ViewModel | `*ViewModel.swift` | `HomeViewModel.swift` |
 | Entity | `*Entity.swift` | `RecipeEntity.swift` |
 | Repository | `*Repository.swift` | `RecipeRepository.swift` |
+| Service | `*Service.swift` | `CSVExportService.swift` |
 | Extension | `*Extension.swift` | `DoubleExtension.swift` |
+| Formatter | `*Formatter.swift` | `CurrencyFormatter.swift` |
 
 ### Folder Structure
 
@@ -44,8 +46,8 @@ Features/
 └── FeatureName/
     ├── FeatureNameView.swift
     ├── FeatureNameViewModel.swift
-    └── Models/
-        └── FeatureModel.swift
+    └── Components/
+        └── FeatureComponent.swift
 ```
 
 ### Code Style
@@ -54,16 +56,50 @@ Features/
 ```swift
 import Foundation
 import Observation
+import SwiftData
 
 @Observable
-class FeatureViewModel {
-    // MARK: - State
-    var items: [Item] = []
+@MainActor
+final class FeatureViewModel {
+    // MARK: - Data State
+    private(set) var items: [Entity] = []
+
+    // MARK: - UI State
     var isLoading = false
+    var searchText = ""
+    var showError = false
+    var errorMessage: String?
+
+    // MARK: - Dependencies
+    private var repository: Repository?
+
+    // MARK: - Setup
+    func setup(modelContext: ModelContext) {
+        repository = Repository(modelContext: modelContext)
+    }
 
     // MARK: - Actions
-    func loadItems() {
-        // Implementation
+    func loadData() {
+        switch repository?.fetchAll() {
+        case .success(let data):
+            items = data
+        case .failure(let error):
+            handleError(error)
+        case .none:
+            break
+        }
+    }
+
+    // MARK: - Computed Properties
+    var filteredItems: [Entity] {
+        if searchText.isEmpty { return items }
+        return items.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    }
+
+    // MARK: - Error Handling
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }
 ```
@@ -74,16 +110,27 @@ import SwiftUI
 
 struct FeatureView: View {
     @State var viewModel = FeatureViewModel()
+    @Environment(\.modelContext) private var modelContext
+    @Environment(StackRouter.self) var stackRouter
 
     var body: some View {
         content
             .onAppear {
-                viewModel.loadItems()
+                viewModel.setup(modelContext: modelContext)
+                viewModel.loadData()
+            }
+            .alert("Error", isPresented: $viewModel.showError) {
+                Button("OK") { }
+            } message: {
+                Text(viewModel.errorMessage ?? "")
             }
     }
 
     private var content: some View {
-        // View implementation
+        List(viewModel.filteredItems) { item in
+            Text(item.name)
+        }
+        .searchable(text: $viewModel.searchText)
     }
 }
 ```
@@ -96,8 +143,8 @@ struct FeatureView: View {
 Presentation/Features/NewFeature/
 ├── NewFeatureView.swift
 ├── NewFeatureViewModel.swift
-└── Models/
-    └── NewFeatureModel.swift (if needed)
+└── Components/
+    └── NewFeatureRow.swift (if needed)
 ```
 
 ### Step 2: Implement ViewModel
@@ -108,19 +155,49 @@ import Observation
 import SwiftData
 
 @Observable
-class NewFeatureViewModel {
-    var data: [DataItem] = []
+@MainActor
+final class NewFeatureViewModel {
+    // Data state
+    private(set) var data: [DataItem] = []
+
+    // UI state
     var isLoading = false
+    var showError = false
     var errorMessage: String?
 
-    func loadData() {
-        isLoading = true
-        // Load data
-        isLoading = false
+    // Dependencies
+    private var repository: DataRepository?
+
+    func setup(modelContext: ModelContext) {
+        repository = DataRepository(modelContext: modelContext)
     }
 
-    func handleAction() {
-        // Handle user action
+    func loadData() {
+        switch repository?.fetchAll() {
+        case .success(let items):
+            data = items
+        case .failure(let error):
+            handleError(error)
+        case .none:
+            break
+        }
+    }
+
+    func createItem(name: String) {
+        let item = DataEntity(name: name)
+        switch repository?.create(item) {
+        case .success:
+            loadData()
+        case .failure(let error):
+            handleError(error)
+        case .none:
+            break
+        }
+    }
+
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }
 ```
@@ -132,17 +209,26 @@ import SwiftUI
 
 struct NewFeatureView: View {
     @State var viewModel = NewFeatureViewModel()
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         Group {
             if viewModel.isLoading {
                 ProgressView()
+            } else if viewModel.data.isEmpty {
+                emptyState
             } else {
                 mainContent
             }
         }
         .onAppear {
+            viewModel.setup(modelContext: modelContext)
             viewModel.loadData()
+        }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK") { }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
         }
     }
 
@@ -150,6 +236,14 @@ struct NewFeatureView: View {
         List(viewModel.data) { item in
             Text(item.name)
         }
+    }
+
+    private var emptyState: some View {
+        ContentUnavailableView(
+            "No Items",
+            systemImage: "tray",
+            description: Text("Add your first item to get started")
+        )
     }
 }
 ```
@@ -167,14 +261,14 @@ enum AppTab: Hashable, CaseIterable {
 
     var title: String {
         switch self {
-        // ...
-        case .newFeature: return "New"
+        // ...existing cases
+        case .newFeature: return String(localized: "New Feature")
         }
     }
 
     var icon: String {
         switch self {
-        // ...
+        // ...existing cases
         case .newFeature: return "star.fill"
         }
     }
@@ -186,8 +280,12 @@ enum AppTab: Hashable, CaseIterable {
 In `Core/Navigation/AppRoute.swift`:
 ```swift
 enum AppRoute: Hashable {
-    case recipeDetail(id: UUID)
-    case newFeatureDetail(id: UUID)  // Add new route
+    case recipeAdd
+    case recipeEdit(id: PersistentIdentifier)
+    case recipeDetail(id: PersistentIdentifier)
+    case manufacturingProcess(id: PersistentIdentifier)
+    case manufacturingDetail(id: PersistentIdentifier)
+    case newFeatureDetail(id: PersistentIdentifier)  // Add new route
 }
 ```
 
@@ -195,8 +293,7 @@ In `MainView.swift` add destination:
 ```swift
 .navigationDestination(for: AppRoute.self) { route in
     switch route {
-    case .recipeDetail(let id):
-        RecipeDetailView(id: id)
+    // ...existing cases
     case .newFeatureDetail(let id):
         NewFeatureDetailView(id: id)
     }
@@ -207,12 +304,12 @@ In `MainView.swift` add destination:
 
 ### Adding an Entity
 
-1. Create entity file:
+1. Create entity file in `Data/Entity/`:
    ```swift
    import SwiftData
 
    @Model
-   class NewEntity {
+   final class NewEntity {
        var name: String
        var createdAt: Date
 
@@ -223,45 +320,81 @@ In `MainView.swift` add destination:
    }
    ```
 
-2. Register in container (`AppModelContainer.swift`):
+2. Register in container (`Core/Database/AppModelContainer.swift`):
    ```swift
    let schema = Schema([
        RecipeEntity.self,
+       RecipeStepEntity.self,
+       IngredientEntity.self,
        InventoryEntity.self,
+       ManufacturingEntity.self,
+       CustomUnitEntity.self,
        NewEntity.self,  // Add here
    ])
    ```
 
+3. Create repository in `Data/Repositories/`:
+   ```swift
+   @MainActor
+   final class NewEntityRepository {
+       private let modelContext: ModelContext
+
+       init(modelContext: ModelContext) {
+           self.modelContext = modelContext
+       }
+
+       func fetchAll() -> Result<[NewEntity], AppError> {
+           let descriptor = FetchDescriptor<NewEntity>(
+               sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+           )
+           do {
+               let results = try modelContext.fetch(descriptor)
+               return .success(results)
+           } catch {
+               return .failure(.databaseError)
+           }
+       }
+
+       func create(_ entity: NewEntity) -> Result<Void, AppError> {
+           modelContext.insert(entity)
+           return .success(())
+       }
+
+       func delete(_ entity: NewEntity) -> Result<Void, AppError> {
+           modelContext.delete(entity)
+           return .success(())
+       }
+   }
+   ```
+
 ### Querying Data
 
-In Views with `@Query`:
+In ViewModels with Repository:
 ```swift
-struct MyView: View {
-    @Query(sort: \RecipeEntity.name) var recipes: [RecipeEntity]
-
-    var body: some View {
-        List(recipes) { recipe in
-            Text(recipe.name)
-        }
+func loadData() {
+    switch repository?.fetchAll() {
+    case .success(let items):
+        self.items = items
+    case .failure(let error):
+        handleError(error)
+    case .none:
+        break
     }
 }
 ```
 
-In ViewModels with ModelContext:
+With predicates:
 ```swift
-@Observable
-class MyViewModel {
-    private var modelContext: ModelContext
-
-    init(modelContext: ModelContext) {
-        self.modelContext = modelContext
-    }
-
-    func fetchRecipes() -> [RecipeEntity] {
-        let descriptor = FetchDescriptor<RecipeEntity>(
-            sortBy: [SortDescriptor(\.name)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
+func search(name: String) -> Result<[RecipeEntity], AppError> {
+    let descriptor = FetchDescriptor<RecipeEntity>(
+        predicate: #Predicate { $0.name.localizedStandardContains(name) },
+        sortBy: [SortDescriptor(\.name)]
+    )
+    do {
+        let results = try modelContext.fetch(descriptor)
+        return .success(results)
+    } catch {
+        return .failure(.databaseError)
     }
 }
 ```
@@ -276,12 +409,39 @@ Custom navigation bar with leading/trailing actions:
 AppBarView(
     title: "My Screen",
     leading: {
-        Button("Back") { /* action */ }
+        Button("Back") { stackRouter.pop() }
     },
     trailing: {
         Button("Add") { /* action */ }
     }
 )
+```
+
+### TimePickerView
+
+Time input component for recipe steps:
+
+```swift
+TimePickerView(minutes: $stepTime)
+```
+
+### Formatters
+
+**CurrencyFormatter** - Format Thai Baht:
+```swift
+let formatted = CurrencyFormatter.format(150.50)  // "฿150.50"
+```
+
+**TimeFormatter** - Format durations:
+```swift
+let formatted = TimeFormatter.formatMinutes(90)  // "1h 30m"
+let duration = TimeFormatter.formatDuration(3600)  // "1h 0m"
+```
+
+**AppNumberFormatter** - Format numbers:
+```swift
+let formatted = AppNumberFormatter.format(5.0)  // "5"
+let decimal = AppNumberFormatter.format(5.25)   // "5.25"
 ```
 
 ### Extensions
@@ -293,6 +453,83 @@ print(whole.clean) // "5"
 
 let decimal = 3.14
 print(decimal.clean) // "3.14"
+```
+
+## Error Handling
+
+Use the `AppError` enum for consistent error handling:
+
+```swift
+enum AppError: Error, LocalizedError {
+    case databaseError
+    case validationError
+    case exportError
+    case notFound
+    case insufficientStock
+    case unknown
+}
+```
+
+In ViewModels:
+```swift
+private func handleError(_ error: AppError) {
+    errorMessage = error.localizedDescription
+    showError = true
+}
+```
+
+In Views:
+```swift
+.alert("Error", isPresented: $viewModel.showError) {
+    Button("OK") { }
+} message: {
+    Text(viewModel.errorMessage ?? "")
+}
+```
+
+## Localization
+
+Use `String(localized:)` for all user-facing text:
+
+```swift
+let title = String(localized: "Recipe")
+let message = String(localized: "Are you sure you want to delete?")
+```
+
+The app supports:
+- English (en)
+- Thai (th)
+
+Language preference is stored in `AppSettings.shared.language`.
+
+## Settings
+
+Access app settings via `AppSettings.shared`:
+
+```swift
+// Theme
+AppSettings.shared.theme = .dark
+
+// Language
+AppSettings.shared.language = .thai
+```
+
+Settings are automatically persisted to UserDefaults.
+
+## CSV Export
+
+Use `CSVExportService` for data export:
+
+```swift
+// Export single manufacturing batch
+if let url = CSVExportService.shared.exportManufacturing(batch) {
+    // Share URL
+}
+
+// Export all inventory
+if let url = CSVExportService.shared.exportInventory(items) {
+    // Share URL
+}
 ```
 
 ## Testing
@@ -309,6 +546,7 @@ final class RecipeViewModelTests: XCTestCase {
     func testInitialState() {
         let viewModel = RecipeViewModel()
         XCTAssertTrue(viewModel.recipes.isEmpty)
+        XCTAssertFalse(viewModel.isLoading)
     }
 }
 ```
@@ -381,6 +619,16 @@ Ensure using `@State` for ViewModel:
 ```swift
 @State var viewModel = MyViewModel()  // Correct
 var viewModel = MyViewModel()          // Wrong
+```
+
+### Repository Not Working
+
+Ensure setup is called in onAppear:
+```swift
+.onAppear {
+    viewModel.setup(modelContext: modelContext)
+    viewModel.loadData()
+}
 ```
 
 ## Resources
