@@ -26,6 +26,7 @@ final class HomeViewModel {
 
     private var manufacturingRepository: ManufacturingRepository?
     private var inventoryRepository: InventoryRepository?
+    private(set) var isSetup = false
 
     // MARK: - Computed
 
@@ -33,17 +34,55 @@ final class HomeViewModel {
         allInventory.filter { $0.isLowStock }.sorted { $0.stockLevel < $1.stockLevel }
     }
 
+    var totalBatches: Int {
+        activeManufacturing.count + completedManufacturing.count
+    }
+
+    var activeBatchesCount: Int {
+        activeManufacturing.count
+    }
+
+    var completedBatchesCount: Int {
+        completedManufacturing.count
+    }
+
+    var totalInventoryItems: Int {
+        allInventory.count
+    }
+
+    var totalInventoryValue: Double {
+        allInventory.reduce(0) { $0 + ($1.stock * $1.unitPrice) }
+    }
+
+    var lowStockItemsCount: Int {
+        lowStockItems.count
+    }
+
+    var totalActiveBatchesCost: Double {
+        activeManufacturing.reduce(0) { $0 + $1.totalCost }
+    }
+
+    var totalCompletedBatchesCost: Double {
+        completedManufacturing.reduce(0) { $0 + $1.totalCost }
+    }
+
+    var totalBatchesCost: Double {
+        totalActiveBatchesCost + totalCompletedBatchesCost
+    }
+
     // MARK: - Setup
 
     func setup(modelContext: ModelContext) {
         self.manufacturingRepository = ManufacturingRepository(modelContext: modelContext)
         self.inventoryRepository = InventoryRepository(modelContext: modelContext)
+        self.isSetup = true
         loadData()
     }
 
     // MARK: - Actions
 
     func loadData() {
+        print("[HomeViewModel] 🔄 Loading data...")
         isLoading = true
         defer { isLoading = false }
 
@@ -52,8 +91,9 @@ final class HomeViewModel {
             switch result {
             case .success(let items):
                 activeManufacturing = items
+                print("[HomeViewModel] ✅ Loaded \(items.count) active manufacturing")
             case .failure(let error):
-                print("[HomeViewModel] Failed to load active manufacturing: \(error)")
+                print("[HomeViewModel] ❌ Failed to load active manufacturing: \(error)")
                 activeManufacturing = []
             }
         }
@@ -63,8 +103,9 @@ final class HomeViewModel {
             switch result {
             case .success(let items):
                 completedManufacturing = items
+                print("[HomeViewModel] ✅ Loaded \(items.count) completed manufacturing")
             case .failure(let error):
-                print("[HomeViewModel] Failed to load completed manufacturing: \(error)")
+                print("[HomeViewModel] ❌ Failed to load completed manufacturing: \(error)")
                 completedManufacturing = []
             }
         }
@@ -74,11 +115,14 @@ final class HomeViewModel {
             switch result {
             case .success(let items):
                 allInventory = items
+                print("[HomeViewModel] ✅ Loaded \(items.count) inventory items")
             case .failure(let error):
-                print("[HomeViewModel] Failed to load inventory: \(error)")
+                print("[HomeViewModel] ❌ Failed to load inventory: \(error)")
                 allInventory = []
             }
         }
+
+        print("[HomeViewModel] 📊 Summary - Active: \(activeManufacturing.count), Completed: \(completedManufacturing.count), Inventory: \(allInventory.count)")
     }
 
     func handleRecipeSelection(_ recipe: RecipeEntity) -> Bool {

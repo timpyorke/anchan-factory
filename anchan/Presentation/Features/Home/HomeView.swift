@@ -11,6 +11,9 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
+                // Summary Statistics Section
+                summarySection
+
                 // Low Stock Alert Section
                 if !viewModel.lowStockItems.isEmpty {
                     lowStockSection
@@ -67,11 +70,64 @@ struct HomeView: View {
             Text(viewModel.errorMessage ?? "An unknown error occurred")
         }
         .onAppear {
-            viewModel.setup(modelContext: modelContext)
+            print("[HomeView] 👀 onAppear - isSetup: \(viewModel.isSetup)")
+            if !viewModel.isSetup {
+                print("[HomeView] 🆕 First setup")
+                viewModel.setup(modelContext: modelContext)
+            } else {
+                print("[HomeView] 🔃 Refreshing data")
+                viewModel.loadData()
+            }
         }
     }
 
     // MARK: - Components
+
+    private var summarySection: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                // Total Batches Card
+                SummaryCard(
+                    title: String(localized: "Total Batches"),
+                    value: "\(viewModel.totalBatches)",
+                    subtitle: String(localized: "\(viewModel.activeBatchesCount) active, \(viewModel.completedBatchesCount) completed"),
+                    icon: "shippingbox.fill",
+                    color: .blue
+                )
+
+                // Inventory Items Card
+                SummaryCard(
+                    title: String(localized: "Inventory"),
+                    value: "\(viewModel.totalInventoryItems)",
+                    subtitle: viewModel.lowStockItemsCount > 0 ?
+                        String(localized: "\(viewModel.lowStockItemsCount) low stock") :
+                        String(localized: "All stocked"),
+                    icon: "cube.box.fill",
+                    color: viewModel.lowStockItemsCount > 0 ? .orange : .green
+                )
+            }
+
+            // Inventory Value Card (Full Width)
+            SummaryCard(
+                title: String(localized: "Total Inventory Value"),
+                value: CurrencyFormatter.format(viewModel.totalInventoryValue),
+                subtitle: String(localized: "Based on current stock levels"),
+                icon: "banknote.fill",
+                color: .purple,
+                fullWidth: true
+            )
+
+            // Total Batches Cost Card (Full Width)
+            SummaryCard(
+                title: String(localized: "Total Manufacturing Cost"),
+                value: CurrencyFormatter.format(viewModel.totalBatchesCost),
+                subtitle: String(localized: "\(CurrencyFormatter.format(viewModel.totalActiveBatchesCost)) active, \(CurrencyFormatter.format(viewModel.totalCompletedBatchesCost)) completed"),
+                icon: "chart.bar.fill",
+                color: .indigo,
+                fullWidth: true
+            )
+        }
+    }
 
     private var newManufacturingButton: some View {
         Button {
@@ -473,6 +529,45 @@ private struct LowStockRow: View {
         } else {
             return .yellow
         }
+    }
+}
+
+// MARK: - Summary Card
+
+private struct SummaryCard: View {
+    let title: String
+    let value: String
+    let subtitle: String
+    let icon: String
+    let color: Color
+    var fullWidth: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundStyle(color)
+
+                Spacer()
+            }
+
+            Text(value)
+                .font(.system(size: 28, weight: .bold))
+                .foregroundStyle(.primary)
+
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Text(subtitle)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: fullWidth ? .infinity : nil)
+        .padding()
+        .background(color.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 

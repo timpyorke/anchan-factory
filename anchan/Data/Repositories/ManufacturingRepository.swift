@@ -7,6 +7,7 @@ protocol ManufacturingRepositoryProtocol {
     func fetchCompleted() -> Result<[ManufacturingEntity], AppError>
     func fetch(by id: PersistentIdentifier) -> Result<ManufacturingEntity, AppError>
     func create(_ manufacturing: ManufacturingEntity) -> Result<Void, AppError>
+    func update() -> Result<Void, AppError>
     func delete(_ manufacturing: ManufacturingEntity) -> Result<Void, AppError>
 }
 
@@ -35,12 +36,11 @@ final class ManufacturingRepository: ManufacturingRepositoryProtocol {
 
     func fetchActive() -> Result<[ManufacturingEntity], AppError> {
         do {
-            let inProgressStatus = ManufacturingStatus.inProgress
             let descriptor = FetchDescriptor<ManufacturingEntity>(
-                predicate: #Predicate { $0.status == inProgressStatus },
                 sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
             )
-            let items = try modelContext.fetch(descriptor)
+            let allItems = try modelContext.fetch(descriptor)
+            let items = allItems.filter { $0.status == .inProgress }
             return .success(items)
         } catch {
             return .failure(.databaseError("Failed to fetch active manufacturing records"))
@@ -49,13 +49,14 @@ final class ManufacturingRepository: ManufacturingRepositoryProtocol {
 
     func fetchCompleted() -> Result<[ManufacturingEntity], AppError> {
         do {
-            let completedStatus = ManufacturingStatus.completed
             let descriptor = FetchDescriptor<ManufacturingEntity>(
-                predicate: #Predicate { $0.status == completedStatus },
-                sortBy: [SortDescriptor(\.completedAt, order: .reverse)]
+                sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
             )
-            let items = try modelContext.fetch(descriptor)
-            return .success(items)
+            let allItems = try modelContext.fetch(descriptor)
+            let items = allItems.filter { $0.status == .completed }
+            // Sort completed by completedAt
+            let sorted = items.sorted { ($0.completedAt ?? Date.distantPast) > ($1.completedAt ?? Date.distantPast) }
+            return .success(sorted)
         } catch {
             return .failure(.databaseError("Failed to fetch completed manufacturing records"))
         }
@@ -68,10 +69,14 @@ final class ManufacturingRepository: ManufacturingRepositoryProtocol {
         return .success(item)
     }
 
-    // MARK: - Create & Delete
+    // MARK: - Create, Update & Delete
 
     func create(_ manufacturing: ManufacturingEntity) -> Result<Void, AppError> {
         modelContext.insert(manufacturing)
+        return save()
+    }
+
+    func update() -> Result<Void, AppError> {
         return save()
     }
 

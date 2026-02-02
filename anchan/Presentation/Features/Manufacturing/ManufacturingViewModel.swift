@@ -47,18 +47,43 @@ final class ManufacturingViewModel {
     }
 
     func completeCurrentStep() {
-        guard let manufacturing else { return }
+        guard let manufacturing = manufacturing, let repository = repository else {
+            print("[ManufacturingViewModel] ERROR: missing manufacturing or repository")
+            return
+        }
+
+        let stepIndex = manufacturing.currentStepIndex
+        print("[ManufacturingViewModel] Completing step \(stepIndex)")
+
         manufacturing.completeCurrentStep()
 
-        if manufacturing.isCompleted {
-            showCompletionAlert = true
+        let isCompleted = manufacturing.isCompleted
+        print("[ManufacturingViewModel] After completion - isCompleted: \(isCompleted)")
+
+        // Save the changes to the database
+        switch repository.update() {
+        case .success:
+            print("[ManufacturingViewModel] ✅ Successfully saved to database")
+            if isCompleted {
+                showCompletionAlert = true
+            }
+        case .failure(let error):
+            print("[ManufacturingViewModel] ❌ Failed to save: \(error)")
+            handleError(error)
         }
     }
 
     func cancelManufacturing(onComplete: () -> Void) {
-        guard let manufacturing else { return }
+        guard let manufacturing, let repository else { return }
         manufacturing.status = .cancelled
-        onComplete()
+
+        // Save the changes to the database
+        switch repository.update() {
+        case .success:
+            onComplete()
+        case .failure(let error):
+            handleError(error)
+        }
     }
 
     // MARK: - Error Handling
