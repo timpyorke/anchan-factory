@@ -93,6 +93,7 @@ enum AppRoute: Hashable {
     case recipeAdd
     case recipeEdit(id: PersistentIdentifier)
     case recipeDetail(id: PersistentIdentifier)
+    case manufacturingList
     case manufacturingProcess(id: PersistentIdentifier)
     case manufacturingDetail(id: PersistentIdentifier)
 }
@@ -105,6 +106,7 @@ enum AppRoute: Hashable {
 | `recipeAdd` | None | Create new recipe |
 | `recipeEdit(id)` | PersistentIdentifier | Edit existing recipe |
 | `recipeDetail(id)` | PersistentIdentifier | View recipe details |
+| `manufacturingList` | None | All manufacturing history |
 | `manufacturingProcess(id)` | PersistentIdentifier | Active manufacturing view |
 | `manufacturingDetail(id)` | PersistentIdentifier | Completed manufacturing details |
 

@@ -107,16 +107,6 @@ struct HomeView: View {
                 )
             }
 
-            // Inventory Value Card (Full Width)
-            SummaryCard(
-                title: String(localized: "Total Inventory Value"),
-                value: CurrencyFormatter.format(viewModel.totalInventoryValue),
-                subtitle: String(localized: "Based on current stock levels"),
-                icon: "banknote.fill",
-                color: .purple,
-                fullWidth: true
-            )
-
             // Total Batches Cost Card (Full Width)
             SummaryCard(
                 title: String(localized: "Total Manufacturing Cost"),
@@ -209,12 +199,10 @@ struct HomeView: View {
 
                 Spacer()
 
-                if viewModel.completedManufacturing.count > 5 {
-                    Button(String(localized: "See All")) {
-                        // Future: Show all completed
-                    }
-                    .font(.subheadline)
+                Button(String(localized: "See All")) {
+                    stackRouter.push(.manufacturingList)
                 }
+                .font(.subheadline)
             }
 
             ForEach(viewModel.completedManufacturing.prefix(5), id: \.persistentModelID) { item in
@@ -434,7 +422,7 @@ private struct RecipeSelectionRow: View {
 
                 HStack(spacing: 12) {
                     if recipe.totalTime > 0 {
-                        Label(TimeFormatter.formatMinutes(recipe.totalTime), systemImage: "clock")
+                        Label(recipe.totalTime.formattedTimeCompact, systemImage: "clock")
                     }
 
                     Label("\(recipe.steps.count) \(String(localized: "steps"))", systemImage: "list.number")

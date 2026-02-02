@@ -82,7 +82,7 @@ final class CSVExportService {
 
                 csv += "\(index + 1),"
                 csv += "\"\(escapeCSV(step.title))\","
-                csv += "\(step.time)m,"
+                csv += "\(TimeFormatter.formatSeconds(step.time)),"
                 csv += "\(actualTime),"
                 csv += "\(completedAt)\n"
             }

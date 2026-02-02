@@ -308,7 +308,7 @@ struct ManufacturingDetailView: View {
                 HStack(spacing: 16) {
                     // Estimated time
                     if step.time > 0 {
-                        Label("Est: \(step.time)m", systemImage: "clock")
+                        Label("Est: \(step.time.formattedTimeCompact)", systemImage: "clock")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

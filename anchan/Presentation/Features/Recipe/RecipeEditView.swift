@@ -448,7 +448,7 @@ private struct AddStepSheet: View {
                 }
 
                 Section {
-                    TimePickerView(title: String(localized: "Duration"), minutes: $time)
+                    TimePickerView(title: String(localized: "Duration"), seconds: $time)
                 } header: {
                     Text(String(localized: "Time"))
                 }

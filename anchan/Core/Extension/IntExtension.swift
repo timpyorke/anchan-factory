@@ -1,20 +1,13 @@
 import Foundation
 
 extension Int {
+    /// Format seconds as hh:mm:ss
     var formattedTime: String {
-        if self == 0 {
-            return "0m"
-        }
+        TimeFormatter.formatSeconds(self)
+    }
 
-        let hours = self / 60
-        let mins = self % 60
-
-        if hours > 0 && mins > 0 {
-            return "\(hours)h \(mins)m"
-        } else if hours > 0 {
-            return "\(hours)h"
-        } else {
-            return "\(mins)m"
-        }
+    /// Format seconds as compact time (e.g., "1h 30m 15s")
+    var formattedTimeCompact: String {
+        TimeFormatter.formatSecondsCompact(self)
     }
 }

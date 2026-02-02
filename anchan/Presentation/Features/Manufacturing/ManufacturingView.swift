@@ -28,8 +28,10 @@ struct ManufacturingView: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 if viewModel.manufacturing?.isCompleted == false {
-                    Button(String(localized: "Cancel")) {
-                        viewModel.showCancelAlert = true
+                    Button {
+                        viewModel.showExitOptions = true
+                    } label: {
+                        Image(systemName: "chevron.left")
                     }
                 }
             }
@@ -43,15 +45,26 @@ struct ManufacturingView: View {
                 }
             }
         }
+        .confirmationDialog(String(localized: "Exit Manufacturing"), isPresented: $viewModel.showExitOptions, titleVisibility: .visible) {
+            Button(String(localized: "Save & Exit")) {
+                stackRouter.pop()
+            }
+            Button(String(localized: "Cancel Manufacturing"), role: .destructive) {
+                viewModel.showCancelAlert = true
+            }
+            Button(String(localized: "Keep Working"), role: .cancel) { }
+        } message: {
+            Text(String(localized: "Your progress is automatically saved. You can continue later."))
+        }
         .alert(String(localized: "Cancel Manufacturing"), isPresented: $viewModel.showCancelAlert) {
-            Button(String(localized: "Continue"), role: .cancel) { }
-            Button(String(localized: "Cancel"), role: .destructive) {
+            Button(String(localized: "Go Back"), role: .cancel) { }
+            Button(String(localized: "Cancel Manufacturing"), role: .destructive) {
                 viewModel.cancelManufacturing {
                     stackRouter.pop()
                 }
             }
         } message: {
-            Text(String(localized: "Are you sure you want to cancel this manufacturing process?"))
+            Text(String(localized: "Are you sure you want to cancel? This will mark the batch as cancelled and cannot be undone."))
         }
         .alert(String(localized: "Manufacturing Complete!"), isPresented: $viewModel.showCompletionAlert) {
             Button(String(localized: "OK")) {
@@ -105,7 +118,7 @@ struct ManufacturingView: View {
                 Spacer()
 
                 if manufacturing.recipe.totalTime > 0 {
-                    Label(TimeFormatter.formatMinutes(manufacturing.recipe.totalTime), systemImage: "clock")
+                    Label(manufacturing.recipe.totalTime.formattedTimeCompact, systemImage: "clock")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -155,7 +168,7 @@ struct ManufacturingView: View {
                     Spacer()
 
                     if step.time > 0 {
-                        Label(TimeFormatter.formatMinutes(step.time), systemImage: "clock")
+                        Label(step.time.formattedTimeCompact, systemImage: "clock")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }

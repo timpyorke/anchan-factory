@@ -1,25 +1,41 @@
 import Foundation
 
 struct TimeFormatter {
-    /// Format minutes into human-readable format (e.g., "1h 30m", "45m")
-    static func formatMinutes(_ minutes: Int) -> String {
-        guard minutes > 0 else { return "0m" }
+    /// Format seconds into hh:mm:ss format (e.g., "01:30:00", "00:45:30")
+    static func formatSeconds(_ totalSeconds: Int) -> String {
+        guard totalSeconds > 0 else { return "00:00:00" }
 
-        let hours = minutes / 60
-        let remainingMinutes = minutes % 60
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
 
-        if hours > 0 && remainingMinutes > 0 {
-            return "\(hours)h \(remainingMinutes)m"
-        } else if hours > 0 {
-            return "\(hours)h"
-        } else {
-            return "\(remainingMinutes)m"
-        }
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
 
-    /// Format time interval (seconds) into human-readable duration (e.g., "2h 15m", "45m")
+    /// Format seconds into compact human-readable format (e.g., "1h 30m 15s", "45m 30s")
+    static func formatSecondsCompact(_ totalSeconds: Int) -> String {
+        guard totalSeconds > 0 else { return "0s" }
+
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+
+        var parts: [String] = []
+        if hours > 0 { parts.append("\(hours)h") }
+        if minutes > 0 { parts.append("\(minutes)m") }
+        if seconds > 0 || parts.isEmpty { parts.append("\(seconds)s") }
+
+        return parts.joined(separator: " ")
+    }
+
+    /// Format minutes into human-readable format (e.g., "1h 30m", "45m")
+    /// @deprecated Use formatSeconds or formatSecondsCompact instead
+    static func formatMinutes(_ minutes: Int) -> String {
+        return formatSecondsCompact(minutes * 60)
+    }
+
+    /// Format time interval (seconds) into human-readable duration
     static func formatDuration(_ interval: TimeInterval) -> String {
-        let totalMinutes = Int(interval / 60)
-        return formatMinutes(totalMinutes)
+        return formatSecondsCompact(Int(interval))
     }
 }

@@ -12,6 +12,7 @@ final class ManufacturingViewModel {
 
     // MARK: - UI State
 
+    var showExitOptions = false
     var showCancelAlert = false
     var showCompletionAlert = false
     var isLoading = false
