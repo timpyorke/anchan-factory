@@ -8,6 +8,7 @@ struct ManufacturingView: View {
     let id: PersistentIdentifier
 
     @State private var viewModel = ManufacturingViewModel()
+    @State private var stepNote: String = ""
 
     var body: some View {
         Group {
@@ -171,6 +172,18 @@ struct ManufacturingView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                // Step Note Input
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(String(localized: "Note (Optional)"))
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+
+                    TextField(String(localized: "Add a note for this step..."), text: $stepNote, axis: .vertical)
+                        .lineLimit(3...6)
+                        .textFieldStyle(.roundedBorder)
+                }
+                .padding(.top, 8)
+
                 // Ingredients for this recipe (show on first step)
                 if manufacturing.currentStepIndex == 0 && !manufacturing.recipe.ingredients.isEmpty {
                     ingredientsCard(manufacturing.recipe)
@@ -236,7 +249,8 @@ struct ManufacturingView: View {
             Divider()
 
             Button {
-                viewModel.completeCurrentStep()
+                viewModel.completeCurrentStep(note: stepNote)
+                stepNote = ""
             } label: {
                 HStack {
                     if manufacturing.currentStepIndex + 1 >= manufacturing.totalSteps {

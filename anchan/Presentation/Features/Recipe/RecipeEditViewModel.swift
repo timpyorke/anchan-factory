@@ -201,8 +201,8 @@ final class RecipeEditViewModel {
         steps.append(step)
     }
 
-    func removeStep(at index: Int) {
-        steps.remove(at: index)
+    func removeStep(_ step: StepInput) {
+        steps.removeAll { $0.id == step.id }
     }
 
     func moveSteps(from: IndexSet, to: Int) {
@@ -213,8 +213,8 @@ final class RecipeEditViewModel {
         ingredients.append(ingredient)
     }
 
-    func removeIngredient(at index: Int) {
-        ingredients.remove(at: index)
+    func removeIngredient(_ ingredient: IngredientInput) {
+        ingredients.removeAll { $0.id == ingredient.id }
     }
 
     // MARK: - Private Helpers

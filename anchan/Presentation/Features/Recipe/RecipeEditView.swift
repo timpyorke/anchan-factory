@@ -133,9 +133,9 @@ struct RecipeEditView: View {
                 Text(String(localized: "No ingredients added"))
                     .foregroundStyle(.secondary)
             } else {
-                ForEach(viewModel.ingredients.indices, id: \.self) { index in
-                    IngredientRowView(ingredient: viewModel.ingredients[index]) {
-                        viewModel.removeIngredient(at: index)
+                ForEach(viewModel.ingredients) { ingredient in
+                    IngredientRowView(ingredient: ingredient) {
+                        viewModel.removeIngredient(ingredient)
                     }
                 }
 
@@ -166,9 +166,9 @@ struct RecipeEditView: View {
                 Text(String(localized: "No steps added"))
                     .foregroundStyle(.secondary)
             } else {
-                ForEach(viewModel.steps.indices, id: \.self) { index in
-                    StepRowView(step: viewModel.steps[index]) {
-                        viewModel.removeStep(at: index)
+                ForEach(viewModel.steps) { step in
+                    StepRowView(step: step) {
+                        viewModel.removeStep(step)
                     }
                 }
                 .onMove { from, to in

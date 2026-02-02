@@ -46,16 +46,16 @@ final class ManufacturingViewModel {
         }
     }
 
-    func completeCurrentStep() {
+    func completeCurrentStep(note: String = "") {
         guard let manufacturing = manufacturing, let repository = repository else {
             print("[ManufacturingViewModel] ERROR: missing manufacturing or repository")
             return
         }
 
         let stepIndex = manufacturing.currentStepIndex
-        print("[ManufacturingViewModel] Completing step \(stepIndex)")
+        print("[ManufacturingViewModel] Completing step \(stepIndex) with note: \(note)")
 
-        manufacturing.completeCurrentStep()
+        manufacturing.completeCurrentStep(note: note)
 
         let isCompleted = manufacturing.isCompleted
         print("[ManufacturingViewModel] After completion - isCompleted: \(isCompleted)")

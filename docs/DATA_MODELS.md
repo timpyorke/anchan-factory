@@ -269,6 +269,7 @@ final class ManufacturingEntity {
 | `startedAt` | Date | Start timestamp |
 | `completedAt` | Date? | Completion timestamp |
 | `stepCompletionTimes` | [Date] | Step completion timestamps |
+| `stepNotes` | [String] | Notes for each completed step |
 | `recipe` | RecipeEntity | Recipe being manufactured |
 
 **ManufacturingStatus Enum:**
@@ -299,7 +300,8 @@ final class ManufacturingEntity {
 |--------|-------------|
 | `stepDuration(at:)` | Get duration for a specific step |
 | `stepCompletionTime(at:)` | Get completion time for a step |
-| `completeCurrentStep()` | Mark current step done, advance |
+| `stepNote(at:)` | Get note for a specific step |
+| `completeCurrentStep(note:)` | Mark current step done with optional note |
 | `generateBatchNumber(existingBatches:)` | Static: create new batch number |
 
 ### CustomUnitEntity

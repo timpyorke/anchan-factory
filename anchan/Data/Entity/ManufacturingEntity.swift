@@ -18,6 +18,7 @@ final class ManufacturingEntity {
     var startedAt: Date = Date.now
     var completedAt: Date?
     var stepCompletionTimes: [Date] = []
+    var stepNotes: [String] = []
 
     @Relationship
     var recipe: RecipeEntity
@@ -35,6 +36,7 @@ final class ManufacturingEntity {
         self.startedAt = Date.now
         self.completedAt = nil
         self.stepCompletionTimes = []
+        self.stepNotes = []
     }
 
     /// Generate a batch number based on date and sequence
@@ -107,12 +109,19 @@ final class ManufacturingEntity {
         return stepCompletionTimes[index]
     }
 
-    func completeCurrentStep() {
+    func completeCurrentStep(note: String = "") {
         stepCompletionTimes.append(Date.now)
+        stepNotes.append(note)
         currentStepIndex += 1
         if currentStepIndex >= recipe.steps.count {
             status = .completed
             completedAt = Date.now
         }
+    }
+
+    func stepNote(at index: Int) -> String? {
+        guard index < stepNotes.count else { return nil }
+        let note = stepNotes[index]
+        return note.isEmpty ? nil : note
     }
 }

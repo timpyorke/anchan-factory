@@ -322,6 +322,22 @@ struct ManufacturingDetailView: View {
                     }
                 }
 
+                // Step Note (user entered during manufacturing)
+                if let stepNote = manufacturing.stepNote(at: index) {
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: "note.text")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                        Text(stepNote)
+                            .font(.caption)
+                            .foregroundStyle(.primary)
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.blue.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+
                 // Completion time
                 if let completionTime = manufacturing.stepCompletionTime(at: index) {
                     Text("Completed at \(completionTime, format: .dateTime.hour().minute().second())")
