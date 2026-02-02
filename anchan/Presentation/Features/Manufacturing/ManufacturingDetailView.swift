@@ -55,6 +55,11 @@ struct ManufacturingDetailView: View {
                 ShareSheet(items: [url])
             }
         }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK") { }
+        } message: {
+            Text(viewModel.errorMessage ?? "An unknown error occurred")
+        }
         .onAppear {
             viewModel.setup(modelContext: modelContext, id: id)
         }

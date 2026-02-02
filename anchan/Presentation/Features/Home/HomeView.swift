@@ -56,10 +56,15 @@ struct HomeView: View {
         } message: {
             if let recipe = viewModel.selectedRecipe {
                 let items = recipe.insufficientIngredients
-                    .map { "\($0.inventoryItem.name) (need \($0.quantity.clean) \($0.displaySymbol), have \($0.inventoryItem.stock.clean) \($0.inventoryItem.displaySymbol))" }
+                    .map { "\($0.inventoryItem.name) (need \(AppNumberFormatter.format($0.quantity)) \($0.displaySymbol), have \(AppNumberFormatter.format($0.inventoryItem.stock)) \($0.inventoryItem.displaySymbol))" }
                     .joined(separator: "\n")
                 Text("The following ingredients don't have enough stock:\n\n\(items)")
             }
+        }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK") { }
+        } message: {
+            Text(viewModel.errorMessage ?? "An unknown error occurred")
         }
         .onAppear {
             viewModel.setup(modelContext: modelContext)
@@ -373,13 +378,13 @@ private struct RecipeSelectionRow: View {
 
                 HStack(spacing: 12) {
                     if recipe.totalTime > 0 {
-                        Label(recipe.totalTime.formattedTime, systemImage: "clock")
+                        Label(TimeFormatter.formatMinutes(recipe.totalTime), systemImage: "clock")
                     }
 
                     Label("\(recipe.steps.count) \(String(localized: "steps"))", systemImage: "list.number")
 
                     if recipe.totalCost > 0 {
-                        Label("฿\(recipe.totalCost.clean)", systemImage: "banknote")
+                        Label(CurrencyFormatter.format(recipe.totalCost), systemImage: "banknote")
                     }
                 }
                 .font(.caption)
@@ -437,7 +442,7 @@ private struct LowStockRow: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.primary)
 
-                    Text("\(item.stock.clean) / \(item.minStock.clean) \(item.displaySymbol)")
+                    Text("\(AppNumberFormatter.format(item.stock)) / \(AppNumberFormatter.format(item.minStock)) \(item.displaySymbol)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -450,7 +455,7 @@ private struct LowStockRow: View {
                         .font(.caption2)
                         .foregroundStyle(.secondary)
 
-                    Text("+\(item.restockAmount.clean) \(item.displaySymbol)")
+                    Text("+\(AppNumberFormatter.format(item.restockAmount)) \(item.displaySymbol)")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.orange)
                 }

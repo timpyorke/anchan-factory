@@ -25,6 +25,11 @@ struct RecipeView: View {
                 listContent
             }
         }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK") { }
+        } message: {
+            Text(viewModel.errorMessage ?? "An unknown error occurred")
+        }
         .onAppear {
             viewModel.setup(modelContext: modelContext)
         }
@@ -105,7 +110,7 @@ private struct RecipeRowView: View {
 
                 HStack(spacing: 12) {
                     if recipe.totalTime > 0 {
-                        Label(recipe.totalTime.formattedTime, systemImage: "clock")
+                        Label(TimeFormatter.formatMinutes(recipe.totalTime), systemImage: "clock")
                     }
 
                     if !recipe.steps.isEmpty {

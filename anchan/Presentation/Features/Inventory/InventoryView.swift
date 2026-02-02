@@ -36,6 +36,11 @@ struct InventoryView: View {
                 }
             }
         }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK") { }
+        } message: {
+            Text(viewModel.errorMessage ?? "An unknown error occurred")
+        }
         .onAppear {
             viewModel.setup(modelContext: modelContext)
         }
@@ -101,8 +106,8 @@ private struct InventoryRowView: View {
                 }
 
                 HStack(spacing: 12) {
-                    Label("\(item.stock.clean) \(item.displaySymbol)", systemImage: "shippingbox")
-                    Label("\(item.unitPrice.clean) / \(item.displaySymbol)", systemImage: "tag")
+                    Label("\(AppNumberFormatter.format(item.stock)) \(item.displaySymbol)", systemImage: "shippingbox")
+                    Label("\(AppNumberFormatter.format(item.unitPrice)) / \(item.displaySymbol)", systemImage: "tag")
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

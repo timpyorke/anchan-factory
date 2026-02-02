@@ -59,6 +59,11 @@ struct ManufacturingView: View {
         } message: {
             Text(String(localized: "All steps have been completed successfully."))
         }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK") { }
+        } message: {
+            Text(viewModel.errorMessage ?? "An unknown error occurred")
+        }
         .onAppear {
             viewModel.setup(modelContext: modelContext, id: id)
         }
@@ -99,7 +104,7 @@ struct ManufacturingView: View {
                 Spacer()
 
                 if manufacturing.recipe.totalTime > 0 {
-                    Label(manufacturing.recipe.totalTime.formattedTime, systemImage: "clock")
+                    Label(TimeFormatter.formatMinutes(manufacturing.recipe.totalTime), systemImage: "clock")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -149,7 +154,7 @@ struct ManufacturingView: View {
                     Spacer()
 
                     if step.time > 0 {
-                        Label(step.time.formattedTime, systemImage: "clock")
+                        Label(TimeFormatter.formatMinutes(step.time), systemImage: "clock")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -214,11 +219,11 @@ struct ManufacturingView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(ingredient.quantity.clean) \(ingredient.displaySymbol)")
+                Text("\(AppNumberFormatter.format(ingredient.quantity)) \(ingredient.displaySymbol)")
                     .foregroundStyle(.secondary)
 
                 if !hasStock {
-                    Text(String(localized: "Stock: \(ingredient.inventoryItem.stock.clean) \(ingredient.inventoryItem.displaySymbol)"))
+                    Text(String(localized: "Stock: \(AppNumberFormatter.format(ingredient.inventoryItem.stock)) \(ingredient.inventoryItem.displaySymbol)"))
                         .font(.caption2)
                         .foregroundStyle(Color.orange)
                 }
