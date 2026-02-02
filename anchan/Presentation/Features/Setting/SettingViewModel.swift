@@ -3,7 +3,10 @@ import SwiftData
 
 @Observable
 final class SettingViewModel {
-    private var modelContext: ModelContext?
+    private var customUnitRepository: CustomUnitRepository?
+    private var manufacturingRepository: ManufacturingRepository?
+    private var recipeRepository: RecipeRepository?
+    private var inventoryRepository: InventoryRepository?
     private let exportService = CSVExportService.shared
 
     var showExportSheet = false
@@ -11,99 +14,169 @@ final class SettingViewModel {
     var showClearDataAlert = false
     var showAddUnitSheet = false
     var showRestartAlert = false
+    var isLoading = false
+    var isDeleting = false
+    var errorMessage: String?
+    var showError = false
 
     var settings: AppSettings {
         AppSettings.shared
     }
 
     func setup(modelContext: ModelContext) {
-        self.modelContext = modelContext
+        self.customUnitRepository = CustomUnitRepository(modelContext: modelContext)
+        self.manufacturingRepository = ManufacturingRepository(modelContext: modelContext)
+        self.recipeRepository = RecipeRepository(modelContext: modelContext)
+        self.inventoryRepository = InventoryRepository(modelContext: modelContext)
     }
 
     // MARK: - Delete Units
 
     func deleteUnits(at offsets: IndexSet, from units: [CustomUnitEntity]) {
-        guard let modelContext else { return }
+        guard let customUnitRepository else { return }
+
+        isDeleting = true
+        defer { isDeleting = false }
+
         for index in offsets {
-            modelContext.delete(units[index])
+            switch customUnitRepository.delete(units[index]) {
+            case .success:
+                break
+            case .failure(let error):
+                handleError(error)
+                return
+            }
         }
     }
 
     // MARK: - Clear All Data
 
     func clearAllData() {
-        guard let modelContext else { return }
+        guard let manufacturingRepository,
+              let recipeRepository,
+              let inventoryRepository,
+              let customUnitRepository else { return }
+
+        isDeleting = true
+        defer { isDeleting = false }
 
         // Delete all manufacturing
-        let manufacturingDescriptor = FetchDescriptor<ManufacturingEntity>()
-        if let items = try? modelContext.fetch(manufacturingDescriptor) {
-            items.forEach { modelContext.delete($0) }
+        switch manufacturingRepository.fetchAll() {
+        case .success(let items):
+            for item in items {
+                if case .failure(let error) = manufacturingRepository.delete(item) {
+                    handleError(error)
+                    return
+                }
+            }
+        case .failure(let error):
+            handleError(error)
+            return
         }
 
         // Delete all recipes (cascades to ingredients and steps)
-        let recipeDescriptor = FetchDescriptor<RecipeEntity>()
-        if let items = try? modelContext.fetch(recipeDescriptor) {
-            items.forEach { modelContext.delete($0) }
+        switch recipeRepository.fetchAll() {
+        case .success(let items):
+            for item in items {
+                if case .failure(let error) = recipeRepository.delete(item) {
+                    handleError(error)
+                    return
+                }
+            }
+        case .failure(let error):
+            handleError(error)
+            return
         }
 
         // Delete all inventory
-        let inventoryDescriptor = FetchDescriptor<InventoryEntity>()
-        if let items = try? modelContext.fetch(inventoryDescriptor) {
-            items.forEach { modelContext.delete($0) }
+        switch inventoryRepository.fetchAll() {
+        case .success(let items):
+            for item in items {
+                if case .failure(let error) = inventoryRepository.delete(item) {
+                    handleError(error)
+                    return
+                }
+            }
+        case .failure(let error):
+            handleError(error)
+            return
         }
 
         // Delete custom units
-        let unitDescriptor = FetchDescriptor<CustomUnitEntity>()
-        if let items = try? modelContext.fetch(unitDescriptor) {
-            items.forEach { modelContext.delete($0) }
+        switch customUnitRepository.fetchAll() {
+        case .success(let items):
+            for item in items {
+                if case .failure(let error) = customUnitRepository.delete(item) {
+                    handleError(error)
+                    return
+                }
+            }
+        case .failure(let error):
+            handleError(error)
         }
     }
 
     // MARK: - Export Manufacturing
 
     func exportManufacturingData() {
-        guard let modelContext else { return }
+        guard let manufacturingRepository else { return }
 
-        let descriptor = FetchDescriptor<ManufacturingEntity>(
-            sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
-        )
-        guard let items = try? modelContext.fetch(descriptor) else { return }
+        isLoading = true
+        defer { isLoading = false }
 
-        exportURL = exportService.exportAllManufacturing(items)
-        if exportURL != nil {
-            showExportSheet = true
+        switch manufacturingRepository.fetchAll() {
+        case .success(let items):
+            exportURL = exportService.exportAllManufacturing(items)
+            if exportURL != nil {
+                showExportSheet = true
+            }
+        case .failure(let error):
+            handleError(error)
         }
     }
 
     // MARK: - Export Inventory
 
     func exportInventoryData() {
-        guard let modelContext else { return }
+        guard let inventoryRepository else { return }
 
-        let descriptor = FetchDescriptor<InventoryEntity>(
-            sortBy: [SortDescriptor(\.name)]
-        )
-        guard let items = try? modelContext.fetch(descriptor) else { return }
+        isLoading = true
+        defer { isLoading = false }
 
-        exportURL = exportService.exportInventory(items)
-        if exportURL != nil {
-            showExportSheet = true
+        switch inventoryRepository.fetchAll() {
+        case .success(let items):
+            exportURL = exportService.exportInventory(items)
+            if exportURL != nil {
+                showExportSheet = true
+            }
+        case .failure(let error):
+            handleError(error)
         }
     }
 
     // MARK: - Export Recipe
 
     func exportRecipeData() {
-        guard let modelContext else { return }
+        guard let recipeRepository else { return }
 
-        let descriptor = FetchDescriptor<RecipeEntity>(
-            sortBy: [SortDescriptor(\.name)]
-        )
-        guard let items = try? modelContext.fetch(descriptor) else { return }
+        isLoading = true
+        defer { isLoading = false }
 
-        exportURL = exportService.exportRecipes(items)
-        if exportURL != nil {
-            showExportSheet = true
+        switch recipeRepository.fetchAll() {
+        case .success(let items):
+            exportURL = exportService.exportRecipes(items)
+            if exportURL != nil {
+                showExportSheet = true
+            }
+        case .failure(let error):
+            handleError(error)
         }
+    }
+
+    // MARK: - Error Handling
+
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }

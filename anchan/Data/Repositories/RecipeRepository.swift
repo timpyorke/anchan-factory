@@ -2,15 +2,15 @@ import SwiftData
 import Foundation
 
 protocol RecipeRepositoryProtocol {
-    func fetchAll() -> [RecipeEntity]
-    func fetch(by id: PersistentIdentifier) -> RecipeEntity?
-    func search(name: String) -> [RecipeEntity]
-    func fetchFavorites() -> [RecipeEntity]
-    func fetchByCategory(_ category: String) -> [RecipeEntity]
-    func create(_ recipe: RecipeEntity)
-    func delete(_ recipe: RecipeEntity)
-    func updateBasicInfo(_ recipe: RecipeEntity, name: String, note: String, category: String?, batchSize: Int, batchUnit: String)
-    func rebuildRelationships(_ recipe: RecipeEntity, steps: [RecipeStepInput], ingredients: [RecipeIngredientInput])
+    func fetchAll() -> Result<[RecipeEntity], AppError>
+    func fetch(by id: PersistentIdentifier) -> Result<RecipeEntity, AppError>
+    func search(name: String) -> Result<[RecipeEntity], AppError>
+    func fetchFavorites() -> Result<[RecipeEntity], AppError>
+    func fetchByCategory(_ category: String) -> Result<[RecipeEntity], AppError>
+    func create(_ recipe: RecipeEntity) -> Result<Void, AppError>
+    func delete(_ recipe: RecipeEntity) -> Result<Void, AppError>
+    func updateBasicInfo(_ recipe: RecipeEntity, name: String, note: String, category: String?, batchSize: Int, batchUnit: String) -> Result<Void, AppError>
+    func rebuildRelationships(_ recipe: RecipeEntity, steps: [RecipeStepInput], ingredients: [RecipeIngredientInput]) -> Result<Void, AppError>
 }
 
 // MARK: - Input Models for Recipe Updates
@@ -39,65 +39,88 @@ final class RecipeRepository: RecipeRepositoryProtocol {
 
     // MARK: - Fetch
 
-    func fetchAll() -> [RecipeEntity] {
-        let descriptor = FetchDescriptor<RecipeEntity>(
-            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
+    func fetchAll() -> Result<[RecipeEntity], AppError> {
+        do {
+            let descriptor = FetchDescriptor<RecipeEntity>(
+                sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+            )
+            let recipes = try modelContext.fetch(descriptor)
+            return .success(recipes)
+        } catch {
+            return .failure(.databaseError("Failed to fetch recipes"))
+        }
     }
 
-    func fetch(by id: PersistentIdentifier) -> RecipeEntity? {
-        return modelContext.model(for: id) as? RecipeEntity
+    func fetch(by id: PersistentIdentifier) -> Result<RecipeEntity, AppError> {
+        guard let recipe = modelContext.model(for: id) as? RecipeEntity else {
+            return .failure(.notFound("Recipe"))
+        }
+        return .success(recipe)
     }
 
-    func search(name: String) -> [RecipeEntity] {
-        let descriptor = FetchDescriptor<RecipeEntity>(
-            predicate: #Predicate { $0.name.localizedStandardContains(name) },
-            sortBy: [SortDescriptor(\.name)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
+    func search(name: String) -> Result<[RecipeEntity], AppError> {
+        do {
+            let descriptor = FetchDescriptor<RecipeEntity>(
+                predicate: #Predicate { $0.name.localizedStandardContains(name) },
+                sortBy: [SortDescriptor(\.name)]
+            )
+            let recipes = try modelContext.fetch(descriptor)
+            return .success(recipes)
+        } catch {
+            return .failure(.databaseError("Failed to search recipes"))
+        }
     }
 
-    func fetchFavorites() -> [RecipeEntity] {
-        let descriptor = FetchDescriptor<RecipeEntity>(
-            predicate: #Predicate { $0.isFavorite },
-            sortBy: [SortDescriptor(\.name)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
+    func fetchFavorites() -> Result<[RecipeEntity], AppError> {
+        do {
+            let descriptor = FetchDescriptor<RecipeEntity>(
+                predicate: #Predicate { $0.isFavorite },
+                sortBy: [SortDescriptor(\.name)]
+            )
+            let recipes = try modelContext.fetch(descriptor)
+            return .success(recipes)
+        } catch {
+            return .failure(.databaseError("Failed to fetch favorite recipes"))
+        }
     }
 
-    func fetchByCategory(_ category: String) -> [RecipeEntity] {
-        let descriptor = FetchDescriptor<RecipeEntity>(
-            predicate: #Predicate { $0.category == category },
-            sortBy: [SortDescriptor(\.name)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
+    func fetchByCategory(_ category: String) -> Result<[RecipeEntity], AppError> {
+        do {
+            let descriptor = FetchDescriptor<RecipeEntity>(
+                predicate: #Predicate { $0.category == category },
+                sortBy: [SortDescriptor(\.name)]
+            )
+            let recipes = try modelContext.fetch(descriptor)
+            return .success(recipes)
+        } catch {
+            return .failure(.databaseError("Failed to fetch recipes by category"))
+        }
     }
 
     // MARK: - Create & Delete
 
-    func create(_ recipe: RecipeEntity) {
+    func create(_ recipe: RecipeEntity) -> Result<Void, AppError> {
         modelContext.insert(recipe)
-        save()
+        return save()
     }
 
-    func delete(_ recipe: RecipeEntity) {
+    func delete(_ recipe: RecipeEntity) -> Result<Void, AppError> {
         modelContext.delete(recipe)
-        save()
+        return save()
     }
 
     // MARK: - Update
 
-    func updateBasicInfo(_ recipe: RecipeEntity, name: String, note: String, category: String?, batchSize: Int, batchUnit: String) {
+    func updateBasicInfo(_ recipe: RecipeEntity, name: String, note: String, category: String?, batchSize: Int, batchUnit: String) -> Result<Void, AppError> {
         recipe.name = name.trimmingCharacters(in: .whitespaces)
         recipe.note = note
         recipe.category = category?.isEmpty == false ? category?.trimmingCharacters(in: .whitespaces) : nil
         recipe.batchSize = batchSize
         recipe.batchUnit = batchUnit.isEmpty ? "pcs" : batchUnit.trimmingCharacters(in: .whitespaces)
-        save()
+        return save()
     }
 
-    func rebuildRelationships(_ recipe: RecipeEntity, steps: [RecipeStepInput], ingredients: [RecipeIngredientInput]) {
+    func rebuildRelationships(_ recipe: RecipeEntity, steps: [RecipeStepInput], ingredients: [RecipeIngredientInput]) -> Result<Void, AppError> {
         // Remove old steps
         for step in recipe.steps {
             modelContext.delete(step)
@@ -136,16 +159,17 @@ final class RecipeRepository: RecipeRepositoryProtocol {
             }
         }
 
-        save()
+        return save()
     }
 
     // MARK: - Private
 
-    private func save() {
+    private func save() -> Result<Void, AppError> {
         do {
             try modelContext.save()
+            return .success(())
         } catch {
-            print("[RecipeRepository] Save error: \(error)")
+            return .failure(.databaseError("Failed to save changes: \(error.localizedDescription)"))
         }
     }
 }

@@ -16,10 +16,18 @@ final class InventoryAddViewModel {
     var minStock: String = ""
     private(set) var customUnits: [CustomUnitEntity] = []
 
+    // MARK: - UI State
+
+    var isLoading = false
+    var isSaving = false
+    var isDeleting = false
+    var errorMessage: String?
+    var showError = false
+
     // MARK: - Dependencies
 
     private var repository: InventoryRepository?
-    private var modelContext: ModelContext?
+    private var customUnitRepository: CustomUnitRepository?
     private let editingItem: InventoryEntity?
 
     // MARK: - Computed Properties
@@ -43,8 +51,8 @@ final class InventoryAddViewModel {
     // MARK: - Setup
 
     func setup(modelContext: ModelContext) {
-        self.modelContext = modelContext
         self.repository = InventoryRepository(modelContext: modelContext)
+        self.customUnitRepository = CustomUnitRepository(modelContext: modelContext)
         loadCustomUnits()
         loadEditingItem()
     }
@@ -52,11 +60,17 @@ final class InventoryAddViewModel {
     // MARK: - Actions
 
     private func loadCustomUnits() {
-        guard let modelContext else { return }
-        let descriptor = FetchDescriptor<CustomUnitEntity>(
-            sortBy: [SortDescriptor(\.name)]
-        )
-        customUnits = (try? modelContext.fetch(descriptor)) ?? []
+        guard let customUnitRepository else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        switch customUnitRepository.fetchAll() {
+        case .success(let units):
+            customUnits = units
+        case .failure(let error):
+            handleError(error)
+        }
     }
 
     private func loadEditingItem() {
@@ -70,7 +84,10 @@ final class InventoryAddViewModel {
     }
 
     func saveItem(onComplete: () -> Void) {
-        guard let modelContext else { return }
+        guard let repository else { return }
+
+        isSaving = true
+        defer { isSaving = false }
 
         let price = Double(unitPrice) ?? 0
         let stockValue = Double(stock) ?? 0
@@ -84,6 +101,7 @@ final class InventoryAddViewModel {
             item.unitPrice = price
             item.stock = stockValue
             item.minStock = minStockValue
+            onComplete()
         } else {
             // Create new
             let item = InventoryEntity(
@@ -96,15 +114,34 @@ final class InventoryAddViewModel {
             if !category.isEmpty {
                 item.category = category.trimmingCharacters(in: .whitespaces)
             }
-            modelContext.insert(item)
-        }
 
-        onComplete()
+            switch repository.create(item) {
+            case .success:
+                onComplete()
+            case .failure(let error):
+                handleError(error)
+            }
+        }
     }
 
     func deleteItem(onComplete: () -> Void) {
-        guard let item = editingItem else { return }
-        repository?.delete(item)
-        onComplete()
+        guard let item = editingItem, let repository else { return }
+
+        isDeleting = true
+        defer { isDeleting = false }
+
+        switch repository.delete(item) {
+        case .success:
+            onComplete()
+        case .failure(let error):
+            handleError(error)
+        }
+    }
+
+    // MARK: - Error Handling
+
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }

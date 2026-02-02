@@ -2,12 +2,12 @@ import SwiftData
 import Foundation
 
 protocol ManufacturingRepositoryProtocol {
-    func fetchAll() -> [ManufacturingEntity]
-    func fetchActive() -> [ManufacturingEntity]
-    func fetchCompleted() -> [ManufacturingEntity]
-    func fetch(by id: PersistentIdentifier) -> ManufacturingEntity?
-    func create(_ manufacturing: ManufacturingEntity)
-    func delete(_ manufacturing: ManufacturingEntity)
+    func fetchAll() -> Result<[ManufacturingEntity], AppError>
+    func fetchActive() -> Result<[ManufacturingEntity], AppError>
+    func fetchCompleted() -> Result<[ManufacturingEntity], AppError>
+    func fetch(by id: PersistentIdentifier) -> Result<ManufacturingEntity, AppError>
+    func create(_ manufacturing: ManufacturingEntity) -> Result<Void, AppError>
+    func delete(_ manufacturing: ManufacturingEntity) -> Result<Void, AppError>
 }
 
 @MainActor
@@ -21,54 +21,73 @@ final class ManufacturingRepository: ManufacturingRepositoryProtocol {
 
     // MARK: - Fetch
 
-    func fetchAll() -> [ManufacturingEntity] {
-        let descriptor = FetchDescriptor<ManufacturingEntity>(
-            sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
+    func fetchAll() -> Result<[ManufacturingEntity], AppError> {
+        do {
+            let descriptor = FetchDescriptor<ManufacturingEntity>(
+                sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
+            )
+            let items = try modelContext.fetch(descriptor)
+            return .success(items)
+        } catch {
+            return .failure(.databaseError("Failed to fetch manufacturing records"))
+        }
     }
 
-    func fetchActive() -> [ManufacturingEntity] {
-        let inProgressStatus = ManufacturingStatus.inProgress
-        let descriptor = FetchDescriptor<ManufacturingEntity>(
-            predicate: #Predicate { $0.status == inProgressStatus },
-            sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
+    func fetchActive() -> Result<[ManufacturingEntity], AppError> {
+        do {
+            let inProgressStatus = ManufacturingStatus.inProgress
+            let descriptor = FetchDescriptor<ManufacturingEntity>(
+                predicate: #Predicate { $0.status == inProgressStatus },
+                sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
+            )
+            let items = try modelContext.fetch(descriptor)
+            return .success(items)
+        } catch {
+            return .failure(.databaseError("Failed to fetch active manufacturing records"))
+        }
     }
 
-    func fetchCompleted() -> [ManufacturingEntity] {
-        let completedStatus = ManufacturingStatus.completed
-        let descriptor = FetchDescriptor<ManufacturingEntity>(
-            predicate: #Predicate { $0.status == completedStatus },
-            sortBy: [SortDescriptor(\.completedAt, order: .reverse)]
-        )
-        return (try? modelContext.fetch(descriptor)) ?? []
+    func fetchCompleted() -> Result<[ManufacturingEntity], AppError> {
+        do {
+            let completedStatus = ManufacturingStatus.completed
+            let descriptor = FetchDescriptor<ManufacturingEntity>(
+                predicate: #Predicate { $0.status == completedStatus },
+                sortBy: [SortDescriptor(\.completedAt, order: .reverse)]
+            )
+            let items = try modelContext.fetch(descriptor)
+            return .success(items)
+        } catch {
+            return .failure(.databaseError("Failed to fetch completed manufacturing records"))
+        }
     }
 
-    func fetch(by id: PersistentIdentifier) -> ManufacturingEntity? {
-        return modelContext.model(for: id) as? ManufacturingEntity
+    func fetch(by id: PersistentIdentifier) -> Result<ManufacturingEntity, AppError> {
+        guard let item = modelContext.model(for: id) as? ManufacturingEntity else {
+            return .failure(.notFound("Manufacturing record"))
+        }
+        return .success(item)
     }
 
     // MARK: - Create & Delete
 
-    func create(_ manufacturing: ManufacturingEntity) {
+    func create(_ manufacturing: ManufacturingEntity) -> Result<Void, AppError> {
         modelContext.insert(manufacturing)
-        save()
+        return save()
     }
 
-    func delete(_ manufacturing: ManufacturingEntity) {
+    func delete(_ manufacturing: ManufacturingEntity) -> Result<Void, AppError> {
         modelContext.delete(manufacturing)
-        save()
+        return save()
     }
 
     // MARK: - Private
 
-    private func save() {
+    private func save() -> Result<Void, AppError> {
         do {
             try modelContext.save()
+            return .success(())
         } catch {
-            print("[ManufacturingRepository] Save error: \(error)")
+            return .failure(.databaseError("Failed to save changes: \(error.localizedDescription)"))
         }
     }
 }

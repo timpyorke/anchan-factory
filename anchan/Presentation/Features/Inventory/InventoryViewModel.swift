@@ -13,6 +13,13 @@ final class InventoryViewModel {
     var isShowingAddSheet: Bool = false
     var editingItem: InventoryEntity?
 
+    // MARK: - UI State
+
+    var isLoading = false
+    var isDeleting = false
+    var errorMessage: String?
+    var showError = false
+
     // MARK: - Dependencies
 
     private var repository: InventoryRepository?
@@ -41,7 +48,17 @@ final class InventoryViewModel {
     // MARK: - Actions
 
     func loadItems() {
-        items = repository?.fetchAll() ?? []
+        guard let repository else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        switch repository.fetchAll() {
+        case .success(let fetchedItems):
+            items = fetchedItems
+        case .failure(let error):
+            handleError(error)
+        }
     }
 
     func edit(_ item: InventoryEntity) {
@@ -49,10 +66,28 @@ final class InventoryViewModel {
     }
 
     func deleteItems(at offsets: IndexSet) {
+        guard let repository else { return }
+
+        isDeleting = true
+        defer { isDeleting = false }
+
         for index in offsets {
             let item = filteredItems[index]
-            repository?.delete(item)
+            switch repository.delete(item) {
+            case .success:
+                break
+            case .failure(let error):
+                handleError(error)
+                return
+            }
         }
         loadItems()
+    }
+
+    // MARK: - Error Handling
+
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }

@@ -14,6 +14,9 @@ final class ManufacturingViewModel {
 
     var showCancelAlert = false
     var showCompletionAlert = false
+    var isLoading = false
+    var errorMessage: String?
+    var showError = false
 
     // MARK: - Dependencies
 
@@ -29,7 +32,17 @@ final class ManufacturingViewModel {
     // MARK: - Actions
 
     func loadManufacturing(id: PersistentIdentifier) {
-        manufacturing = repository?.fetch(by: id)
+        guard let repository else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        switch repository.fetch(by: id) {
+        case .success(let item):
+            manufacturing = item
+        case .failure(let error):
+            handleError(error)
+        }
     }
 
     func completeCurrentStep() {
@@ -45,5 +58,12 @@ final class ManufacturingViewModel {
         guard let manufacturing else { return }
         manufacturing.status = .cancelled
         onComplete()
+    }
+
+    // MARK: - Error Handling
+
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }

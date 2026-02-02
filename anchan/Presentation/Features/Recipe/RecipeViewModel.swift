@@ -11,6 +11,13 @@ final class RecipeViewModel {
     private(set) var recipes: [RecipeEntity] = []
     var searchText: String = ""
 
+    // MARK: - UI State
+
+    var isLoading = false
+    var isDeleting = false
+    var errorMessage: String?
+    var showError = false
+
     // MARK: - Dependencies
 
     private var repository: RecipeRepository?
@@ -34,7 +41,17 @@ final class RecipeViewModel {
     // MARK: - Actions
 
     func loadRecipes() {
-        recipes = repository?.fetchAll() ?? []
+        guard let repository else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        switch repository.fetchAll() {
+        case .success(let items):
+            recipes = items
+        case .failure(let error):
+            handleError(error)
+        }
     }
 
     func toggleFavorite(_ recipe: RecipeEntity) {
@@ -43,10 +60,28 @@ final class RecipeViewModel {
     }
 
     func deleteRecipes(at offsets: IndexSet) {
+        guard let repository else { return }
+
+        isDeleting = true
+        defer { isDeleting = false }
+
         for index in offsets {
             let recipe = filteredRecipes[index]
-            repository?.delete(recipe)
+            switch repository.delete(recipe) {
+            case .success:
+                break
+            case .failure(let error):
+                handleError(error)
+                return
+            }
         }
         loadRecipes()
+    }
+
+    // MARK: - Error Handling
+
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }
