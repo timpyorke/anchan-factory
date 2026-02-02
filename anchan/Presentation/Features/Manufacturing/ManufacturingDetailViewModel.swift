@@ -15,6 +15,10 @@ final class ManufacturingDetailViewModel {
     var showDeleteAlert = false
     var showShareSheet = false
     var exportURL: URL?
+    var isLoading = false
+    var isDeleting = false
+    var errorMessage: String?
+    var showError = false
 
     // MARK: - Dependencies
 
@@ -31,13 +35,31 @@ final class ManufacturingDetailViewModel {
     // MARK: - Actions
 
     func loadManufacturing(id: PersistentIdentifier) {
-        manufacturing = repository?.fetch(by: id)
+        guard let repository else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        switch repository.fetch(by: id) {
+        case .success(let item):
+            manufacturing = item
+        case .failure(let error):
+            handleError(error)
+        }
     }
 
     func deleteManufacturing(onComplete: () -> Void) {
-        guard let manufacturing else { return }
-        repository?.delete(manufacturing)
-        onComplete()
+        guard let manufacturing, let repository else { return }
+
+        isDeleting = true
+        defer { isDeleting = false }
+
+        switch repository.delete(manufacturing) {
+        case .success:
+            onComplete()
+        case .failure(let error):
+            handleError(error)
+        }
     }
 
     func exportToCSV() {
@@ -51,17 +73,13 @@ final class ManufacturingDetailViewModel {
     // MARK: - Helpers
 
     func formatDuration(_ interval: TimeInterval) -> String {
-        let totalSeconds = Int(interval)
-        let hours = totalSeconds / 3600
-        let minutes = (totalSeconds % 3600) / 60
-        let seconds = totalSeconds % 60
+        return TimeFormatter.formatDuration(interval)
+    }
 
-        if hours > 0 {
-            return "\(hours)h \(minutes)m"
-        } else if minutes > 0 {
-            return "\(minutes)m \(seconds)s"
-        } else {
-            return "\(seconds)s"
-        }
+    // MARK: - Error Handling
+
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }

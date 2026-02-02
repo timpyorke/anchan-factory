@@ -23,12 +23,16 @@ final class RecipeEditViewModel {
     var isAddingStep: Bool = false
     var isAddingIngredient: Bool = false
     var showDeleteAlert: Bool = false
+    var isLoading = false
+    var isSaving = false
+    var isDeleting = false
+    var errorMessage: String?
+    var showError = false
 
     // MARK: - Dependencies
 
     private var repository: RecipeRepository?
     private var inventoryRepository: InventoryRepository?
-    private var modelContext: ModelContext?
 
     // MARK: - Computed Properties
 
@@ -49,7 +53,6 @@ final class RecipeEditViewModel {
     // MARK: - Setup
 
     func setup(modelContext: ModelContext, recipeId: PersistentIdentifier?) {
-        self.modelContext = modelContext
         self.repository = RecipeRepository(modelContext: modelContext)
         self.inventoryRepository = InventoryRepository(modelContext: modelContext)
 
@@ -61,55 +64,75 @@ final class RecipeEditViewModel {
     // MARK: - Actions
 
     func loadRecipe(id: PersistentIdentifier) {
-        recipe = repository?.fetch(by: id)
+        guard let repository else { return }
 
-        guard let recipe else { return }
-        name = recipe.name
-        note = recipe.note
-        category = recipe.category ?? ""
-        batchSize = recipe.batchSize
-        batchUnit = recipe.batchUnit
-        steps = recipe.sortedSteps.map { step in
-            StepInput(title: step.title, note: step.note, time: step.time)
-        }
-        ingredients = recipe.ingredients.map { ingredient in
-            IngredientInput(
-                inventoryId: ingredient.inventoryItem.persistentModelID,
-                inventoryName: ingredient.inventoryItem.name,
-                quantity: ingredient.quantity,
-                unitSymbol: ingredient.unitSymbol,
-                note: ingredient.note ?? ""
-            )
+        isLoading = true
+        defer { isLoading = false }
+
+        switch repository.fetch(by: id) {
+        case .success(let fetchedRecipe):
+            recipe = fetchedRecipe
+            name = fetchedRecipe.name
+            note = fetchedRecipe.note
+            category = fetchedRecipe.category ?? ""
+            batchSize = fetchedRecipe.batchSize
+            batchUnit = fetchedRecipe.batchUnit
+            steps = fetchedRecipe.sortedSteps.map { step in
+                StepInput(title: step.title, note: step.note, time: step.time)
+            }
+            ingredients = fetchedRecipe.ingredients.map { ingredient in
+                IngredientInput(
+                    inventoryId: ingredient.inventoryItem.persistentModelID,
+                    inventoryName: ingredient.inventoryItem.name,
+                    quantity: ingredient.quantity,
+                    unitSymbol: ingredient.unitSymbol,
+                    note: ingredient.note ?? ""
+                )
+            }
+        case .failure(let error):
+            handleError(error)
         }
     }
 
     func saveRecipe(onComplete: () -> Void) {
-        guard let modelContext else { return }
+        guard let repository, let inventoryRepository else { return }
+
+        isSaving = true
+        defer { isSaving = false }
 
         if let recipe {
             // Update existing recipe
-            repository?.updateBasicInfo(
+            switch repository.updateBasicInfo(
                 recipe,
                 name: name,
                 note: note,
                 category: category.isEmpty ? nil : category,
                 batchSize: batchSize,
                 batchUnit: batchUnit
-            )
+            ) {
+            case .success:
+                // Rebuild relationships
+                let recipeSteps = steps.map { step in
+                    RecipeStepInput(title: step.title, note: step.note, time: step.time)
+                }
+                let recipeIngredients = ingredients.map { ingredient in
+                    RecipeIngredientInput(
+                        inventoryId: ingredient.inventoryId,
+                        quantity: ingredient.quantity,
+                        unitSymbol: ingredient.unitSymbol,
+                        note: ingredient.note.isEmpty ? nil : ingredient.note
+                    )
+                }
 
-            // Rebuild relationships
-            let recipeSteps = steps.map { step in
-                RecipeStepInput(title: step.title, note: step.note, time: step.time)
+                switch repository.rebuildRelationships(recipe, steps: recipeSteps, ingredients: recipeIngredients) {
+                case .success:
+                    onComplete()
+                case .failure(let error):
+                    handleError(error)
+                }
+            case .failure(let error):
+                handleError(error)
             }
-            let recipeIngredients = ingredients.map { ingredient in
-                RecipeIngredientInput(
-                    inventoryId: ingredient.inventoryId,
-                    quantity: ingredient.quantity,
-                    unitSymbol: ingredient.unitSymbol,
-                    note: ingredient.note.isEmpty ? nil : ingredient.note
-                )
-            }
-            repository?.rebuildRelationships(recipe, steps: recipeSteps, ingredients: recipeIngredients)
         } else {
             // Create new recipe
             let newRecipe = RecipeEntity(
@@ -134,7 +157,8 @@ final class RecipeEditViewModel {
 
             // Add ingredients
             for ingredientInput in ingredients {
-                if let inventory = modelContext.model(for: ingredientInput.inventoryId) as? InventoryEntity {
+                switch inventoryRepository.fetch(by: ingredientInput.inventoryId) {
+                case .success(let inventory):
                     let ingredient = IngredientEntity(
                         inventoryItem: inventory,
                         quantity: ingredientInput.quantity,
@@ -143,19 +167,33 @@ final class RecipeEditViewModel {
                         recipe: newRecipe
                     )
                     newRecipe.ingredients.append(ingredient)
+                case .failure(let error):
+                    handleError(error)
+                    return
                 }
             }
 
-            repository?.create(newRecipe)
+            switch repository.create(newRecipe) {
+            case .success:
+                onComplete()
+            case .failure(let error):
+                handleError(error)
+            }
         }
-
-        onComplete()
     }
 
     func deleteRecipe(onComplete: () -> Void) {
-        guard let recipe else { return }
-        repository?.delete(recipe)
-        onComplete()
+        guard let recipe, let repository else { return }
+
+        isDeleting = true
+        defer { isDeleting = false }
+
+        switch repository.delete(recipe) {
+        case .success:
+            onComplete()
+        case .failure(let error):
+            handleError(error)
+        }
     }
 
     func addStep(_ step: StepInput) {
@@ -181,10 +219,11 @@ final class RecipeEditViewModel {
     // MARK: - Private Helpers
 
     private func calculateTotalCost() -> Double {
-        guard let modelContext else { return 0.0 }
+        guard let inventoryRepository else { return 0.0 }
 
         return ingredients.reduce(0.0) { total, ingredient in
-            if let inventory = modelContext.model(for: ingredient.inventoryId) as? InventoryEntity {
+            switch inventoryRepository.fetch(by: ingredient.inventoryId) {
+            case .success(let inventory):
                 // Try to convert if both are built-in units
                 var quantityInBaseUnit = ingredient.quantity
                 if let fromUnit = InventoryUnit(rawValue: ingredient.unitSymbol.lowercased()),
@@ -193,8 +232,16 @@ final class RecipeEditViewModel {
                     quantityInBaseUnit = converted
                 }
                 return total + (quantityInBaseUnit * inventory.unitPrice)
+            case .failure:
+                return total
             }
-            return total
         }
+    }
+
+    // MARK: - Error Handling
+
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }

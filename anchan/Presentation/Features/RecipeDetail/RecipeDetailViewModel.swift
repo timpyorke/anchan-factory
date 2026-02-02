@@ -13,6 +13,10 @@ final class RecipeDetailViewModel {
     // MARK: - UI State
 
     var showDeleteAlert = false
+    var isLoading = false
+    var isDeleting = false
+    var errorMessage: String?
+    var showError = false
 
     // MARK: - Dependencies
 
@@ -28,16 +32,41 @@ final class RecipeDetailViewModel {
     // MARK: - Actions
 
     func loadRecipe(id: PersistentIdentifier) {
-        recipe = repository?.fetch(by: id)
+        guard let repository else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        switch repository.fetch(by: id) {
+        case .success(let fetchedRecipe):
+            recipe = fetchedRecipe
+        case .failure(let error):
+            handleError(error)
+        }
     }
 
     func deleteRecipe(onComplete: () -> Void) {
-        guard let recipe else { return }
-        repository?.delete(recipe)
-        onComplete()
+        guard let recipe, let repository else { return }
+
+        isDeleting = true
+        defer { isDeleting = false }
+
+        switch repository.delete(recipe) {
+        case .success:
+            onComplete()
+        case .failure(let error):
+            handleError(error)
+        }
     }
 
     func toggleFavorite() {
         recipe?.isFavorite.toggle()
+    }
+
+    // MARK: - Error Handling
+
+    private func handleError(_ error: AppError) {
+        errorMessage = error.localizedDescription
+        showError = true
     }
 }
