@@ -4,6 +4,7 @@ import SwiftData
 @Observable
 final class SettingViewModel {
     private var modelContext: ModelContext?
+    private let exportService = CSVExportService.shared
 
     var showExportSheet = false
     var exportURL: URL?
@@ -66,30 +67,12 @@ final class SettingViewModel {
         let descriptor = FetchDescriptor<ManufacturingEntity>(
             sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
         )
-        guard let items = try? modelContext.fetch(descriptor), !items.isEmpty else { return }
+        guard let items = try? modelContext.fetch(descriptor) else { return }
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-
-        var csv = "Batch Number,Recipe,Category,Status,Started,Completed,Duration,Batches,Batch Size,Total Units,Total Cost,Cost Per Unit\n"
-
-        for m in items {
-            let status = m.status.rawValue.capitalized
-            let started = dateFormatter.string(from: m.startedAt)
-            let completed = m.completedAt.map { dateFormatter.string(from: $0) } ?? "-"
-            let duration = m.isCompleted ? formatDuration(m.totalDuration) : "-"
-            let category = m.recipe.category ?? "-"
-
-            csv += "\(m.batchNumber),"
-            csv += "\"\(m.recipe.name.replacingOccurrences(of: "\"", with: "\"\""))\","
-            csv += "\"\(category.replacingOccurrences(of: "\"", with: "\"\""))\","
-            csv += "\(status),\(started),\(completed),\(duration),"
-            csv += "\(m.quantity),\(m.recipe.batchSize) \(m.recipe.batchUnit),"
-            csv += "\(m.totalUnits),฿\(String(format: "%.2f", m.totalCost)),"
-            csv += "฿\(String(format: "%.2f", m.costPerUnit))\n"
+        exportURL = exportService.exportAllManufacturing(items)
+        if exportURL != nil {
+            showExportSheet = true
         }
-
-        saveAndShare(csv: csv, fileName: "Manufacturing_Report")
     }
 
     // MARK: - Export Inventory
@@ -100,24 +83,12 @@ final class SettingViewModel {
         let descriptor = FetchDescriptor<InventoryEntity>(
             sortBy: [SortDescriptor(\.name)]
         )
-        guard let items = try? modelContext.fetch(descriptor), !items.isEmpty else { return }
+        guard let items = try? modelContext.fetch(descriptor) else { return }
 
-        var csv = "Name,Category,Unit,Stock,Min Stock,Unit Price,Status\n"
-
-        for item in items {
-            let category = item.category ?? "-"
-            let status = item.isLowStock ? "Low Stock" : "OK"
-
-            csv += "\"\(item.name.replacingOccurrences(of: "\"", with: "\"\""))\","
-            csv += "\"\(category.replacingOccurrences(of: "\"", with: "\"\""))\","
-            csv += "\(item.displaySymbol),"
-            csv += "\(String(format: "%.2f", item.stock)),"
-            csv += "\(String(format: "%.2f", item.minStock)),"
-            csv += "฿\(String(format: "%.2f", item.unitPrice)),"
-            csv += "\(status)\n"
+        exportURL = exportService.exportInventory(items)
+        if exportURL != nil {
+            showExportSheet = true
         }
-
-        saveAndShare(csv: csv, fileName: "Inventory_Report")
     }
 
     // MARK: - Export Recipe
@@ -128,54 +99,11 @@ final class SettingViewModel {
         let descriptor = FetchDescriptor<RecipeEntity>(
             sortBy: [SortDescriptor(\.name)]
         )
-        guard let items = try? modelContext.fetch(descriptor), !items.isEmpty else { return }
+        guard let items = try? modelContext.fetch(descriptor) else { return }
 
-        var csv = "Name,Category,Batch Size,Batch Unit,Total Cost,Cost Per Unit,Steps,Ingredients\n"
-
-        for recipe in items {
-            let category = recipe.category ?? "-"
-            let ingredientNames = recipe.ingredients.map { $0.inventoryItem.name }.joined(separator: "; ")
-
-            csv += "\"\(recipe.name.replacingOccurrences(of: "\"", with: "\"\""))\","
-            csv += "\"\(category.replacingOccurrences(of: "\"", with: "\"\""))\","
-            csv += "\(recipe.batchSize),"
-            csv += "\(recipe.batchUnit),"
-            csv += "฿\(String(format: "%.2f", recipe.totalCost)),"
-            csv += "฿\(String(format: "%.2f", recipe.costPerUnit)),"
-            csv += "\(recipe.steps.count),"
-            csv += "\"\(ingredientNames.replacingOccurrences(of: "\"", with: "\"\""))\"\n"
-        }
-
-        saveAndShare(csv: csv, fileName: "Recipe_Report")
-    }
-
-    // MARK: - Helpers
-
-    private func saveAndShare(csv: String, fileName: String) {
-        let shortDateFormatter = DateFormatter()
-        shortDateFormatter.dateFormat = "yyyyMMdd_HHmmss"
-
-        let fullFileName = "\(fileName)_\(shortDateFormatter.string(from: Date.now)).csv"
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fullFileName)
-
-        do {
-            try csv.write(to: tempURL, atomically: true, encoding: .utf8)
-            exportURL = tempURL
+        exportURL = exportService.exportRecipes(items)
+        if exportURL != nil {
             showExportSheet = true
-        } catch {
-            print("Failed to export: \(error)")
-        }
-    }
-
-    private func formatDuration(_ interval: TimeInterval) -> String {
-        let totalSeconds = Int(interval)
-        let hours = totalSeconds / 3600
-        let minutes = (totalSeconds % 3600) / 60
-
-        if hours > 0 {
-            return "\(hours)h \(minutes)m"
-        } else {
-            return "\(minutes)m"
         }
     }
 }

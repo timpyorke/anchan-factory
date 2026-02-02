@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		B9DFC29C7B884E3FA9667BEC /* RecipeSelectionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeSelectionViewModel.swift; sourceTree = "<group>"; };
 		89EF155B2F21185000493825 /* anchan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = anchan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -111,7 +112,8 @@
 		89EF15572F21185000493825 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
-			);
+			
+				9EFF0993807F43CA8771FFAD /* RecipeSelectionViewModel.swift in Sources */,);
 		};
 /* End PBXSourcesBuildPhase section */
 

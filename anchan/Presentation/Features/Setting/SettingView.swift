@@ -16,7 +16,6 @@ struct SettingView: View {
             exportSection
             dataSection
         }
-        .navigationTitle(String(localized: "Settings"))
         .sheet(isPresented: $viewModel.showExportSheet) {
             if let url = viewModel.exportURL {
                 ShareSheet(items: [url])

@@ -7,33 +7,12 @@ struct HomeView: View {
     let stackRouter: StackRouter
 
     @State private var viewModel = HomeViewModel()
-    @State private var showRecipeSelection = false
-    @State private var showInsufficientAlert = false
-    @State private var selectedRecipe: RecipeEntity?
-
-    @Query(sort: \ManufacturingEntity.startedAt, order: .reverse)
-    private var allManufacturing: [ManufacturingEntity]
-
-    @Query(sort: \InventoryEntity.name)
-    private var allInventory: [InventoryEntity]
-
-    private var activeManufacturing: [ManufacturingEntity] {
-        allManufacturing.filter { $0.status == .inProgress }
-    }
-
-    private var completedManufacturing: [ManufacturingEntity] {
-        allManufacturing.filter { $0.status == .completed }
-    }
-
-    private var lowStockItems: [InventoryEntity] {
-        allInventory.filter { $0.isLowStock }.sorted { $0.stockLevel < $1.stockLevel }
-    }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
                 // Low Stock Alert Section
-                if !lowStockItems.isEmpty {
+                if !viewModel.lowStockItems.isEmpty {
                     lowStockSection
                 }
 
@@ -41,45 +20,49 @@ struct HomeView: View {
                 newManufacturingButton
 
                 // Active Manufacturing Section
-                if !activeManufacturing.isEmpty {
+                if !viewModel.activeManufacturing.isEmpty {
                     activeSection
                 }
 
                 // Completed Section
-                if !completedManufacturing.isEmpty {
+                if !viewModel.completedManufacturing.isEmpty {
                     completedSection
                 }
 
                 // Empty State
-                if activeManufacturing.isEmpty && completedManufacturing.isEmpty && lowStockItems.isEmpty {
+                if viewModel.activeManufacturing.isEmpty && viewModel.completedManufacturing.isEmpty && viewModel.lowStockItems.isEmpty {
                     emptyState
                 }
             }
             .padding()
         }
         .navigationTitle("Manufacturing")
-        .sheet(isPresented: $showRecipeSelection) {
+        .sheet(isPresented: $viewModel.showRecipeSelection) {
             RecipeSelectionSheet { recipe in
                 handleRecipeSelection(recipe)
             }
         }
-        .alert("Insufficient Inventory", isPresented: $showInsufficientAlert) {
+        .alert("Insufficient Inventory", isPresented: $viewModel.showInsufficientAlert) {
             Button("Cancel", role: .cancel) {
-                selectedRecipe = nil
+                viewModel.selectedRecipe = nil
             }
             Button("Start Anyway", role: .destructive) {
-                if let recipe = selectedRecipe {
-                    startManufacturing(with: recipe)
-                    selectedRecipe = nil
+                if let recipe = viewModel.selectedRecipe {
+                    let id = viewModel.startManufacturing(with: recipe)
+                    stackRouter.push(.manufacturingProcess(id: id))
+                    viewModel.selectedRecipe = nil
                 }
             }
         } message: {
-            if let recipe = selectedRecipe {
+            if let recipe = viewModel.selectedRecipe {
                 let items = recipe.insufficientIngredients
                     .map { "\($0.inventoryItem.name) (need \($0.quantity.clean) \($0.displaySymbol), have \($0.inventoryItem.stock.clean) \($0.inventoryItem.displaySymbol))" }
                     .joined(separator: "\n")
                 Text("The following ingredients don't have enough stock:\n\n\(items)")
             }
+        }
+        .onAppear {
+            viewModel.setup(modelContext: modelContext)
         }
     }
 
@@ -87,7 +70,7 @@ struct HomeView: View {
 
     private var newManufacturingButton: some View {
         Button {
-            showRecipeSelection = true
+            viewModel.showRecipeSelection = true
         } label: {
             HStack {
                 Image(systemName: "plus.circle.fill")
@@ -132,7 +115,7 @@ struct HomeView: View {
             }
 
             VStack(spacing: 8) {
-                ForEach(lowStockItems.prefix(5), id: \.persistentModelID) { item in
+                ForEach(viewModel.lowStockItems.prefix(5), id: \.persistentModelID) { item in
                     LowStockRow(item: item) {
                         tabRouter.go(to: .inventory)
                     }
@@ -149,7 +132,7 @@ struct HomeView: View {
             Text("In Progress")
                 .font(.title3.bold())
 
-            ForEach(activeManufacturing, id: \.persistentModelID) { item in
+            ForEach(viewModel.activeManufacturing, id: \.persistentModelID) { item in
                 ManufacturingCard(manufacturing: item) {
                     stackRouter.push(.manufacturingProcess(id: item.persistentModelID))
                 }
@@ -165,7 +148,7 @@ struct HomeView: View {
 
                 Spacer()
 
-                if completedManufacturing.count > 5 {
+                if viewModel.completedManufacturing.count > 5 {
                     Button("See All") {
                         // Future: Show all completed
                     }
@@ -173,7 +156,7 @@ struct HomeView: View {
                 }
             }
 
-            ForEach(completedManufacturing.prefix(5), id: \.persistentModelID) { item in
+            ForEach(viewModel.completedManufacturing.prefix(5), id: \.persistentModelID) { item in
                 CompletedManufacturingRow(manufacturing: item) {
                     stackRouter.push(.manufacturingDetail(id: item.persistentModelID))
                 }
@@ -201,21 +184,12 @@ struct HomeView: View {
     // MARK: - Actions
 
     private func handleRecipeSelection(_ recipe: RecipeEntity) {
-        if recipe.hasEnoughInventory {
-            startManufacturing(with: recipe)
+        if viewModel.handleRecipeSelection(recipe) {
+            let id = viewModel.startManufacturing(with: recipe)
+            stackRouter.push(.manufacturingProcess(id: id))
         } else {
-            selectedRecipe = recipe
-            showInsufficientAlert = true
+            viewModel.showInsufficientAlert = true
         }
-    }
-
-    private func startManufacturing(with recipe: RecipeEntity) {
-        let batchNumber = ManufacturingEntity.generateBatchNumber(existingBatches: allManufacturing)
-        let manufacturing = ManufacturingEntity(recipe: recipe, batchNumber: batchNumber)
-        modelContext.insert(manufacturing)
-
-        // Navigate to manufacturing view
-        stackRouter.push(.manufacturingProcess(id: manufacturing.persistentModelID))
     }
 }
 
@@ -333,29 +307,21 @@ private struct RecipeSelectionSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @State private var recipes: [RecipeEntity] = []
-    @State private var searchText: String = ""
+    @State private var viewModel = RecipeSelectionViewModel()
 
     let onSelect: (RecipeEntity) -> Void
-
-    private var filteredRecipes: [RecipeEntity] {
-        if searchText.isEmpty {
-            return recipes
-        }
-        return recipes.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-    }
 
     var body: some View {
         NavigationStack {
             Group {
-                if recipes.isEmpty {
+                if viewModel.recipes.isEmpty {
                     ContentUnavailableView(
                         "No Recipes",
                         systemImage: "book",
                         description: Text("Create a recipe first to start manufacturing")
                     )
                 } else {
-                    List(filteredRecipes, id: \.persistentModelID) { recipe in
+                    List(viewModel.filteredRecipes, id: \.persistentModelID) { recipe in
                         Button {
                             onSelect(recipe)
                             dismiss()
@@ -364,7 +330,7 @@ private struct RecipeSelectionSheet: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    .searchable(text: $searchText, prompt: "Search recipes")
+                    .searchable(text: $viewModel.searchText, prompt: "Search recipes")
                 }
             }
             .navigationTitle("Select Recipe")
@@ -377,16 +343,9 @@ private struct RecipeSelectionSheet: View {
                 }
             }
             .onAppear {
-                loadRecipes()
+                viewModel.setup(modelContext: modelContext)
             }
         }
-    }
-
-    private func loadRecipes() {
-        let descriptor = FetchDescriptor<RecipeEntity>(
-            sortBy: [SortDescriptor(\.name)]
-        )
-        recipes = (try? modelContext.fetch(descriptor)) ?? []
     }
 }
 

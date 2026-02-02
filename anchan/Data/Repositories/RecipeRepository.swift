@@ -9,6 +9,23 @@ protocol RecipeRepositoryProtocol {
     func fetchByCategory(_ category: String) -> [RecipeEntity]
     func create(_ recipe: RecipeEntity)
     func delete(_ recipe: RecipeEntity)
+    func updateBasicInfo(_ recipe: RecipeEntity, name: String, note: String, category: String?, batchSize: Int, batchUnit: String)
+    func rebuildRelationships(_ recipe: RecipeEntity, steps: [RecipeStepInput], ingredients: [RecipeIngredientInput])
+}
+
+// MARK: - Input Models for Recipe Updates
+
+struct RecipeStepInput {
+    let title: String
+    let note: String
+    let time: Int
+}
+
+struct RecipeIngredientInput {
+    let inventoryId: PersistentIdentifier
+    let quantity: Double
+    let unitSymbol: String
+    let note: String?
 }
 
 @MainActor
@@ -66,6 +83,59 @@ final class RecipeRepository: RecipeRepositoryProtocol {
 
     func delete(_ recipe: RecipeEntity) {
         modelContext.delete(recipe)
+        save()
+    }
+
+    // MARK: - Update
+
+    func updateBasicInfo(_ recipe: RecipeEntity, name: String, note: String, category: String?, batchSize: Int, batchUnit: String) {
+        recipe.name = name.trimmingCharacters(in: .whitespaces)
+        recipe.note = note
+        recipe.category = category?.isEmpty == false ? category?.trimmingCharacters(in: .whitespaces) : nil
+        recipe.batchSize = batchSize
+        recipe.batchUnit = batchUnit.isEmpty ? "pcs" : batchUnit.trimmingCharacters(in: .whitespaces)
+        save()
+    }
+
+    func rebuildRelationships(_ recipe: RecipeEntity, steps: [RecipeStepInput], ingredients: [RecipeIngredientInput]) {
+        // Remove old steps
+        for step in recipe.steps {
+            modelContext.delete(step)
+        }
+        recipe.steps.removeAll()
+
+        // Remove old ingredients
+        for ingredient in recipe.ingredients {
+            modelContext.delete(ingredient)
+        }
+        recipe.ingredients.removeAll()
+
+        // Add new steps
+        for (index, stepInput) in steps.enumerated() {
+            let step = RecipeStepEntity(
+                title: stepInput.title,
+                note: stepInput.note,
+                time: stepInput.time,
+                order: index
+            )
+            step.recipe = recipe
+            recipe.steps.append(step)
+        }
+
+        // Add new ingredients
+        for ingredientInput in ingredients {
+            if let inventory = modelContext.model(for: ingredientInput.inventoryId) as? InventoryEntity {
+                let ingredient = IngredientEntity(
+                    inventoryItem: inventory,
+                    quantity: ingredientInput.quantity,
+                    unitSymbol: ingredientInput.unitSymbol,
+                    note: ingredientInput.note,
+                    recipe: recipe
+                )
+                recipe.ingredients.append(ingredient)
+            }
+        }
+
         save()
     }
 

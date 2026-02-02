@@ -7,26 +7,23 @@ struct ManufacturingDetailView: View {
 
     let id: PersistentIdentifier
 
-    @State private var manufacturing: ManufacturingEntity?
-    @State private var showDeleteAlert = false
-    @State private var showShareSheet = false
-    @State private var exportURL: URL?
+    @State private var viewModel = ManufacturingDetailViewModel()
 
     var body: some View {
         Group {
-            if let manufacturing {
+            if let manufacturing = viewModel.manufacturing {
                 contentView(manufacturing)
             } else {
                 ContentUnavailableView("Not Found", systemImage: "exclamationmark.triangle")
             }
         }
-        .navigationTitle(manufacturing?.recipe.name ?? "Manufacturing")
+        .navigationTitle(viewModel.manufacturing?.recipe.name ?? "Manufacturing")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button {
-                        exportToCSV()
+                        viewModel.exportToCSV()
                     } label: {
                         Label("Export to Sheets", systemImage: "tablecells")
                     }
@@ -34,7 +31,7 @@ struct ManufacturingDetailView: View {
                     Divider()
 
                     Button(role: .destructive) {
-                        showDeleteAlert = true
+                        viewModel.showDeleteAlert = true
                     } label: {
                         Label("Delete", systemImage: "trash")
                     }
@@ -43,21 +40,23 @@ struct ManufacturingDetailView: View {
                 }
             }
         }
-        .alert("Delete Manufacturing", isPresented: $showDeleteAlert) {
+        .alert("Delete Manufacturing", isPresented: $viewModel.showDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
-                deleteManufacturing()
+                viewModel.deleteManufacturing {
+                    stackRouter.pop()
+                }
             }
         } message: {
             Text("Are you sure you want to delete this manufacturing record?")
         }
-        .sheet(isPresented: $showShareSheet) {
-            if let url = exportURL {
+        .sheet(isPresented: $viewModel.showShareSheet) {
+            if let url = viewModel.exportURL {
                 ShareSheet(items: [url])
             }
         }
         .onAppear {
-            loadManufacturing()
+            viewModel.setup(modelContext: modelContext, id: id)
         }
     }
 
@@ -204,7 +203,7 @@ struct ManufacturingDetailView: View {
             HStack(spacing: 16) {
                 // Total Duration
                 VStack(spacing: 4) {
-                    Text(formatDuration(manufacturing.totalDuration))
+                    Text(viewModel.formatDuration(manufacturing.totalDuration))
                         .font(.title2.bold())
                         .foregroundStyle(Color.accentColor)
                     Text("Total Time")
@@ -312,7 +311,7 @@ struct ManufacturingDetailView: View {
                     // Actual duration
                     if isCompleted {
                         let duration = manufacturing.stepDuration(at: index)
-                        Label("Actual: \(formatDuration(duration))", systemImage: "stopwatch")
+                        Label("Actual: \(viewModel.formatDuration(duration))", systemImage: "stopwatch")
                             .font(.caption)
                             .foregroundStyle(.green)
                     }
@@ -368,116 +367,6 @@ struct ManufacturingDetailView: View {
         }
     }
 
-    // MARK: - Helpers
-
-    private func formatDuration(_ interval: TimeInterval) -> String {
-        let totalSeconds = Int(interval)
-        let hours = totalSeconds / 3600
-        let minutes = (totalSeconds % 3600) / 60
-        let seconds = totalSeconds % 60
-
-        if hours > 0 {
-            return "\(hours)h \(minutes)m"
-        } else if minutes > 0 {
-            return "\(minutes)m \(seconds)s"
-        } else {
-            return "\(seconds)s"
-        }
-    }
-
-    // MARK: - Actions
-
-    private func loadManufacturing() {
-        manufacturing = modelContext.model(for: id) as? ManufacturingEntity
-    }
-
-    private func deleteManufacturing() {
-        if let manufacturing {
-            modelContext.delete(manufacturing)
-        }
-        stackRouter.pop()
-    }
-
-    private func exportToCSV() {
-        guard let manufacturing else { return }
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-
-        var csv = "Manufacturing Report\n"
-        csv += "Generated:,\(dateFormatter.string(from: Date.now))\n\n"
-
-        // Summary Section
-        csv += "SUMMARY\n"
-        csv += "Batch Number,\(manufacturing.batchNumber)\n"
-        csv += "Recipe,\(manufacturing.recipe.name)\n"
-        csv += "Status,\(manufacturing.status.rawValue.capitalized)\n"
-        csv += "Started,\(dateFormatter.string(from: manufacturing.startedAt))\n"
-        if let completedAt = manufacturing.completedAt {
-            csv += "Completed,\(dateFormatter.string(from: completedAt))\n"
-            csv += "Duration,\(formatDuration(manufacturing.totalDuration))\n"
-        }
-        csv += "\n"
-
-        // Production Section
-        csv += "PRODUCTION\n"
-        csv += "Batches,\(manufacturing.quantity)\n"
-        csv += "Batch Size,\(manufacturing.recipe.batchSize) \(manufacturing.recipe.batchUnit)\n"
-        csv += "Total Units,\(manufacturing.totalUnits) \(manufacturing.recipe.batchUnit)\n"
-        csv += "\n"
-
-        // Cost Section
-        csv += "COSTS\n"
-        csv += "Total Cost,฿\(String(format: "%.2f", manufacturing.totalCost))\n"
-        csv += "Cost per Unit,฿\(String(format: "%.2f", manufacturing.costPerUnit))\n"
-        csv += "\n"
-
-        // Ingredients Section
-        if !manufacturing.recipe.ingredients.isEmpty {
-            csv += "INGREDIENTS\n"
-            csv += "Item,Quantity,Unit,Unit Price,Subtotal\n"
-            for ingredient in manufacturing.recipe.ingredients {
-                let subtotal = ingredient.quantityInBaseUnit * ingredient.inventoryItem.unitPrice
-                csv += "\(ingredient.inventoryItem.name),"
-                csv += "\(ingredient.quantity),"
-                csv += "\(ingredient.displaySymbol),"
-                csv += "฿\(String(format: "%.2f", ingredient.inventoryItem.unitPrice)),"
-                csv += "฿\(String(format: "%.2f", subtotal))\n"
-            }
-            csv += "\n"
-        }
-
-        // Steps Section
-        if !manufacturing.recipe.steps.isEmpty {
-            csv += "STEPS\n"
-            csv += "Step,Title,Est. Time,Actual Time,Completed At\n"
-            for (index, step) in manufacturing.recipe.sortedSteps.enumerated() {
-                let actualTime = index < manufacturing.stepCompletionTimes.count
-                    ? formatDuration(manufacturing.stepDuration(at: index))
-                    : "-"
-                let completedAt = manufacturing.stepCompletionTime(at: index)
-                    .map { dateFormatter.string(from: $0) } ?? "-"
-
-                csv += "\(index + 1),"
-                csv += "\"\(step.title.replacingOccurrences(of: "\"", with: "\"\""))\","
-                csv += "\(step.time)m,"
-                csv += "\(actualTime),"
-                csv += "\(completedAt)\n"
-            }
-        }
-
-        // Save to file
-        let fileName = "Manufacturing_\(manufacturing.batchNumber).csv"
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-
-        do {
-            try csv.write(to: tempURL, atomically: true, encoding: .utf8)
-            exportURL = tempURL
-            showShareSheet = true
-        } catch {
-            print("Failed to export: \(error)")
-        }
-    }
 }
 
 // MARK: - Share Sheet

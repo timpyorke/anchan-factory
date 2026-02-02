@@ -29,43 +29,7 @@ struct RecipeEditView: View {
 
     let id: PersistentIdentifier?
 
-    @State private var recipe: RecipeEntity?
-    @State private var name: String = ""
-    @State private var note: String = ""
-    @State private var category: String = ""
-    @State private var batchSize: Int = 1
-    @State private var batchUnit: String = "pcs"
-    @State private var steps: [StepInput] = []
-    @State private var ingredients: [IngredientInput] = []
-    @State private var isAddingStep: Bool = false
-    @State private var isAddingIngredient: Bool = false
-    @State private var showDeleteAlert: Bool = false
-
-    private var isEditing: Bool { id != nil }
-
-    private var canSave: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-
-    private var totalTime: Int {
-        steps.reduce(0) { $0 + $1.time }
-    }
-
-    private var totalCost: Double {
-        ingredients.reduce(0.0) { total, ingredient in
-            if let inventory = modelContext.model(for: ingredient.inventoryId) as? InventoryEntity {
-                // Try to convert if both are built-in units
-                var quantityInBaseUnit = ingredient.quantity
-                if let fromUnit = InventoryUnit(rawValue: ingredient.unitSymbol.lowercased()),
-                   let toUnit = inventory.builtInUnit,
-                   let converted = fromUnit.convert(ingredient.quantity, to: toUnit) {
-                    quantityInBaseUnit = converted
-                }
-                return total + (quantityInBaseUnit * inventory.unitPrice)
-            }
-            return total
-        }
-    }
+    @State private var viewModel = RecipeEditViewModel()
 
     var body: some View {
         Form {
@@ -74,11 +38,11 @@ struct RecipeEditView: View {
             ingredientsSection
             stepsSection
 
-            if isEditing {
+            if viewModel.isEditing {
                 deleteSection
             }
         }
-        .navigationTitle(isEditing ? "Edit Recipe" : "New Recipe")
+        .navigationTitle(viewModel.isEditing ? "Edit Recipe" : "New Recipe")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -90,32 +54,36 @@ struct RecipeEditView: View {
 
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save") {
-                    saveRecipe()
+                    viewModel.saveRecipe {
+                        stackRouter.pop()
+                    }
                 }
                 .fontWeight(.semibold)
-                .disabled(!canSave)
+                .disabled(!viewModel.canSave)
             }
         }
-        .sheet(isPresented: $isAddingStep) {
+        .sheet(isPresented: $viewModel.isAddingStep) {
             AddStepSheet { newStep in
-                steps.append(newStep)
+                viewModel.addStep(newStep)
             }
         }
-        .sheet(isPresented: $isAddingIngredient) {
+        .sheet(isPresented: $viewModel.isAddingIngredient) {
             AddIngredientSheet { newIngredient in
-                ingredients.append(newIngredient)
+                viewModel.addIngredient(newIngredient)
             }
         }
-        .alert("Delete Recipe", isPresented: $showDeleteAlert) {
+        .alert("Delete Recipe", isPresented: $viewModel.showDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
-                deleteRecipe()
+                viewModel.deleteRecipe {
+                    stackRouter.popToRoot()
+                }
             }
         } message: {
             Text("Are you sure you want to delete this recipe? This action cannot be undone.")
         }
         .onAppear {
-            loadRecipe()
+            viewModel.setup(modelContext: modelContext, recipeId: id)
         }
     }
 
@@ -123,13 +91,13 @@ struct RecipeEditView: View {
 
     private var basicInfoSection: some View {
         Section {
-            TextField("Recipe Name", text: $name)
+            TextField("Recipe Name", text: $viewModel.name)
                 .textInputAutocapitalization(.words)
 
-            TextField("Category (optional)", text: $category)
+            TextField("Category (optional)", text: $viewModel.category)
                 .textInputAutocapitalization(.words)
 
-            TextField("Notes (optional)", text: $note, axis: .vertical)
+            TextField("Notes (optional)", text: $viewModel.note, axis: .vertical)
                 .lineLimit(2...4)
         } header: {
             Text("Basic Info")
@@ -138,17 +106,17 @@ struct RecipeEditView: View {
 
     private var batchSection: some View {
         Section {
-            Stepper("Batch Size: \(batchSize)", value: $batchSize, in: 1...1000)
+            Stepper("Batch Size: \(viewModel.batchSize)", value: $viewModel.batchSize, in: 1...1000)
 
-            TextField("Unit (e.g., pcs, bottles)", text: $batchUnit)
+            TextField("Unit (e.g., pcs, bottles)", text: $viewModel.batchUnit)
                 .textInputAutocapitalization(.never)
 
-            if totalCost > 0 && batchSize > 0 {
+            if viewModel.totalCost > 0 && viewModel.batchSize > 0 {
                 HStack {
-                    Text("Cost per \(batchUnit)")
+                    Text("Cost per \(viewModel.batchUnit)")
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text("฿\((totalCost / Double(batchSize)).clean)")
+                    Text("฿\((viewModel.totalCost / Double(viewModel.batchSize)).clean)")
                         .fontWeight(.medium)
                 }
             }
@@ -161,29 +129,29 @@ struct RecipeEditView: View {
 
     private var ingredientsSection: some View {
         Section {
-            if ingredients.isEmpty {
+            if viewModel.ingredients.isEmpty {
                 Text("No ingredients added")
                     .foregroundStyle(.secondary)
             } else {
-                ForEach(ingredients.indices, id: \.self) { index in
-                    IngredientRowView(ingredient: ingredients[index]) {
-                        ingredients.remove(at: index)
+                ForEach(viewModel.ingredients.indices, id: \.self) { index in
+                    IngredientRowView(ingredient: viewModel.ingredients[index]) {
+                        viewModel.removeIngredient(at: index)
                     }
                 }
 
-                if totalCost > 0 {
+                if viewModel.totalCost > 0 {
                     HStack {
                         Text("Estimated Cost")
                             .fontWeight(.medium)
                         Spacer()
-                        Text("฿\(totalCost.clean)")
+                        Text("฿\(viewModel.totalCost.clean)")
                             .foregroundStyle(.secondary)
                     }
                 }
             }
 
             Button {
-                isAddingIngredient = true
+                viewModel.isAddingIngredient = true
             } label: {
                 Label("Add Ingredient", systemImage: "plus.circle.fill")
             }
@@ -194,32 +162,32 @@ struct RecipeEditView: View {
 
     private var stepsSection: some View {
         Section {
-            if steps.isEmpty {
+            if viewModel.steps.isEmpty {
                 Text("No steps added")
                     .foregroundStyle(.secondary)
             } else {
-                ForEach(steps.indices, id: \.self) { index in
-                    StepRowView(step: steps[index]) {
-                        steps.remove(at: index)
+                ForEach(viewModel.steps.indices, id: \.self) { index in
+                    StepRowView(step: viewModel.steps[index]) {
+                        viewModel.removeStep(at: index)
                     }
                 }
                 .onMove { from, to in
-                    steps.move(fromOffsets: from, toOffset: to)
+                    viewModel.moveSteps(from: from, to: to)
                 }
 
-                if totalTime > 0 {
+                if viewModel.totalTime > 0 {
                     HStack {
                         Text("Total Time")
                             .fontWeight(.medium)
                         Spacer()
-                        Text(totalTime.formattedTime)
+                        Text(viewModel.totalTime.formattedTime)
                             .foregroundStyle(.secondary)
                     }
                 }
             }
 
             Button {
-                isAddingStep = true
+                viewModel.isAddingStep = true
             } label: {
                 Label("Add Step", systemImage: "plus.circle.fill")
             }
@@ -231,7 +199,7 @@ struct RecipeEditView: View {
     private var deleteSection: some View {
         Section {
             Button(role: .destructive) {
-                showDeleteAlert = true
+                viewModel.showDeleteAlert = true
             } label: {
                 HStack {
                     Spacer()
@@ -242,126 +210,6 @@ struct RecipeEditView: View {
         }
     }
 
-    // MARK: - Actions
-
-    private func loadRecipe() {
-        guard let id else { return }
-        recipe = modelContext.model(for: id) as? RecipeEntity
-
-        guard let recipe else { return }
-        name = recipe.name
-        note = recipe.note
-        category = recipe.category ?? ""
-        batchSize = recipe.batchSize
-        batchUnit = recipe.batchUnit
-        steps = recipe.sortedSteps.map { step in
-            StepInput(title: step.title, note: step.note, time: step.time)
-        }
-        ingredients = recipe.ingredients.map { ingredient in
-            IngredientInput(
-                inventoryId: ingredient.inventoryItem.persistentModelID,
-                inventoryName: ingredient.inventoryItem.name,
-                quantity: ingredient.quantity,
-                unitSymbol: ingredient.unitSymbol,
-                note: ingredient.note ?? ""
-            )
-        }
-    }
-
-    private func saveRecipe() {
-        if let recipe {
-            // Update existing
-            recipe.name = name.trimmingCharacters(in: .whitespaces)
-            recipe.note = note
-            recipe.category = category.isEmpty ? nil : category.trimmingCharacters(in: .whitespaces)
-            recipe.batchSize = batchSize
-            recipe.batchUnit = batchUnit.isEmpty ? "pcs" : batchUnit.trimmingCharacters(in: .whitespaces)
-
-            // Remove old steps
-            for step in recipe.steps {
-                modelContext.delete(step)
-            }
-            recipe.steps.removeAll()
-
-            // Remove old ingredients
-            for ingredient in recipe.ingredients {
-                modelContext.delete(ingredient)
-            }
-            recipe.ingredients.removeAll()
-
-            // Add new steps
-            for (index, stepInput) in steps.enumerated() {
-                let step = RecipeStepEntity(
-                    title: stepInput.title,
-                    note: stepInput.note,
-                    time: stepInput.time,
-                    order: index
-                )
-                step.recipe = recipe
-                recipe.steps.append(step)
-            }
-
-            // Add new ingredients
-            for ingredientInput in ingredients {
-                if let inventory = modelContext.model(for: ingredientInput.inventoryId) as? InventoryEntity {
-                    let ingredient = IngredientEntity(
-                        inventoryItem: inventory,
-                        quantity: ingredientInput.quantity,
-                        unitSymbol: ingredientInput.unitSymbol,
-                        note: ingredientInput.note.isEmpty ? nil : ingredientInput.note,
-                        recipe: recipe
-                    )
-                    recipe.ingredients.append(ingredient)
-                }
-            }
-        } else {
-            // Create new
-            let newRecipe = RecipeEntity(
-                name: name.trimmingCharacters(in: .whitespaces),
-                note: note,
-                category: category.isEmpty ? nil : category.trimmingCharacters(in: .whitespaces),
-                batchSize: batchSize,
-                batchUnit: batchUnit.isEmpty ? "pcs" : batchUnit.trimmingCharacters(in: .whitespaces)
-            )
-
-            for (index, stepInput) in steps.enumerated() {
-                let step = RecipeStepEntity(
-                    title: stepInput.title,
-                    note: stepInput.note,
-                    time: stepInput.time,
-                    order: index
-                )
-                step.recipe = newRecipe
-                newRecipe.steps.append(step)
-            }
-
-            // Add ingredients to new recipe
-            for ingredientInput in ingredients {
-                if let inventory = modelContext.model(for: ingredientInput.inventoryId) as? InventoryEntity {
-                    let ingredient = IngredientEntity(
-                        inventoryItem: inventory,
-                        quantity: ingredientInput.quantity,
-                        unitSymbol: ingredientInput.unitSymbol,
-                        note: ingredientInput.note.isEmpty ? nil : ingredientInput.note,
-                        recipe: newRecipe
-                    )
-                    newRecipe.ingredients.append(ingredient)
-                }
-            }
-
-            modelContext.insert(newRecipe)
-        }
-
-        stackRouter.pop()
-    }
-
-    private func deleteRecipe() {
-        if let recipe {
-            modelContext.delete(recipe)
-        }
-        // Pop twice to go back past detail view
-        stackRouter.popToRoot()
-    }
 }
 
 // MARK: - Step Row View
