@@ -1,0 +1,150 @@
+name: Deploy to Firebase App Distribution
+
+on:
+  push:
+    branches:
+      - develop
+      - release/**
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: "Release notes for testers"
+        required: false
+        default: "New internal build for testing"
+      tester_groups:
+        description: "Tester groups (comma-separated)"
+        required: false
+        default: "internal-testers"
+
+concurrency:
+  group: firebase-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SCHEME: anchan
+  TARGET: anchan
+  BUNDLE_ID: com.codenour.anchan
+  XCODE_PROJECT: anchan.xcodeproj
+  CONFIGURATION: Debug
+  EXPORT_OPTIONS_PLIST: ExportOptions-AdHoc.plist
+
+jobs:
+  deploy:
+    name: Build & Deploy to Firebase App Distribution
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Import signing certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.CERTIFICATE_BASE64_ADHOC }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/signing.keychain-db
+
+          echo -n "$CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          security import "$CERTIFICATE_PATH" \
+            -P "$CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+      - name: Install provisioning profile (Ad Hoc)
+        env:
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64_ADHOC }}
+        run: |
+          PROFILE_PATH="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILE_PATH"
+          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode \
+            -o "$PROFILE_PATH/anchan_adhoc.mobileprovision"
+
+      - name: Create ExportOptions plist (Ad Hoc)
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME_ADHOC }}
+        run: |
+          cat > $EXPORT_OPTIONS_PLIST << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>ad-hoc</string>
+            <key>teamID</key>
+            <string>${TEAM_ID}</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${BUNDLE_ID}</key>
+              <string>${PROVISIONING_PROFILE_NAME}</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Increment build number
+        run: |
+          BUILD_NUMBER=${{ github.run_number }}
+          agvtool new-version -all $BUILD_NUMBER
+
+      - name: Archive app
+        run: |
+          xcodebuild archive \
+            -project "$XCODE_PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration "$CONFIGURATION" \
+            -archivePath "$RUNNER_TEMP/anchan.xcarchive" \
+            -destination "generic/platform=iOS" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
+            | xcpretty || true
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/anchan.xcarchive" \
+            -exportOptionsPlist "$EXPORT_OPTIONS_PLIST" \
+            -exportPath "$RUNNER_TEMP/export" \
+            | xcpretty || true
+
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          groups: ${{ github.event.inputs.tester_groups || 'internal-testers' }}
+          releaseNotes: |
+            ${{ github.event.inputs.release_notes || format('Branch: {0} | Commit: {1}', github.ref_name, github.sha) }}
+
+            Commit: ${{ github.sha }}
+            Branch: ${{ github.ref_name }}
+            Run: #${{ github.run_number }}
+          file: ${{ runner.temp }}/export/anchan.ipa
+
+      - name: Clean up keychain and profiles
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/anchan_adhoc.mobileprovision"
+
+      - name: Upload IPA as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anchan-adhoc-${{ github.run_number }}
+          path: ${{ runner.temp }}/export/anchan.ipa
+          retention-days: 7
