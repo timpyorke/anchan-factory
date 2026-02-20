@@ -134,23 +134,12 @@ jobs:
           echo "IPA found: $(du -sh $IPA_PATH)"
 
       - name: Upload to TestFlight
-        env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
-        run: |
-          # altool searches ~/.appstoreconnect/private_keys/ by default
-          KEY_DIR="$HOME/.appstoreconnect/private_keys"
-          mkdir -p "$KEY_DIR"
-          echo -n "$APP_STORE_CONNECT_API_KEY_CONTENT" \
-            > "$KEY_DIR/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
-
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$RUNNER_TEMP/export/anchan.ipa" \
-            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_API_KEY_ISSUER_ID" \
-            --verbose
+        uses: apple-actions/upload-testflight-build@v3
+        with:
+          app-path: ${{ runner.temp }}/export/anchan.ipa
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
 
       - name: Clean up keychain and profiles
         if: always()
