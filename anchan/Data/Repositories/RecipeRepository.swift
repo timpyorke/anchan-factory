@@ -1,6 +1,7 @@
 import SwiftData
 import Foundation
 
+@MainActor
 protocol RecipeRepositoryProtocol {
     func fetchAll() -> Result<[RecipeEntity], AppError>
     func fetch(by id: PersistentIdentifier) -> Result<RecipeEntity, AppError>

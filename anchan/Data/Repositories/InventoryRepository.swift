@@ -1,6 +1,7 @@
 import SwiftData
 import Foundation
 
+@MainActor
 protocol InventoryRepositoryProtocol {
     // Inventory CRUD
     func fetchAll() -> Result<[InventoryEntity], AppError>

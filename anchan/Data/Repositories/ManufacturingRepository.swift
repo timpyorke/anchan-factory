@@ -1,6 +1,7 @@
 import SwiftData
 import Foundation
 
+@MainActor
 protocol ManufacturingRepositoryProtocol {
     func fetchAll() -> Result<[ManufacturingEntity], AppError>
     func fetchActive() -> Result<[ManufacturingEntity], AppError>

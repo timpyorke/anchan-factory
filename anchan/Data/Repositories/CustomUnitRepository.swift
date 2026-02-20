@@ -1,6 +1,7 @@
 import SwiftData
 import Foundation
 
+@MainActor
 protocol CustomUnitRepositoryProtocol {
     func fetchAll() -> Result<[CustomUnitEntity], AppError>
     func fetch(by id: PersistentIdentifier) -> Result<CustomUnitEntity, AppError>
