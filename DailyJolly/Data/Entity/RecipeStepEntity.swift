@@ -9,6 +9,10 @@ final class RecipeStepEntity {
     var time: Int              // minutes
     var order: Int
     var requiredMeasurementRawValues: [String] = []
+    var lineIdentifier: String? // "Line A", "Line B"
+
+    @Relationship
+    var dependencies: [RecipeStepEntity] = []
 
     var requiredMeasurements: [MeasurementType] {
         get { requiredMeasurementRawValues.compactMap { MeasurementType(rawValue: $0) } }
@@ -23,12 +27,18 @@ final class RecipeStepEntity {
         note: String = "",
         time: Int = 0,
         order: Int = 0,
-        requiredMeasurements: [MeasurementType] = []
+        requiredMeasurements: [MeasurementType] = [],
+        lineIdentifier: String? = nil,
+        dependencies: [RecipeStepEntity] = []
     ) {
         self.title = title
         self.note = note
         self.time = time
         self.order = order
+        self.requiredMeasurementRawValues = []
+        self.lineIdentifier = lineIdentifier
+        self.dependencies = dependencies
+        // Now set computed property
         self.requiredMeasurements = requiredMeasurements
     }
 }

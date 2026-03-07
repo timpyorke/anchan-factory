@@ -10,7 +10,13 @@ final class RecipeEntity {
     var isFavorite: Bool
     var batchSize: Int = 1          // How many units this recipe produces
     var batchUnit: String = "pcs"   // Unit label for batch (e.g., "pcs", "bottles", "boxes")
+    var templateTypeRawValue: String?
     var createdAt: Date
+
+    var templateType: GellingAgentType? {
+        get { templateTypeRawValue.flatMap { GellingAgentType(rawValue: $0) } }
+        set { templateTypeRawValue = newValue?.rawValue }
+    }
 
     @Relationship(deleteRule: .cascade)
     var ingredients: [IngredientEntity] = []
@@ -23,7 +29,8 @@ final class RecipeEntity {
         note: String = "",
         category: String? = nil,
         batchSize: Int = 1,
-        batchUnit: String = "pcs"
+        batchUnit: String = "pcs",
+        templateType: GellingAgentType? = nil
     ) {
         self.name = name
         self.note = note
@@ -31,7 +38,9 @@ final class RecipeEntity {
         self.isFavorite = false
         self.batchSize = batchSize
         self.batchUnit = batchUnit
+        self.templateTypeRawValue = nil
         self.createdAt = Date.now
+        self.templateType = templateType
     }
 
     var totalTime: Int {

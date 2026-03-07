@@ -47,16 +47,15 @@ final class ManufacturingViewModel {
         }
     }
 
-    func completeCurrentStep(note: String = "") {
+    func completeStep(at index: Int, note: String = "") {
         guard let manufacturing = manufacturing, let repository = repository else {
             print("[ManufacturingViewModel] ERROR: missing manufacturing or repository")
             return
         }
 
-        let stepIndex = manufacturing.currentStepIndex
-        print("[ManufacturingViewModel] Completing step \(stepIndex) with note: \(note)")
+        print("[ManufacturingViewModel] Completing step \(index) with note: \(note)")
 
-        manufacturing.completeCurrentStep(note: note)
+        manufacturing.completeStep(at: index, note: note)
 
         let isCompleted = manufacturing.isCompleted
         print("[ManufacturingViewModel] After completion - isCompleted: \(isCompleted)")
@@ -77,6 +76,11 @@ final class ManufacturingViewModel {
             print("[ManufacturingViewModel] ❌ Failed to save: \(error)")
             handleError(error)
         }
+    }
+
+    func completeCurrentStep(note: String = "") {
+        guard let manufacturing else { return }
+        completeStep(at: manufacturing.currentStepIndex, note: note)
     }
 
     private func deductInventory(for manufacturing: ManufacturingEntity) {

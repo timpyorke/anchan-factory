@@ -92,16 +92,68 @@ struct ManufacturingView: View {
 
             Divider()
 
-            // Current Step
-            if let currentStep = manufacturing.currentStep {
-                currentStepCard(currentStep, manufacturing: manufacturing)
+            let steps = manufacturing.recipe.sortedSteps
+            let hasParallelLines = steps.contains { $0.lineIdentifier != nil }
+
+            if hasParallelLines {
+                parallelLinesList(manufacturing)
+            } else {
+                // Current Step
+                if let currentStep = manufacturing.currentStep {
+                    currentStepCard(currentStep, manufacturing: manufacturing)
+                }
+
+                Spacer()
+
+                // Complete Step Button
+                completeButton(manufacturing)
             }
-
-            Spacer()
-
-            // Complete Step Button
-            completeButton(manufacturing)
         }
+    }
+
+    private func parallelLinesList(_ manufacturing: ManufacturingEntity) -> some View {
+        List {
+            let sortedSteps = manufacturing.recipe.sortedSteps
+            let lines = Array(Set(sortedSteps.compactMap { $0.lineIdentifier } + ["Main"])).sorted()
+
+            ForEach(lines, id: \.self) { line in
+                Section(header: Text(line)) {
+                    ForEach(Array(sortedSteps.enumerated()), id: \.offset) { index, step in
+                        if (step.lineIdentifier ?? "Main") == line {
+                            let isCompleted = manufacturing.isStepCompleted(at: index)
+                            let canComplete = manufacturing.canCompleteStep(at: index)
+
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(step.title)
+                                        .font(.headline)
+                                        .foregroundStyle(isCompleted ? .secondary : .primary)
+                                    if !step.note.isEmpty {
+                                        Text(step.note)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+
+                                Spacer()
+
+                                if isCompleted {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.green)
+                                } else {
+                                    Button(canComplete ? String(localized: "Complete") : String(localized: "Waiting")) {
+                                        viewModel.completeStep(at: index)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .disabled(!canComplete)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
     }
 
     private func progressHeader(_ manufacturing: ManufacturingEntity) -> some View {

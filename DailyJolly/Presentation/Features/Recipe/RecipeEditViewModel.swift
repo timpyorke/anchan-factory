@@ -15,6 +15,7 @@ final class RecipeEditViewModel {
     var category: String = ""
     var batchSize: Int = 1
     var batchUnit: String = "pcs"
+    var templateType: GellingAgentType?
     var steps: [StepInput] = []
     var ingredients: [IngredientInput] = []
 
@@ -77,8 +78,15 @@ final class RecipeEditViewModel {
             category = fetchedRecipe.category ?? ""
             batchSize = fetchedRecipe.batchSize
             batchUnit = fetchedRecipe.batchUnit
+            templateType = fetchedRecipe.templateType
             steps = fetchedRecipe.sortedSteps.map { step in
-                StepInput(title: step.title, note: step.note, time: step.time, requiredMeasurements: step.requiredMeasurements)
+                StepInput(
+                    title: step.title,
+                    note: step.note,
+                    time: step.time,
+                    requiredMeasurements: step.requiredMeasurements,
+                    lineIdentifier: step.lineIdentifier
+                )
             }
             ingredients = fetchedRecipe.ingredients.map { ingredient in
                 IngredientInput(
@@ -114,7 +122,13 @@ final class RecipeEditViewModel {
             case .success:
                 // Rebuild relationships
                 let recipeSteps = steps.map { step in
-                    RecipeStepInput(title: step.title, note: step.note, time: step.time, requiredMeasurements: step.requiredMeasurements)
+                    RecipeStepInput(
+                        title: step.title,
+                        note: step.note,
+                        time: step.time,
+                        requiredMeasurements: step.requiredMeasurements,
+                        lineIdentifier: step.lineIdentifier
+                    )
                 }
                 let recipeIngredients = ingredients.map { ingredient in
                     RecipeIngredientInput(
@@ -141,7 +155,8 @@ final class RecipeEditViewModel {
                 note: note,
                 category: category.isEmpty ? nil : category.trimmingCharacters(in: .whitespaces),
                 batchSize: batchSize,
-                batchUnit: batchUnit.isEmpty ? "pcs" : batchUnit.trimmingCharacters(in: .whitespaces)
+                batchUnit: batchUnit.isEmpty ? "pcs" : batchUnit.trimmingCharacters(in: .whitespaces),
+                templateType: templateType
             )
 
             // Add steps
@@ -151,7 +166,8 @@ final class RecipeEditViewModel {
                     note: stepInput.note,
                     time: stepInput.time,
                     order: index,
-                    requiredMeasurements: stepInput.requiredMeasurements
+                    requiredMeasurements: stepInput.requiredMeasurements,
+                    lineIdentifier: stepInput.lineIdentifier
                 )
                 step.recipe = newRecipe
                 newRecipe.steps.append(step)
@@ -208,6 +224,19 @@ final class RecipeEditViewModel {
 
     func moveSteps(from: IndexSet, to: Int) {
         steps.move(fromOffsets: from, toOffset: to)
+    }
+
+    func applyTemplate(_ template: GellingAgentType) {
+        let templateSteps = ProductionTemplateService.shared.getSteps(for: template)
+        steps = templateSteps.map { step in
+            StepInput(
+                title: step.title,
+                note: step.note,
+                time: step.time,
+                requiredMeasurements: step.requiredMeasurements,
+                lineIdentifier: step.lineIdentifier
+            )
+        }
     }
 
     func addIngredient(_ ingredient: IngredientInput) {

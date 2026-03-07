@@ -13,7 +13,8 @@ final class ManufacturingEntity {
 
     var batchNumber: String = ""    // e.g., "250201-001"
     var status: ManufacturingStatus = ManufacturingStatus.pending
-    var currentStepIndex: Int = 0
+    var currentStepIndex: Int = 0 // Keep for backward compatibility/default linear flow
+    var completedStepIndices: [Int] = [] // NEW: indices of completed steps
     var quantity: Int = 1
     var startedAt: Date = Date.now
     var completedAt: Date?
@@ -33,10 +34,57 @@ final class ManufacturingEntity {
         self.batchNumber = batchNumber
         self.status = .inProgress
         self.currentStepIndex = 0
+        self.completedStepIndices = []
         self.startedAt = Date.now
         self.completedAt = nil
         self.stepCompletionTimes = []
         self.stepNotes = []
+    }
+
+    /// Check if a specific step is completed
+    func isStepCompleted(at index: Int) -> Bool {
+        completedStepIndices.contains(index)
+    }
+
+    /// Check if a step can be completed (all dependencies must be finished)
+    func canCompleteStep(at index: Int) -> Bool {
+        let sorted = recipe.sortedSteps
+        guard index < sorted.count else { return false }
+        let step = sorted[index]
+        
+        // If there are dependencies, all must be in completedStepIndices
+        for dependency in step.dependencies {
+            if let depIndex = sorted.firstIndex(where: { $0.persistentModelID == dependency.persistentModelID }) {
+                if !completedStepIndices.contains(depIndex) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    /// Complete a specific step (can be non-linear)
+    func completeStep(at index: Int, note: String = "") {
+        guard !isStepCompleted(at: index) else { return }
+        
+        completedStepIndices.append(index)
+        // For simplicity in reporting for now, we still use stepCompletionTimes/Notes
+        // but might need mapping if they are out of order
+        stepCompletionTimes.append(Date.now)
+        stepNotes.append(note)
+        
+        // Check if all steps are done
+        if completedStepIndices.count >= recipe.steps.count {
+            status = .completed
+            completedAt = Date.now
+        }
+        
+        // Move currentStepIndex for linear views
+        if index == currentStepIndex {
+            while isStepCompleted(at: currentStepIndex) && currentStepIndex < recipe.steps.count {
+                currentStepIndex += 1
+            }
+        }
     }
 
     /// Generate a batch number based on date and sequence

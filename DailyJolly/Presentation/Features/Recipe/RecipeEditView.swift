@@ -9,6 +9,7 @@ struct StepInput: Identifiable {
     var note: String
     var time: Int
     var requiredMeasurements: [MeasurementType] = []
+    var lineIdentifier: String?
 }
 
 // MARK: - Ingredient Input Model
@@ -100,6 +101,21 @@ struct RecipeEditView: View {
 
             TextField(String(localized: "Notes (optional)"), text: $viewModel.note, axis: .vertical)
                 .lineLimit(2...4)
+
+            Picker(String(localized: "Gelling Agent Template"), selection: $viewModel.templateType) {
+                Text(String(localized: "None")).tag(nil as GellingAgentType?)
+                ForEach(GellingAgentType.allCases) { type in
+                    VStack(alignment: .leading) {
+                        Text(type.rawValue)
+                        Text(type.description).font(.caption).foregroundStyle(.secondary)
+                    }.tag(type as GellingAgentType?)
+                }
+            }
+            .onChange(of: viewModel.templateType) { _, newValue in
+                if let template = newValue {
+                    viewModel.applyTemplate(template)
+                }
+            }
         } header: {
             Text(String(localized: "Basic Info"))
         }
@@ -232,10 +248,18 @@ private struct StepRowView: View {
                         .lineLimit(2)
                 }
 
-                if step.time > 0 {
-                    Label(step.time.formattedTime, systemImage: "clock")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    if let line = step.lineIdentifier {
+                        Label(line, systemImage: "arrow.branch")
+                            .font(.caption)
+                            .foregroundStyle(.purple)
+                    }
+
+                    if step.time > 0 {
+                        Label(step.time.formattedTime, systemImage: "clock")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 if !step.requiredMeasurements.isEmpty {
@@ -446,6 +470,7 @@ private struct AddStepSheet: View {
     @State private var note: String = ""
     @State private var time: Int = 0
     @State private var requiredMeasurements: [MeasurementType] = []
+    @State private var lineIdentifier: String = ""
 
     let onAdd: (StepInput) -> Void
 
@@ -464,6 +489,15 @@ private struct AddStepSheet: View {
                         .lineLimit(2...4)
                 } header: {
                     Text(String(localized: "Step Info"))
+                }
+
+                Section {
+                    TextField(String(localized: "Line Identifier (e.g., Line A)"), text: $lineIdentifier)
+                        .textInputAutocapitalization(.sentences)
+                } header: {
+                    Text(String(localized: "Production Line"))
+                } footer: {
+                    Text(String(localized: "Leave empty for main production line"))
                 }
 
                 Section {
@@ -508,7 +542,8 @@ private struct AddStepSheet: View {
                             title: title.trimmingCharacters(in: .whitespaces),
                             note: note,
                             time: time,
-                            requiredMeasurements: requiredMeasurements
+                            requiredMeasurements: requiredMeasurements,
+                            lineIdentifier: lineIdentifier.isEmpty ? nil : lineIdentifier.trimmingCharacters(in: .whitespaces)
                         )
                         onAdd(step)
                         dismiss()
