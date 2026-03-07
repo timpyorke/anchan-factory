@@ -86,6 +86,23 @@ final class CSVExportService {
                 csv += "\(actualTime),"
                 csv += "\(completedAt)\n"
             }
+            csv += "\n"
+        }
+
+        // Quality Control Measurements Section
+        let measurements = manufacturing.measurements
+        if !measurements.isEmpty {
+            csv += "QUALITY CONTROL MEASUREMENTS\n"
+            csv += "Step,Measurement,Value,Unit,Timestamp\n"
+            let sortedSteps = manufacturing.recipe.sortedSteps
+            for log in measurements.sorted(by: { $0.timestamp < $1.timestamp }) {
+                let stepTitle = log.stepIndex < sortedSteps.count ? sortedSteps[log.stepIndex].title : "Unknown"
+                csv += "\"\(escapeCSV(stepTitle))\","
+                csv += "\(log.type.rawValue),"
+                csv += "\(String(format: "%.2f", log.value)),"
+                csv += "\(log.type.symbol),"
+                csv += "\(dateFormatter.string(from: log.timestamp))\n"
+            }
         }
 
         let fileName = "Manufacturing_\(manufacturing.batchNumber).csv"
@@ -96,7 +113,7 @@ final class CSVExportService {
     func exportAllManufacturing(_ items: [ManufacturingEntity]) -> URL? {
         guard !items.isEmpty else { return nil }
 
-        var csv = "Batch Number,Recipe,Category,Status,Started,Completed,Duration,Batches,Batch Size,Total Units,Total Cost,Cost Per Unit\n"
+        var csv = "Batch Number,Recipe,Category,Status,Started,Completed,Duration,Batches,Batch Size,Total Units,Actual Units,Total Cost,Cost Per Unit\n"
 
         for m in items {
             let status = m.status.rawValue.capitalized
@@ -104,13 +121,14 @@ final class CSVExportService {
             let completed = m.completedAt.map { dateFormatter.string(from: $0) } ?? "-"
             let duration = m.isCompleted ? formatDuration(m.totalDuration) : "-"
             let category = m.recipe.category ?? "-"
+            let actualUnits = m.actualOutput.map { String(format: "%.2f", $0) } ?? String(m.totalUnits)
 
             csv += "\(m.batchNumber),"
             csv += "\"\(escapeCSV(m.recipe.name))\","
             csv += "\"\(escapeCSV(category))\","
             csv += "\(status),\(started),\(completed),\(duration),"
             csv += "\(m.quantity),\(m.recipe.batchSize) \(m.recipe.batchUnit),"
-            csv += "\(m.totalUnits),฿\(String(format: "%.2f", m.totalCost)),"
+            csv += "\(m.totalUnits),\(actualUnits),฿\(String(format: "%.2f", m.totalCost)),"
             csv += "฿\(String(format: "%.2f", m.costPerUnit))\n"
         }
 

@@ -20,6 +20,10 @@ final class ManufacturingEntity {
     var completedAt: Date?
     var stepCompletionTimes: [Date] = []
     var stepNotes: [String] = []
+    var actualOutput: Double? // NEW: For flexible output tracking
+
+    @Relationship(deleteRule: .cascade)
+    var measurements: [MeasurementLogEntity] = []
 
     @Relationship
     var recipe: RecipeEntity
@@ -171,5 +175,29 @@ final class ManufacturingEntity {
         guard index < stepNotes.count else { return nil }
         let note = stepNotes[index]
         return note.isEmpty ? nil : note
+    }
+
+    /// Log a quality control measurement for a step
+    func logMeasurement(type: MeasurementType, value: Double, stepIndex: Int) {
+        // Remove existing if any
+        measurements.removeAll { $0.stepIndex == stepIndex && $0.type == type }
+        
+        let log = MeasurementLogEntity(type: type, value: value, stepIndex: stepIndex, manufacturing: self)
+        measurements.append(log)
+    }
+
+    /// Get measurements for a specific step
+    func getMeasurements(at stepIndex: Int) -> [MeasurementLogEntity] {
+        measurements.filter { $0.stepIndex == stepIndex }
+    }
+
+    /// Check if all required measurements for a step are logged
+    func hasRequiredMeasurements(at index: Int) -> Bool {
+        let sorted = recipe.sortedSteps
+        guard index < sorted.count else { return true }
+        let step = sorted[index]
+        let logged = getMeasurements(at: index).map { $0.type }
+        
+        return step.requiredMeasurements.allSatisfy { logged.contains($0) }
     }
 }

@@ -83,6 +83,18 @@ final class ManufacturingViewModel {
         completeStep(at: manufacturing.currentStepIndex, note: note)
     }
 
+    func logMeasurement(at stepIndex: Int, type: MeasurementType, value: Double) {
+        guard let manufacturing, let repository else { return }
+        manufacturing.logMeasurement(type: type, value: value, stepIndex: stepIndex)
+        _ = repository.update()
+    }
+
+    func updateActualOutput(_ value: Double) {
+        guard let manufacturing, let repository else { return }
+        manufacturing.actualOutput = value
+        _ = repository.update()
+    }
+
     private func deductInventory(for manufacturing: ManufacturingEntity) {
         print("[ManufacturingViewModel] 📦 Deducting inventory for \(manufacturing.quantity) batch(es)")
 

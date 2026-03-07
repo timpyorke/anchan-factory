@@ -133,6 +133,27 @@ struct ManufacturingView: View {
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                     }
+
+                                    // Measurement inputs for parallel view
+                                    if !isCompleted && !step.requiredMeasurements.isEmpty {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            ForEach(step.requiredMeasurements) { measurement in
+                                                let loggedValue = manufacturing.getMeasurements(at: index)
+                                                    .first(where: { $0.type == measurement })?.value
+                                                
+                                                MeasurementInputView(
+                                                    type: measurement,
+                                                    value: .constant(loggedValue),
+                                                    onSave: { newValue in
+                                                        viewModel.logMeasurement(at: index, type: measurement, value: newValue)
+                                                    }
+                                                )
+                                                .scaleEffect(0.8)
+                                                .frame(height: 25)
+                                            }
+                                        }
+                                        .padding(.top, 4)
+                                    }
                                 }
 
                                 Spacer()
@@ -141,11 +162,12 @@ struct ManufacturingView: View {
                                     Image(systemName: "checkmark.circle.fill")
                                         .foregroundStyle(.green)
                                 } else {
-                                    Button(canComplete ? String(localized: "Complete") : String(localized: "Waiting")) {
+                                    let hasQC = manufacturing.hasRequiredMeasurements(at: index)
+                                    Button(canComplete ? (hasQC ? String(localized: "Complete") : String(localized: "Need QC")) : String(localized: "Waiting")) {
                                         viewModel.completeStep(at: index)
                                     }
                                     .buttonStyle(.bordered)
-                                    .disabled(!canComplete)
+                                    .disabled(!canComplete || !hasQC)
                                 }
                             }
                         }
@@ -249,6 +271,33 @@ struct ManufacturingView: View {
                 }
                 .padding(.top, 8)
 
+                // Required Measurements
+                if !step.requiredMeasurements.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(String(localized: "Required Measurements"))
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.secondary)
+                        
+                        VStack(spacing: 12) {
+                            ForEach(step.requiredMeasurements) { measurement in
+                                let loggedValue = manufacturing.getMeasurements(at: manufacturing.currentStepIndex)
+                                    .first(where: { $0.type == measurement })?.value
+                                
+                                MeasurementInputView(
+                                    type: measurement,
+                                    value: .constant(loggedValue),
+                                    onSave: { newValue in
+                                        viewModel.logMeasurement(at: manufacturing.currentStepIndex, type: measurement, value: newValue)
+                                    }
+                                )
+                            }
+                        }
+                        .padding()
+                        .background(.fill.quinary)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+
                 // Ingredients for this recipe (show on first step)
                 if manufacturing.currentStepIndex == 0 && !manufacturing.recipe.ingredients.isEmpty {
                     ingredientsCard(manufacturing.recipe)
@@ -313,6 +362,8 @@ struct ManufacturingView: View {
         VStack(spacing: 16) {
             Divider()
 
+            let canComplete = manufacturing.hasRequiredMeasurements(at: manufacturing.currentStepIndex)
+
             Button {
                 viewModel.completeCurrentStep(note: stepNote)
                 stepNote = ""
@@ -329,52 +380,121 @@ struct ManufacturingView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.accentColor)
+                .background(canComplete ? Color.accentColor : Color.gray)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .padding(.horizontal)
             .padding(.bottom)
+            .disabled(!canComplete)
+
+            if !canComplete {
+                Text(String(localized: "Please enter all required measurements"))
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .padding(.bottom, 8)
+            }
         }
     }
 
     // MARK: - Completed View
 
     private func completedView(_ manufacturing: ManufacturingEntity) -> some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer()
 
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(.green)
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 80))
+                    .foregroundStyle(.green)
 
-            VStack(spacing: 8) {
-                Text(String(localized: "Manufacturing Complete!"))
-                    .font(.title.bold())
+                VStack(spacing: 8) {
+                    Text(String(localized: "Manufacturing Complete!"))
+                        .font(.title.bold())
 
-                Text(manufacturing.recipe.name)
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-            }
-
-            if let completedAt = manufacturing.completedAt {
-                VStack(spacing: 4) {
-                    Text(String(localized: "Completed"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Text(completedAt, style: .date)
-                        .font(.subheadline)
-
-                    Text(completedAt, style: .time)
-                        .font(.subheadline)
+                    Text(manufacturing.recipe.name)
+                        .font(.headline)
                         .foregroundStyle(.secondary)
                 }
-            }
 
-            Spacer()
+                // Flexible Output Section
+                VStack(spacing: 12) {
+                    Text(String(localized: "Total Units Produced"))
+                        .font(.subheadline.bold())
+                    
+                    HStack {
+                        TextField("0", value: Binding(
+                            get: { manufacturing.actualOutput ?? Double(manufacturing.totalUnits) },
+                            set: { viewModel.updateActualOutput($0) }
+                        ), format: .number)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.center)
+                        .font(.title2.bold())
+                        .frame(width: 120)
+                        .textFieldStyle(.roundedBorder)
+                        
+                        Text(manufacturing.recipe.batchUnit)
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    Text(String(localized: "Expected: \(manufacturing.totalUnits) \(manufacturing.recipe.batchUnit)"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(.fill.quinary)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                // Completed Measurements Summary
+                if !manufacturing.measurements.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(String(localized: "Quality Control Log"))
+                            .font(.headline)
+                            .padding(.bottom, 4)
+                        
+                        let sortedMeasurements = manufacturing.measurements.sorted(by: { $0.timestamp < $1.timestamp })
+                        let steps = manufacturing.recipe.sortedSteps
+                        
+                        ForEach(sortedMeasurements) { log in
+                            let stepTitle = log.stepIndex < steps.count ? steps[log.stepIndex].title : "Step \(log.stepIndex + 1)"
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(stepTitle).font(.caption).foregroundStyle(.secondary)
+                                    Text(log.type.rawValue).font(.subheadline)
+                                }
+                                Spacer()
+                                Text("\(AppNumberFormatter.format(log.value)) \(log.type.symbol)")
+                                    .font(.headline)
+                            }
+                            Divider()
+                        }
+                    }
+                    .padding()
+                    .background(.fill.quinary)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal)
+                }
+
+                if let completedAt = manufacturing.completedAt {
+                    VStack(spacing: 4) {
+                        Text(String(localized: "Completed"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Text(completedAt, style: .date)
+                            .font(.subheadline)
+
+                        Text(completedAt, style: .time)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+            }
+            .padding()
         }
-        .padding()
     }
 
     // MARK: - Actions
