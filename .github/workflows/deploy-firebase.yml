@@ -21,10 +21,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  SCHEME: anchan
-  TARGET: anchan
+  SCHEME: DailyJolly
+  TARGET: DailyJolly
   BUNDLE_ID: com.codenour.anchan
-  XCODE_PROJECT: anchan.xcodeproj
+  XCODE_PROJECT: DailyJolly.xcodeproj
   CONFIGURATION: Debug
   EXPORT_OPTIONS_PLIST: ExportOptions-AdHoc.plist
 
@@ -69,7 +69,7 @@ jobs:
           PROFILE_PATH="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILE_PATH"
           echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode \
-            -o "$PROFILE_PATH/anchan_adhoc.mobileprovision"
+            -o "$PROFILE_PATH/DailyJolly_adhoc.mobileprovision"
 
       - name: Create ExportOptions plist (Ad Hoc)
         env:
@@ -103,23 +103,25 @@ jobs:
 
       - name: Archive app
         run: |
+          set -o pipefail
           xcodebuild archive \
             -project "$XCODE_PROJECT" \
             -scheme "$SCHEME" \
             -configuration "$CONFIGURATION" \
-            -archivePath "$RUNNER_TEMP/anchan.xcarchive" \
+            -archivePath "$RUNNER_TEMP/DailyJolly.xcarchive" \
             -destination "generic/platform=iOS" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
-            | xcpretty || true
+            | xcpretty
 
       - name: Export IPA
         run: |
+          set -o pipefail
           xcodebuild -exportArchive \
-            -archivePath "$RUNNER_TEMP/anchan.xcarchive" \
+            -archivePath "$RUNNER_TEMP/DailyJolly.xcarchive" \
             -exportOptionsPlist "$EXPORT_OPTIONS_PLIST" \
             -exportPath "$RUNNER_TEMP/export" \
-            | xcpretty || true
+            | xcpretty
 
       - name: Upload to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1
@@ -133,18 +135,18 @@ jobs:
             Commit: ${{ github.sha }}
             Branch: ${{ github.ref_name }}
             Run: #${{ github.run_number }}
-          file: ${{ runner.temp }}/export/anchan.ipa
+          file: ${{ runner.temp }}/export/DailyJolly.ipa
 
       - name: Clean up keychain and profiles
         if: always()
         run: |
           security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
-          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/anchan_adhoc.mobileprovision"
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/DailyJolly_adhoc.mobileprovision"
 
       - name: Upload IPA as artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: anchan-adhoc-${{ github.run_number }}
-          path: ${{ runner.temp }}/export/anchan.ipa
+          name: DailyJolly-adhoc-${{ github.run_number }}
+          path: ${{ runner.temp }}/export/DailyJolly.ipa
           retention-days: 7
