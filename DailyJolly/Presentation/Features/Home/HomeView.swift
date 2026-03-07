@@ -14,6 +14,19 @@ struct HomeView: View {
                 // Summary Statistics Section
                 summarySection
 
+                // Analytics Button (Guaranteed Access)
+                Button {
+                    stackRouter.push(.analyticsDashboard)
+                } label: {
+                    Label(String(localized: "View Detailed Quality Control Analytics"), systemImage: "chart.xyaxis.line")
+                        .font(.subheadline.bold())
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.1))
+                        .foregroundStyle(.blue)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+
                 // Low Stock Alert Section
                 if !viewModel.lowStockItems.isEmpty {
                     lowStockSection
@@ -40,6 +53,15 @@ struct HomeView: View {
             .padding()
         }
         .navigationTitle(String(localized: "Manufacturing"))
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    stackRouter.push(.analyticsDashboard)
+                } label: {
+                    Image(systemName: "chart.xyaxis.line")
+                }
+            }
+        }
         .sheet(isPresented: $viewModel.showRecipeSelection) {
             RecipeSelectionSheet { recipe in
                 handleRecipeSelection(recipe)

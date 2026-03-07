@@ -8,4 +8,5 @@ enum AppRoute: Hashable {
     case manufacturingList
     case manufacturingProcess(id: PersistentIdentifier)
     case manufacturingDetail(id: PersistentIdentifier)
+    case analyticsDashboard
 }

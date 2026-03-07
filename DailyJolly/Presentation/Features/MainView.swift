@@ -48,6 +48,8 @@ struct MainView: View {
                     ManufacturingView(id: id)
                 case .manufacturingDetail(let id):
                     ManufacturingDetailView(id: id)
+                case .analyticsDashboard:
+                    AnalyticsDashboardView()
                 }
             }
         }
