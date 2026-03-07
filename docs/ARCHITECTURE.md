@@ -1,10 +1,10 @@
 # Architecture
 
-This document describes the architecture of the Anchan Factory iOS application.
+This document describes the architecture of the Daily Jolly iOS application.
 
 ## Overview
 
-Anchan Factory uses the **MVVM (Model-View-ViewModel)** architectural pattern with Clean Architecture principles and a clear separation of concerns across multiple layers.
+Daily Jolly uses the **MVVM (Model-View-ViewModel)** architectural pattern with Clean Architecture principles and a clear separation of concerns across multiple layers.
 
 ## Layer Structure
 

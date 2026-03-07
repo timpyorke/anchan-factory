@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		89EF155B2F21185000493825 /* anchan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = anchan.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		89EF155B2F21185000493825 /* DailyJolly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyJolly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		89EF155D2F21185000493825 /* anchan */ = {
+		89EF155D2F21185000493825 /* DailyJolly */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = anchan;
+			path = DailyJolly;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -30,7 +30,7 @@
 		89EF15522F21185000493825 = {
 			isa = PBXGroup;
 			children = (
-				89EF155D2F21185000493825 /* anchan */,
+				89EF155D2F21185000493825 /* DailyJolly */,
 				89EF155C2F21185000493825 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -38,7 +38,7 @@
 		89EF155C2F21185000493825 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				89EF155B2F21185000493825 /* anchan.app */,
+				89EF155B2F21185000493825 /* DailyJolly.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -46,9 +46,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		89EF155A2F21185000493825 /* anchan */ = {
+		89EF155A2F21185000493825 /* DailyJolly */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 89EF15662F21185200493825 /* Build configuration list for PBXNativeTarget "anchan" */;
+			buildConfigurationList = 89EF15662F21185200493825 /* Build configuration list for PBXNativeTarget "DailyJolly" */;
 			buildPhases = (
 				89EF15572F21185000493825 /* Sources */,
 				89EF15582F21185000493825 /* Frameworks */,
@@ -57,11 +57,11 @@
 			buildRules = (
 			);
 			fileSystemSynchronizedGroups = (
-				89EF155D2F21185000493825 /* anchan */,
+				89EF155D2F21185000493825 /* DailyJolly */,
 			);
-			name = anchan;
-			productName = anchan;
-			productReference = 89EF155B2F21185000493825 /* anchan.app */;
+			name = DailyJolly;
+			productName = DailyJolly;
+			productReference = 89EF155B2F21185000493825 /* DailyJolly.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -79,7 +79,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 89EF15562F21185000493825 /* Build configuration list for PBXProject "anchan" */;
+			buildConfigurationList = 89EF15562F21185000493825 /* Build configuration list for PBXProject "DailyJolly" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -94,7 +94,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				89EF155A2F21185000493825 /* anchan */,
+				89EF155A2F21185000493825 /* DailyJolly */,
 			);
 		};
 /* End PBXProject section */
@@ -116,7 +116,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		89EF15642F21185200493825 /* Debug configuration for PBXProject "anchan" */ = {
+		89EF15642F21185200493825 /* Debug configuration for PBXProject "DailyJolly" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -181,7 +181,7 @@
 			};
 			name = Debug;
 		};
-		89EF15652F21185200493825 /* Release configuration for PBXProject "anchan" */ = {
+		89EF15652F21185200493825 /* Release configuration for PBXProject "DailyJolly" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -239,7 +239,7 @@
 			};
 			name = Release;
 		};
-		89EF15672F21185200493825 /* Debug configuration for PBXNativeTarget "anchan" */ = {
+		89EF15672F21185200493825 /* Debug configuration for PBXNativeTarget "DailyJolly" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -254,6 +254,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_CFBundleDisplayName = "Daily Jolly";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -271,7 +272,7 @@
 			};
 			name = Debug;
 		};
-		89EF15682F21185200493825 /* Release configuration for PBXNativeTarget "anchan" */ = {
+		89EF15682F21185200493825 /* Release configuration for PBXNativeTarget "DailyJolly" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -286,6 +287,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_CFBundleDisplayName = "Daily Jolly";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -306,19 +308,19 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		89EF15562F21185000493825 /* Build configuration list for PBXProject "anchan" */ = {
+		89EF15562F21185000493825 /* Build configuration list for PBXProject "DailyJolly" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				89EF15642F21185200493825 /* Debug configuration for PBXProject "anchan" */,
-				89EF15652F21185200493825 /* Release configuration for PBXProject "anchan" */,
+				89EF15642F21185200493825 /* Debug configuration for PBXProject "DailyJolly" */,
+				89EF15652F21185200493825 /* Release configuration for PBXProject "DailyJolly" */,
 			);
 			defaultConfigurationName = Release;
 		};
-		89EF15662F21185200493825 /* Build configuration list for PBXNativeTarget "anchan" */ = {
+		89EF15662F21185200493825 /* Build configuration list for PBXNativeTarget "DailyJolly" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				89EF15672F21185200493825 /* Debug configuration for PBXNativeTarget "anchan" */,
-				89EF15682F21185200493825 /* Release configuration for PBXNativeTarget "anchan" */,
+				89EF15672F21185200493825 /* Debug configuration for PBXNativeTarget "DailyJolly" */,
+				89EF15682F21185200493825 /* Release configuration for PBXNativeTarget "DailyJolly" */,
 			);
 			defaultConfigurationName = Release;
 		};

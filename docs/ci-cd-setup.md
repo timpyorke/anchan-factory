@@ -1,6 +1,6 @@
 # CI/CD Setup Guide
 
-This document covers how to configure GitHub Actions for deploying **anchan** to TestFlight and Firebase App Distribution.
+This document covers how to configure GitHub Actions for deploying **DailyJolly** to TestFlight and Firebase App Distribution.
 
 ---
 
@@ -46,7 +46,7 @@ This document covers how to configure GitHub Actions for deploying **anchan** to
 2. Create an **App Store** provisioning profile for bundle ID `com.codenour.anchan`
 3. Download and encode:
    ```bash
-   base64 -i anchan_appstore.mobileprovision | pbcopy
+   base64 -i DailyJolly_appstore.mobileprovision | pbcopy
    ```
 4. Save as `PROVISIONING_PROFILE_BASE64` secret
 

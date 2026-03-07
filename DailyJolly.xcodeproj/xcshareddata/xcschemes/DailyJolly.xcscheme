@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "89EF155A2F21185000493825"
-               BuildableName = "anchan.app"
-               BlueprintName = "anchan"
-               ReferencedContainer = "container:anchan.xcodeproj">
+               BuildableName = "DailyJolly.app"
+               BlueprintName = "DailyJolly"
+               ReferencedContainer = "container:DailyJolly.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "89EF155A2F21185000493825"
-            BuildableName = "anchan.app"
-            BlueprintName = "anchan"
-            ReferencedContainer = "container:anchan.xcodeproj">
+            BuildableName = "DailyJolly.app"
+            BlueprintName = "DailyJolly"
+            ReferencedContainer = "container:DailyJolly.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -62,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "89EF155A2F21185000493825"
-            BuildableName = "anchan.app"
-            BlueprintName = "anchan"
-            ReferencedContainer = "container:anchan.xcodeproj">
+            BuildableName = "DailyJolly.app"
+            BlueprintName = "DailyJolly"
+            ReferencedContainer = "container:DailyJolly.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

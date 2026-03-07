@@ -1,6 +1,6 @@
 # Navigation System
 
-This document describes the navigation architecture used in Anchan Factory.
+This document describes the navigation architecture used in Daily Jolly.
 
 ## Overview
 

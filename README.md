@@ -1,10 +1,10 @@
-# Anchan Factory
+# Daily Jolly
 
 A native iOS application for manufacturing management, recipe tracking, and inventory control, built with SwiftUI and SwiftData.
 
 ## Overview
 
-Anchan Factory is a comprehensive manufacturing and inventory management app designed for production environments. It enables users to create recipes with ingredients and steps, track inventory levels, manage manufacturing batches, and monitor production costs. The app provides a clean, modern interface with tab-based navigation optimized for iPad devices.
+Daily Jolly is a comprehensive manufacturing and inventory management app designed for production environments. It enables users to create recipes with ingredients and steps, track inventory levels, manage manufacturing batches, and monitor production costs. The app provides a clean, modern interface with tab-based navigation optimized for iPad devices.
 
 ## Requirements
 
@@ -26,9 +26,9 @@ Anchan Factory is a comprehensive manufacturing and inventory management app des
 The project follows the **MVVM (Model-View-ViewModel)** pattern with Clean Architecture principles:
 
 ```
-anchan/
+DailyJolly/
 ├── App/                    # Application entry point
-│   └── AnchanApp.swift
+│   └── DailyJollyApp.swift
 ├── Core/                   # Shared utilities and infrastructure
 │   ├── Const/              # App settings, themes, language, errors
 │   ├── Database/           # SwiftData configuration
@@ -158,12 +158,12 @@ Supported measurement units:
 1. Clone the repository
    ```bash
    git clone <repository-url>
-   cd anchan
+   cd DailyJolly
    ```
 
 2. Open the project in Xcode
    ```bash
-   open anchan.xcodeproj
+   open DailyJolly.xcodeproj
    ```
 
 3. Select your target device or simulator (iPad recommended)

@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct AnchanApp: App {
+struct DailyJollyApp: App {
     private let container = AppModelContainer.make()
     @State private var settings = AppSettings.shared
 

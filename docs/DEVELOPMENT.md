@@ -1,6 +1,6 @@
 # Development Guide
 
-This guide covers development practices and conventions for Anchan Factory.
+This guide covers development practices and conventions for Daily Jolly.
 
 ## Getting Started
 
@@ -15,12 +15,12 @@ This guide covers development practices and conventions for Anchan Factory.
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd anchan
+   cd DailyJolly
    ```
 
 2. Open project:
    ```bash
-   open anchan.xcodeproj
+   open DailyJolly.xcodeproj
    ```
 
 3. Select an iPad target device and run (⌘+R)
@@ -536,11 +536,11 @@ if let url = CSVExportService.shared.exportInventory(items) {
 
 ### Unit Tests
 
-Create tests in `anchanTests/` folder:
+Create tests in `DailyJollyTests/` folder:
 
 ```swift
 import XCTest
-@testable import anchan
+@testable import DailyJolly
 
 final class RecipeViewModelTests: XCTestCase {
     func testInitialState() {
@@ -553,7 +553,7 @@ final class RecipeViewModelTests: XCTestCase {
 
 ### UI Tests
 
-Create tests in `anchanUITests/` folder:
+Create tests in `DailyJollyUITests/` folder:
 
 ```swift
 import XCTest

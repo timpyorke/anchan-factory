@@ -1,8 +1,8 @@
-# Anchan Factory - Development Roadmap
+# Daily Jolly - Development Roadmap
 
 ## Overview
 
-This document tracks the development progress and future plans for Anchan Factory.
+This document tracks the development progress and future plans for Daily Jolly.
 
 ## Completed Features
 

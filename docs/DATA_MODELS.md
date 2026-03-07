@@ -1,6 +1,6 @@
 # Data Models
 
-This document describes the data layer and models used in Anchan Factory.
+This document describes the data layer and models used in Daily Jolly.
 
 ## Overview
 
