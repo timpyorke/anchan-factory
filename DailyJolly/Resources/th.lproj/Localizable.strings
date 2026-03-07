@@ -169,3 +169,56 @@
 "steps" = "ขั้นตอน";
 "ingredient" = "วัตถุดิบ";
 "ingredients" = "วัตถุดิบ";
+
+/* Quality Control & Analytics */
+"pH" = "ค่า pH";
+"Quality Control" = "ควบคุมคุณภาพ (QC)";
+"Initial pH value for this inventory item" = "ค่า pH เริ่มต้นสำหรับวัตถุดิบนี้";
+"Total Batches" = "จำนวนชุดทั้งหมด";
+"Total Manufacturing Cost" = "ต้นทุนการผลิตรวม";
+"View Detailed Quality Control Analytics" = "ดูรายงานวิเคราะห์คุณภาพ (QC)";
+"Analytics & QC" = "การวิเคราะห์และ QC";
+"Process Compliance" = "ความถูกต้องของกระบวนการ";
+"Score" = "คะแนน";
+"Quality Control Tracking" = "การติดตามการควบคุมคุณภาพ";
+"This score represents the percentage of required QC measurements (Temp, pH, Brix, Aw) successfully logged across all completed batches." = "คะแนนนี้แสดงถึงเปอร์เซ็นต์ของการวัดค่า QC ที่กำหนด (อุณหภูมิ, pH, Brix, Aw) ที่ถูกบันทึกสำเร็จในทุกชุดการผลิตที่เสร็จสิ้น";
+"Batch Variance Analysis" = "การวิเคราะห์ความแปรผันของแบทช์";
+"Compares QC measurements across multiple batches of the same recipe to identify inconsistency. Lower variance means higher consistency." = "เปรียบเทียบการวัดค่า QC ในหลายแบทช์ของสูตรเดียวกันเพื่อระบุความไม่สม่ำเสมอ ค่าความแปรผันที่ต่ำกว่าหมายถึงความสม่ำเสมอที่สูงกว่า";
+"Not enough data. Complete at least two batches of the same recipe with QC measurements to see variance." = "ข้อมูลไม่เพียงพอ กรุณาผลิตให้ครบอย่างน้อยสองแบทช์ในสูตรเดียวกันพร้อมบันทึกค่า QC เพื่อดูความแปรผัน";
+"Average" = "ค่าเฉลี่ย";
+"Min" = "ต่ำสุด";
+"Max" = "สูงสุด";
+"Variance Range" = "ช่วงความแปรผัน";
+"Temperature" = "อุณหภูมิ";
+"Brix" = "ความหวาน (Brix)";
+"Aw" = "ค่า Aw";
+"Quality Control Log" = "บันทึกการควบคุมคุณภาพ";
+"Required Measurements" = "การวัดค่าที่จำเป็น";
+"Please enter all required measurements" = "กรุณากรอกข้อมูลการวัดที่จำเป็นให้ครบถ้วน";
+"Need QC" = "รอค่า QC";
+
+/* Parallel Workflow & Templates */
+"Production Line" = "สายการผลิต";
+"Line Identifier (e.g., Line A)" = "ชื่อสายการผลิต (เช่น Line A)";
+"Leave empty for main production line" = "เว้นว่างไว้สำหรับสายการผลิตหลัก";
+"Gelling Agent Template" = "เทมเพลตสารก่อเจล";
+"None" = "ไม่มี";
+"Waiting" = "รอขั้นตอนอื่น";
+"Complete" = "บันทึกเสร็จสิ้น";
+"Select measurements required for this step" = "เลือกการวัดค่าที่จำเป็นสำหรับขั้นตอนนี้";
+
+/* Flexible Output */
+"Total Units Produced" = "จำนวนหน่วยที่ผลิตได้จริง";
+"Expected: %lld %@" = "ตามแผน: %lld %@";
+
+/* Gelling Agents */
+"Pectin" = "เพคติน (Pectin)";
+"Gelatin" = "เจลาติน (Gelatin)";
+"Agar-Agar" = "ผงวุ้น (Agar-Agar)";
+"Carrageenan" = "คาราจีแนน (Carrageenan)";
+"Starch" = "แป้ง (Starch)";
+"High-temperature cooking, pH sensitive" = "ปรุงที่อุณหภูมิสูง, ไวต่อค่า pH";
+"Hydration required, low temperature set" = "ต้องแช่น้ำ, เซ็ตตัวที่อุณหภูมิต่ำ";
+"High-temperature activation, heat stable" = "กระตุ้นที่อุณหภูมิสูง, ทนความร้อน";
+"Shear thinning, thermoreversible" = "คืนรูปได้ด้วยความร้อน";
+"Gelatinization at specific temperature" = "เกิดเจลที่อุณหภูมิเฉพาะ";
