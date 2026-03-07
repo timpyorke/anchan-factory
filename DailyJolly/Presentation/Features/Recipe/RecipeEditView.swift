@@ -8,6 +8,7 @@ struct StepInput: Identifiable {
     var title: String
     var note: String
     var time: Int
+    var requiredMeasurements: [MeasurementType] = []
 }
 
 // MARK: - Ingredient Input Model
@@ -236,6 +237,23 @@ private struct StepRowView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+
+                if !step.requiredMeasurements.isEmpty {
+                    HStack(spacing: 8) {
+                        ForEach(step.requiredMeasurements) { measurement in
+                            HStack(spacing: 2) {
+                                Image(systemName: measurement.icon)
+                                Text(measurement.symbol)
+                            }
+                            .font(.system(size: 10, weight: .medium))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(.blue.opacity(0.1))
+                            .foregroundStyle(.blue)
+                            .clipShape(Capsule())
+                        }
+                    }
+                }
             }
 
             Spacer()
@@ -427,6 +445,7 @@ private struct AddStepSheet: View {
     @State private var title: String = ""
     @State private var note: String = ""
     @State private var time: Int = 0
+    @State private var requiredMeasurements: [MeasurementType] = []
 
     let onAdd: (StepInput) -> Void
 
@@ -452,6 +471,27 @@ private struct AddStepSheet: View {
                 } header: {
                     Text(String(localized: "Time"))
                 }
+
+                Section {
+                    ForEach(MeasurementType.allCases) { measurement in
+                        Toggle(isOn: Binding(
+                            get: { requiredMeasurements.contains(measurement) },
+                            set: { isOn in
+                                if isOn {
+                                    requiredMeasurements.append(measurement)
+                                } else {
+                                    requiredMeasurements.removeAll { $0 == measurement }
+                                }
+                            }
+                        )) {
+                            Label(measurement.rawValue, systemImage: measurement.icon)
+                        }
+                    }
+                } header: {
+                    Text(String(localized: "Quality Control"))
+                } footer: {
+                    Text(String(localized: "Select measurements required for this step"))
+                }
             }
             .navigationTitle(String(localized: "Add Step"))
             .navigationBarTitleDisplayMode(.inline)
@@ -467,7 +507,8 @@ private struct AddStepSheet: View {
                         let step = StepInput(
                             title: title.trimmingCharacters(in: .whitespaces),
                             note: note,
-                            time: time
+                            time: time,
+                            requiredMeasurements: requiredMeasurements
                         )
                         onAdd(step)
                         dismiss()

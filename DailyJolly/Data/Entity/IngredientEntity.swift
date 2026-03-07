@@ -6,6 +6,7 @@ final class IngredientEntity {
     var quantity: Double            // 100
     var unitSymbol: String          // "g", "ml", or custom
     var note: String?
+    var batchPhValue: Double?      // The specific pH recorded when this batch was used
 
     // relationships
     @Relationship
@@ -19,12 +20,14 @@ final class IngredientEntity {
         quantity: Double,
         unitSymbol: String,
         note: String? = nil,
+        batchPhValue: Double? = nil,
         recipe: RecipeEntity
     ) {
         self.inventoryItem = inventoryItem
         self.quantity = quantity
         self.unitSymbol = unitSymbol
         self.note = note
+        self.batchPhValue = batchPhValue
         self.recipe = recipe
     }
 

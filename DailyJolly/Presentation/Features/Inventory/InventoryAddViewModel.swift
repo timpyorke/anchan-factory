@@ -14,6 +14,7 @@ final class InventoryAddViewModel {
     var unitPrice: String = ""
     var stock: String = ""
     var minStock: String = ""
+    var phValue: String = ""
     private(set) var customUnits: [CustomUnitEntity] = []
 
     // MARK: - UI State
@@ -82,6 +83,7 @@ final class InventoryAddViewModel {
         unitPrice = item.unitPrice > 0 ? String(item.unitPrice) : ""
         stock = item.stock > 0 ? String(item.stock) : ""
         minStock = item.minStock > 0 ? String(item.minStock) : ""
+        phValue = item.phValue != nil ? String(item.phValue!) : ""
     }
 
     func saveItem(onComplete: () -> Void) {
@@ -93,6 +95,7 @@ final class InventoryAddViewModel {
         let price = Double(unitPrice) ?? 0
         let stockValue = Double(stock) ?? 0
         let minStockValue = Double(minStock) ?? 0
+        let ph = Double(phValue)
 
         if let item = editingItem {
             // Update existing
@@ -102,6 +105,7 @@ final class InventoryAddViewModel {
             item.unitPrice = price
             item.stock = stockValue
             item.minStock = minStockValue
+            item.phValue = ph
             onComplete()
         } else {
             // Create new
@@ -110,7 +114,8 @@ final class InventoryAddViewModel {
                 unitSymbol: unitSymbol,
                 unitPrice: price,
                 stock: stockValue,
-                minStock: minStockValue
+                minStock: minStockValue,
+                phValue: ph
             )
             if !category.isEmpty {
                 item.category = category.trimmingCharacters(in: .whitespaces)

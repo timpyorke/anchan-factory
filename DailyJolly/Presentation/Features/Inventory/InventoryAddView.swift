@@ -84,6 +84,21 @@ struct InventoryAddView: View {
                     Text(String(localized: "Get notified when stock falls below this level"))
                 }
 
+                Section {
+                    HStack {
+                        Text(String(localized: "pH"))
+                        Spacer()
+                        TextField("0.0", text: $viewModel.phValue)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                    }
+                } header: {
+                    Text(String(localized: "Quality Control"))
+                } footer: {
+                    Text(String(localized: "Initial pH value for this inventory item"))
+                }
+
                 if viewModel.isEditing {
                     Section {
                         Button(role: .destructive) {

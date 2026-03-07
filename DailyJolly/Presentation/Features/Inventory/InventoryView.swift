@@ -108,6 +108,10 @@ private struct InventoryRowView: View {
                 HStack(spacing: 12) {
                     Label("\(AppNumberFormatter.format(item.stock)) \(item.displaySymbol)", systemImage: "shippingbox")
                     Label("\(AppNumberFormatter.format(item.unitPrice)) / \(item.displaySymbol)", systemImage: "tag")
+                    if let ph = item.phValue {
+                        Label("pH \(AppNumberFormatter.format(ph))", systemImage: "drop.fill")
+                            .foregroundStyle(.blue)
+                    }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

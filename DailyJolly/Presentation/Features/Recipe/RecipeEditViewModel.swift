@@ -78,7 +78,7 @@ final class RecipeEditViewModel {
             batchSize = fetchedRecipe.batchSize
             batchUnit = fetchedRecipe.batchUnit
             steps = fetchedRecipe.sortedSteps.map { step in
-                StepInput(title: step.title, note: step.note, time: step.time)
+                StepInput(title: step.title, note: step.note, time: step.time, requiredMeasurements: step.requiredMeasurements)
             }
             ingredients = fetchedRecipe.ingredients.map { ingredient in
                 IngredientInput(
@@ -114,7 +114,7 @@ final class RecipeEditViewModel {
             case .success:
                 // Rebuild relationships
                 let recipeSteps = steps.map { step in
-                    RecipeStepInput(title: step.title, note: step.note, time: step.time)
+                    RecipeStepInput(title: step.title, note: step.note, time: step.time, requiredMeasurements: step.requiredMeasurements)
                 }
                 let recipeIngredients = ingredients.map { ingredient in
                     RecipeIngredientInput(
@@ -150,7 +150,8 @@ final class RecipeEditViewModel {
                     title: stepInput.title,
                     note: stepInput.note,
                     time: stepInput.time,
-                    order: index
+                    order: index,
+                    requiredMeasurements: stepInput.requiredMeasurements
                 )
                 step.recipe = newRecipe
                 newRecipe.steps.append(step)

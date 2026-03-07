@@ -122,17 +122,19 @@ final class CSVExportService {
     func exportInventory(_ items: [InventoryEntity]) -> URL? {
         guard !items.isEmpty else { return nil }
 
-        var csv = "Name,Category,Unit,Stock,Min Stock,Unit Price,Status\n"
+        var csv = "Name,Category,Unit,Stock,Min Stock,pH,Unit Price,Status\n"
 
         for item in items {
             let category = item.category ?? "-"
             let status = item.isLowStock ? "Low Stock" : "OK"
+            let phValue = item.phValue.map { String(format: "%.2f", $0) } ?? "-"
 
             csv += "\"\(escapeCSV(item.name))\","
             csv += "\"\(escapeCSV(category))\","
             csv += "\(item.displaySymbol),"
             csv += "\(String(format: "%.2f", item.stock)),"
             csv += "\(String(format: "%.2f", item.minStock)),"
+            csv += "\(phValue),"
             csv += "฿\(String(format: "%.2f", item.unitPrice)),"
             csv += "\(status)\n"
         }
@@ -145,11 +147,12 @@ final class CSVExportService {
     func exportRecipes(_ items: [RecipeEntity]) -> URL? {
         guard !items.isEmpty else { return nil }
 
-        var csv = "Name,Category,Batch Size,Batch Unit,Total Cost,Cost Per Unit,Steps,Ingredients\n"
+        var csv = "Name,Category,Batch Size,Batch Unit,Total Cost,Cost Per Unit,Steps,Ingredients,Required QC\n"
 
         for recipe in items {
             let category = recipe.category ?? "-"
             let ingredientNames = recipe.ingredients.map { $0.inventoryItem.name }.joined(separator: "; ")
+            let qcTypes = Set(recipe.steps.flatMap { $0.requiredMeasurements }).map { $0.rawValue }.joined(separator: "; ")
 
             csv += "\"\(escapeCSV(recipe.name))\","
             csv += "\"\(escapeCSV(category))\","
@@ -158,7 +161,8 @@ final class CSVExportService {
             csv += "฿\(String(format: "%.2f", recipe.totalCost)),"
             csv += "฿\(String(format: "%.2f", recipe.costPerUnit)),"
             csv += "\(recipe.steps.count),"
-            csv += "\"\(escapeCSV(ingredientNames))\"\n"
+            csv += "\"\(escapeCSV(ingredientNames))\","
+            csv += "\"\(escapeCSV(qcTypes))\"\n"
         }
 
         return saveCSV(csv, fileName: "Recipe_Report")

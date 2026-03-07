@@ -20,6 +20,7 @@ struct RecipeStepInput {
     let title: String
     let note: String
     let time: Int
+    let requiredMeasurements: [MeasurementType]
 }
 
 struct RecipeIngredientInput {
@@ -140,7 +141,8 @@ final class RecipeRepository: RecipeRepositoryProtocol {
                 title: stepInput.title,
                 note: stepInput.note,
                 time: stepInput.time,
-                order: index
+                order: index,
+                requiredMeasurements: stepInput.requiredMeasurements
             )
             step.recipe = recipe
             recipe.steps.append(step)

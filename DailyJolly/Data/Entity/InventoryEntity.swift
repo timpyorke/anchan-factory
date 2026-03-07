@@ -10,6 +10,7 @@ final class InventoryEntity {
     var unitPrice: Double          // price per base unit
     var stock: Double              // current stock
     var minStock: Double = 0       // minimum stock threshold for restock alert
+    var phValue: Double?           // Quality Control: pH tracking
     var createdAt: Date
 
     init(
@@ -17,13 +18,15 @@ final class InventoryEntity {
         unitSymbol: String,
         unitPrice: Double,
         stock: Double,
-        minStock: Double = 0
+        minStock: Double = 0,
+        phValue: Double? = nil
     ) {
         self.name = name
         self.unitSymbol = unitSymbol
         self.unitPrice = unitPrice
         self.stock = stock
         self.minStock = minStock
+        self.phValue = phValue
         self.createdAt = Date()
     }
 
