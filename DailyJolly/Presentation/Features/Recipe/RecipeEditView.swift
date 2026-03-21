@@ -4,7 +4,7 @@ import SwiftData
 // MARK: - Step Input Model
 
 struct StepInput: Identifiable {
-    let id = UUID()
+    var id: UUID = UUID()
     var title: String
     var note: String
     var time: Int
@@ -32,6 +32,7 @@ struct RecipeEditView: View {
     let id: PersistentIdentifier?
 
     @State private var viewModel = RecipeEditViewModel()
+    @State private var editingStep: StepInput?
 
     var body: some View {
         Form {
@@ -65,8 +66,13 @@ struct RecipeEditView: View {
             }
         }
         .sheet(isPresented: $viewModel.isAddingStep) {
-            AddStepSheet { newStep in
+            StepEditSheet { newStep in
                 viewModel.addStep(newStep)
+            }
+        }
+        .sheet(item: $editingStep) { step in
+            StepEditSheet(step: step) { updatedStep in
+                viewModel.updateStep(updatedStep)
             }
         }
         .sheet(isPresented: $viewModel.isAddingIngredient) {
@@ -74,6 +80,7 @@ struct RecipeEditView: View {
                 viewModel.addIngredient(newIngredient)
             }
         }
+
         .alert(String(localized: "Delete Recipe"), isPresented: $viewModel.showDeleteAlert) {
             Button(String(localized: "Cancel"), role: .cancel) { }
             Button(String(localized: "Delete"), role: .destructive) {
@@ -184,8 +191,20 @@ struct RecipeEditView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(viewModel.steps) { step in
-                    StepRowView(step: step) {
-                        viewModel.removeStep(step)
+                    HStack {
+                        StepRowView(step: step)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                editingStep = step
+                            }
+
+                        Button(role: .destructive) {
+                            viewModel.removeStep(step)
+                        } label: {
+                            Image(systemName: "trash")
+                                .foregroundStyle(.red)
+                        }
+                        .buttonStyle(.borderless)
                     }
                 }
                 .onMove { from, to in
@@ -233,7 +252,6 @@ struct RecipeEditView: View {
 
 private struct StepRowView: View {
     let step: StepInput
-    let onDelete: () -> Void
 
     var body: some View {
         HStack(alignment: .top) {
@@ -279,16 +297,7 @@ private struct StepRowView: View {
                     }
                 }
             }
-
             Spacer()
-
-            Button(role: .destructive) {
-                onDelete()
-            } label: {
-                Image(systemName: "trash")
-                    .font(.caption)
-            }
-            .buttonStyle(.borderless)
         }
         .padding(.vertical, 4)
     }
@@ -461,10 +470,13 @@ private struct AddIngredientSheet: View {
     }
 }
 
-// MARK: - Add Step Sheet
+// MARK: - Step Edit Sheet
 
-private struct AddStepSheet: View {
+private struct StepEditSheet: View {
     @Environment(\.dismiss) private var dismiss
+
+    var step: StepInput? = nil
+    let onSave: (StepInput) -> Void
 
     @State private var title: String = ""
     @State private var note: String = ""
@@ -472,9 +484,9 @@ private struct AddStepSheet: View {
     @State private var requiredMeasurements: [MeasurementType] = []
     @State private var lineIdentifier: String = ""
 
-    let onAdd: (StepInput) -> Void
+    private var isEditing: Bool { step != nil }
 
-    private var canAdd: Bool {
+    private var canSave: Bool {
         !title.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
@@ -527,7 +539,7 @@ private struct AddStepSheet: View {
                     Text(String(localized: "Select measurements required for this step"))
                 }
             }
-            .navigationTitle(String(localized: "Add Step"))
+            .navigationTitle(isEditing ? String(localized: "Edit Step") : String(localized: "Add Step"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -537,19 +549,29 @@ private struct AddStepSheet: View {
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "Add")) {
-                        let step = StepInput(
+                    Button(isEditing ? String(localized: "Save") : String(localized: "Add")) {
+                        let resultStep = StepInput(
+                            id: step?.id ?? UUID(),
                             title: title.trimmingCharacters(in: .whitespaces),
                             note: note,
                             time: time,
                             requiredMeasurements: requiredMeasurements,
                             lineIdentifier: lineIdentifier.isEmpty ? nil : lineIdentifier.trimmingCharacters(in: .whitespaces)
                         )
-                        onAdd(step)
+                        onSave(resultStep)
                         dismiss()
                     }
                     .fontWeight(.semibold)
-                    .disabled(!canAdd)
+                    .disabled(!canSave)
+                }
+            }
+            .onAppear {
+                if let step {
+                    title = step.title
+                    note = step.note
+                    time = step.time
+                    requiredMeasurements = step.requiredMeasurements
+                    lineIdentifier = step.lineIdentifier ?? ""
                 }
             }
         }

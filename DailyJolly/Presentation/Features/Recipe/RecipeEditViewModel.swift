@@ -218,6 +218,12 @@ final class RecipeEditViewModel {
         steps.append(step)
     }
 
+    func updateStep(_ step: StepInput) {
+        if let index = steps.firstIndex(where: { $0.id == step.id }) {
+            steps[index] = step
+        }
+    }
+
     func removeStep(_ step: StepInput) {
         steps.removeAll { $0.id == step.id }
     }
