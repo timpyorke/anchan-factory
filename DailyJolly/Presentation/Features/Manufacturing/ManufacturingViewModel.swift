@@ -85,6 +85,18 @@ final class ManufacturingViewModel {
         _ = repository.update()
     }
 
+    func startStep(at index: Int) {
+        guard let manufacturing, let repository else { return }
+        manufacturing.startStep(at: index)
+        _ = repository.update()
+    }
+
+    func recordStepTime(at index: Int) {
+        guard let manufacturing, let repository else { return }
+        manufacturing.recordStepTime(at: index)
+        _ = repository.update()
+    }
+
     func logMeasurement(at stepIndex: Int, type: MeasurementType, value: Double) {
         guard let manufacturing, let repository else { return }
         manufacturing.logMeasurement(type: type, value: value, stepIndex: stepIndex)

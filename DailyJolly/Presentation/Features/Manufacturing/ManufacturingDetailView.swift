@@ -335,7 +335,7 @@ struct ManufacturingDetailView: View {
     private func stepRow(_ step: RecipeStepEntity, index: Int, manufacturing: ManufacturingEntity) -> some View {
         HStack(alignment: .top, spacing: 12) {
             // Step Number
-            let isCompleted = index < manufacturing.stepCompletionTimes.count
+            let isCompleted = manufacturing.isStepCompleted(at: index)
             ZStack {
                 Circle()
                     .fill(isCompleted ? Color.green : Color.secondary.opacity(0.3))
@@ -396,13 +396,6 @@ struct ManufacturingDetailView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.blue.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
-                }
-
-                // Completion time
-                if let completionTime = manufacturing.stepCompletionTime(at: index) {
-                    Text("Completed at \(completionTime, format: .dateTime.hour().minute().second())")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
                 }
             }
 

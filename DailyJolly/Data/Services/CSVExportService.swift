@@ -74,7 +74,8 @@ final class CSVExportService {
             csv += "STEPS\n"
             csv += "Step,Title,Est. Time,Actual Time,Completed At\n"
             for (index, step) in manufacturing.recipe.sortedSteps.enumerated() {
-                let actualTime = index < manufacturing.stepCompletionTimes.count
+                let isCompleted = manufacturing.isStepCompleted(at: index)
+                let actualTime = isCompleted
                     ? formatDuration(manufacturing.stepDuration(at: index))
                     : "-"
                 let completedAt = manufacturing.stepCompletionTime(at: index)

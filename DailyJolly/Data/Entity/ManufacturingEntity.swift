@@ -82,6 +82,30 @@ final class ManufacturingEntity {
         getLog(at: index)?.note ?? ""
     }
 
+    /// Check if a step has started
+    func isStepStarted(at index: Int) -> Bool {
+        getLog(at: index)?.startedAt != nil
+    }
+
+    /// Start a step timer
+    func startStep(at index: Int) {
+        let log = ensureLogExists(at: index)
+        if log.startedAt == nil {
+            log.startedAt = Date.now
+        }
+    }
+
+    /// Record current time as step completion time (without marking step as fully complete)
+    func recordStepTime(at index: Int) {
+        let log = ensureLogExists(at: index)
+        log.completedAt = Date.now
+    }
+
+    /// Get start time for a specific step
+    func getStepStartTime(at index: Int) -> Date? {
+        getLog(at: index)?.startedAt
+    }
+
     /// Add a photo of the work result
     func addImage(_ data: Data) {
         let newImage = ManufacturingImageEntity(imageData: data, manufacturing: self)
@@ -120,19 +144,28 @@ final class ManufacturingEntity {
         
         // Update new log system
         let log = ensureLogExists(at: index)
-        log.completedAt = now
+        
+        // Use already recorded time or current time
+        let completionTime = log.completedAt ?? now
+        log.completedAt = completionTime
+        
+        if log.startedAt == nil {
+            // Default start time to startedAt of manufacturing or previous step if not manually started
+            log.startedAt = stepCompletionTimes.last ?? startedAt
+        }
+        
         if !note.isEmpty {
             log.note = note
         }
         
         // Maintain old arrays for backward compatibility and simpler reporting
-        stepCompletionTimes.append(now)
+        stepCompletionTimes.append(completionTime)
         stepNotes.append(note)
         
         // Check if all steps are done
         if completedStepIndices.count >= recipe.steps.count {
             status = .completed
-            completedAt = Date.now
+            completedAt = completionTime
         }
         
         // Move currentStepIndex for linear views
@@ -204,7 +237,11 @@ final class ManufacturingEntity {
     func stepDuration(at index: Int) -> TimeInterval {
         guard let log = getLog(at: index), let end = log.completedAt else { return 0 }
         
-        // Find previous completed step in time
+        if let start = log.startedAt {
+            return end.timeIntervalSince(start)
+        }
+        
+        // Fallback: Find previous completed step in time
         let previousLogs = stepLogs.filter { $0.completedAt != nil && $0.completedAt! < end }
         let startTime = previousLogs.max(by: { $0.completedAt! < $1.completedAt! })?.completedAt ?? startedAt
         

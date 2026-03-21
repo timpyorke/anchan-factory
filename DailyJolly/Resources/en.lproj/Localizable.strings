@@ -148,6 +148,13 @@
 "%@ low" = "%@ low";
 "Next Step" = "Next Step";
 "Complete Manufacturing" = "Complete Manufacturing";
+"Start Timer" = "Start Timer";
+"Record Time" = "Record Time";
+"Time Recorded" = "Time Recorded";
+"Re-record" = "Re-record";
+"Need Time" = "Need Time";
+"Need QC" = "Need QC";
+"Please record the completion time" = "Please record the completion time";
 "Work Result Photo" = "Work Result Photo";
 "Add Photo" = "Add Photo";
 "Take Photo" = "Take Photo";

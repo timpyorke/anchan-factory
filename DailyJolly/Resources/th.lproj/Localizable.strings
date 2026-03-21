@@ -148,6 +148,13 @@
 "%@ low" = "เหลือน้อย %@ รายการ";
 "Next Step" = "ขั้นตอนถัดไป";
 "Complete Manufacturing" = "เสร็จสิ้นการผลิต";
+"Start Timer" = "เริ่มจับเวลา";
+"Record Time" = "บันทึกเวลา";
+"Time Recorded" = "เวลาที่บันทึก";
+"Re-record" = "บันทึกใหม่";
+"Need Time" = "รอเวลา";
+"Need QC" = "รอค่า QC";
+"Please record the completion time" = "กรุณากดบันทึกเวลาที่เสร็จสิ้น";
 "Work Result Photo" = "รูปภาพผลงาน";
 "Add Photo" = "เพิ่มรูปภาพ";
 "Take Photo" = "ถ่ายรูป";
