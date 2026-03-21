@@ -23,6 +23,9 @@ final class ManufacturingEntity {
     var actualOutput: Double? // NEW: For flexible output tracking
 
     @Relationship(deleteRule: .cascade)
+    var images: [ManufacturingImageEntity] = [] // NEW: Multiple photos of finished work
+
+    @Relationship(deleteRule: .cascade)
     var measurements: [MeasurementLogEntity] = []
 
     @Relationship
@@ -43,7 +46,15 @@ final class ManufacturingEntity {
         self.completedAt = nil
         self.stepCompletionTimes = []
         self.stepNotes = []
+        self.images = []
     }
+
+    /// Add a photo of the work result
+    func addImage(_ data: Data) {
+        let newImage = ManufacturingImageEntity(imageData: data, manufacturing: self)
+        images.append(newImage)
+    }
+
 
     /// Check if a specific step is completed
     func isStepCompleted(at index: Int) -> Bool {

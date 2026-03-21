@@ -148,6 +148,12 @@
 "%@ low" = "%@ low";
 "Next Step" = "Next Step";
 "Complete Manufacturing" = "Complete Manufacturing";
+"Work Result Photo" = "Work Result Photo";
+"Add Photo" = "Add Photo";
+"Take Photo" = "Take Photo";
+"Choose from Library" = "Choose from Library";
+"Total Units Produced" = "Total Units Produced";
+"Expected: %@ %@" = "Expected: %@ %@";
 
 /* Recipe Edit */
 "Unit (e.g., pcs, bottles)" = "Unit (e.g., pcs, bottles)";

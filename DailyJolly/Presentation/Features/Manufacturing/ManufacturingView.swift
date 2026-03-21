@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
 
 struct ManufacturingView: View {
     @Environment(\.modelContext) private var modelContext
@@ -9,6 +10,12 @@ struct ManufacturingView: View {
 
     @State private var viewModel = ManufacturingViewModel()
     @State private var stepNote: String = ""
+    @State private var selectedPhotos: [PhotosPickerItem] = []
+    @State private var showPhotoSourceOptions = false
+    @State private var showCamera = false
+    @State private var showPhotoLibrary = false
+    @State private var cameraImage: Data?
+    @State private var previewImage: Data?
 
     var body: some View {
         Group {
@@ -66,21 +73,50 @@ struct ManufacturingView: View {
         } message: {
             Text(String(localized: "Are you sure you want to cancel? This will mark the batch as cancelled and cannot be undone."))
         }
-        .alert(String(localized: "Manufacturing Complete!"), isPresented: $viewModel.showCompletionAlert) {
-            Button(String(localized: "OK")) {
-                stackRouter.pop()
-            }
-        } message: {
-            Text(String(localized: "All steps have been completed successfully."))
-        }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { }
         } message: {
             Text(viewModel.errorMessage ?? "An unknown error occurred")
         }
+        .sheet(isPresented: $showCamera) {
+            CameraPicker(imageData: $cameraImage)
+        }
         .onAppear {
             viewModel.setup(modelContext: modelContext, id: id)
         }
+        .overlay {
+            if let imageData = previewImage, let uiImage = UIImage(data: imageData) {
+                ZStack {
+                    Color.black.ignoresSafeArea()
+                    
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFit()
+                        .ignoresSafeArea()
+                    
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Button {
+                                previewImage = nil
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.title2.bold())
+                                    .foregroundStyle(.white)
+                                    .padding()
+                                    .background(.black.opacity(0.5))
+                                    .clipShape(Circle())
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding()
+                }
+                .transition(.opacity)
+                .zIndex(1)
+            }
+        }
+        .animation(.easeInOut, value: previewImage != nil)
     }
 
     // MARK: - Step View
@@ -446,6 +482,88 @@ struct ManufacturingView: View {
                 .background(.fill.quinary)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
 
+                // Photo Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(String(localized: "Work Result Photo"))
+                        .font(.headline)
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .center, spacing: 12) {
+                            ForEach(manufacturing.images.sorted(by: { $0.createdAt < $1.createdAt })) { imageEntity in
+                                if let uiImage = UIImage(data: imageEntity.imageData) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 150, height: 150)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            previewImage = imageEntity.imageData
+                                        }
+                                        .overlay(alignment: .topTrailing) {
+                                            Button {
+                                                viewModel.removeImage(imageEntity)
+                                            } label: {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .foregroundStyle(.white, .red)
+                                                    .font(.title2)
+                                            }
+                                            .padding(4)
+                                        }
+                                }
+                            }
+                            
+                            Menu {
+                                #if !targetEnvironment(simulator)
+                                Button {
+                                    showCamera = true
+                                } label: {
+                                    Label(String(localized: "Take Photo"), systemImage: "camera")
+                                }
+                                #endif
+                                
+                                Button {
+                                    showPhotoLibrary = true
+                                } label: {
+                                    Label(String(localized: "Choose from Library"), systemImage: "photo.on.rectangle")
+                                }
+                            } label: {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.title)
+                                    Text(String(localized: "Add Photo"))
+                                        .font(.caption)
+                                }
+                                .frame(width: 150, height: 150)
+                                .background(.fill.quinary)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .strokeBorder(.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [5]))
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal)
+                .photosPicker(isPresented: $showPhotoLibrary, selection: $selectedPhotos, matching: .images)
+                .onChange(of: selectedPhotos) { _, newValue in
+                    Task {
+                        for item in newValue {
+                            if let data = try? await item.loadTransferable(type: Data.self) {
+                                viewModel.addImageData(data)
+                            }
+                        }
+                        selectedPhotos = []
+                    }
+                }
+                .onChange(of: cameraImage) { _, newValue in
+                    if let newValue {
+                        viewModel.addImageData(newValue)
+                        cameraImage = nil
+                    }
+                }
+
                 // Completed Measurements Summary
                 if !manufacturing.measurements.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
@@ -507,3 +625,4 @@ struct ManufacturingView: View {
     }
     .modelContainer(AppModelContainer.make())
 }
+

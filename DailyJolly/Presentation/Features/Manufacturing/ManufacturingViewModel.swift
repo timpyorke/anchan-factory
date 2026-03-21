@@ -14,7 +14,6 @@ final class ManufacturingViewModel {
 
     var showExitOptions = false
     var showCancelAlert = false
-    var showCompletionAlert = false
     var isLoading = false
     var errorMessage: String?
     var showError = false
@@ -69,9 +68,6 @@ final class ManufacturingViewModel {
         switch repository.update() {
         case .success:
             print("[ManufacturingViewModel] ✅ Successfully saved to database")
-            if isCompleted {
-                showCompletionAlert = true
-            }
         case .failure(let error):
             print("[ManufacturingViewModel] ❌ Failed to save: \(error)")
             handleError(error)
@@ -92,6 +88,18 @@ final class ManufacturingViewModel {
     func updateActualOutput(_ value: Double) {
         guard let manufacturing, let repository else { return }
         manufacturing.actualOutput = value
+        _ = repository.update()
+    }
+
+    func addImageData(_ data: Data) {
+        guard let manufacturing, let repository else { return }
+        manufacturing.addImage(data)
+        _ = repository.update()
+    }
+
+    func removeImage(_ image: ManufacturingImageEntity) {
+        guard let manufacturing, let repository else { return }
+        manufacturing.images.removeAll { $0.persistentModelID == image.persistentModelID }
         _ = repository.update()
     }
 

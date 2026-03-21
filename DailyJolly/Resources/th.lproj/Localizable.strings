@@ -148,6 +148,12 @@
 "%@ low" = "เหลือน้อย %@ รายการ";
 "Next Step" = "ขั้นตอนถัดไป";
 "Complete Manufacturing" = "เสร็จสิ้นการผลิต";
+"Work Result Photo" = "รูปภาพผลงาน";
+"Add Photo" = "เพิ่มรูปภาพ";
+"Take Photo" = "ถ่ายรูป";
+"Choose from Library" = "เลือกจากอัลบั้ม";
+"Total Units Produced" = "จำนวนหน่วยที่ผลิตได้จริง";
+"Expected: %@ %@" = "ตามแผน: %@ %@";
 
 /* Recipe Edit */
 "Unit (e.g., pcs, bottles)" = "หน่วย (เช่น ชิ้น, ขวด)";

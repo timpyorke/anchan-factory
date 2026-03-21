@@ -9,6 +9,7 @@ enum AppModelContainer {
             InventoryEntity.self,
             IngredientEntity.self,
             ManufacturingEntity.self,
+            ManufacturingImageEntity.self,
             CustomUnitEntity.self,
             MeasurementLogEntity.self
         ])

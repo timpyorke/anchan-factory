@@ -8,6 +8,7 @@ struct ManufacturingDetailView: View {
     let id: PersistentIdentifier
 
     @State private var viewModel = ManufacturingDetailViewModel()
+    @State private var previewImage: Data?
 
     var body: some View {
         Group {
@@ -63,6 +64,39 @@ struct ManufacturingDetailView: View {
         .onAppear {
             viewModel.setup(modelContext: modelContext, id: id)
         }
+        .overlay {
+            if let imageData = previewImage, let uiImage = UIImage(data: imageData) {
+                ZStack {
+                    Color.black.ignoresSafeArea()
+                    
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFit()
+                        .ignoresSafeArea()
+                    
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Button {
+                                previewImage = nil
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.title2.bold())
+                                    .foregroundStyle(.white)
+                                    .padding()
+                                    .background(.black.opacity(0.5))
+                                    .clipShape(Circle())
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding()
+                }
+                .transition(.opacity)
+                .zIndex(1)
+            }
+        }
+        .animation(.easeInOut, value: previewImage != nil)
     }
 
     // MARK: - Content
@@ -72,6 +106,32 @@ struct ManufacturingDetailView: View {
             VStack(alignment: .leading, spacing: 24) {
                 // Summary Header
                 summaryHeader(manufacturing)
+
+                // Photo Result
+                if !manufacturing.images.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Work Result Photos")
+                            .font(.title3.bold())
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(manufacturing.images.sorted(by: { $0.createdAt < $1.createdAt })) { imageEntity in
+                                    if let uiImage = UIImage(data: imageEntity.imageData) {
+                                        Image(uiImage: uiImage)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 200, height: 200)
+                                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                                            .contentShape(Rectangle())
+                                            .onTapGesture {
+                                                previewImage = imageEntity.imageData
+                                            }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Time Summary
                 if !manufacturing.recipe.steps.isEmpty {
