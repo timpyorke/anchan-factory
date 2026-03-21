@@ -23,6 +23,9 @@ final class ManufacturingEntity {
     var actualOutput: Double? // NEW: For flexible output tracking
 
     @Relationship(deleteRule: .cascade)
+    var stepLogs: [ManufacturingStepLogEntity] = [] // NEW: Per-step notes and times
+
+    @Relationship(deleteRule: .cascade)
     var images: [ManufacturingImageEntity] = [] // NEW: Multiple photos of finished work
 
     @Relationship(deleteRule: .cascade)
@@ -47,6 +50,36 @@ final class ManufacturingEntity {
         self.stepCompletionTimes = []
         self.stepNotes = []
         self.images = []
+        self.stepLogs = []
+    }
+
+    /// Get log for a specific step, create if not exists
+    func getLog(at index: Int) -> ManufacturingStepLogEntity? {
+        if let log = stepLogs.first(where: { $0.stepIndex == index }) {
+            return log
+        }
+        return nil
+    }
+
+    /// Ensure log exists for a specific step
+    func ensureLogExists(at index: Int) -> ManufacturingStepLogEntity {
+        if let log = getLog(at: index) {
+            return log
+        }
+        let newLog = ManufacturingStepLogEntity(stepIndex: index, manufacturing: self)
+        stepLogs.append(newLog)
+        return newLog
+    }
+
+    /// Set note for a specific step (without completing it)
+    func setStepNote(at index: Int, note: String) {
+        let log = ensureLogExists(at: index)
+        log.note = note
+    }
+
+    /// Get note for a specific step
+    func getStepNote(at index: Int) -> String {
+        getLog(at: index)?.note ?? ""
     }
 
     /// Add a photo of the work result
@@ -82,10 +115,18 @@ final class ManufacturingEntity {
     func completeStep(at index: Int, note: String = "") {
         guard !isStepCompleted(at: index) else { return }
         
+        let now = Date.now
         completedStepIndices.append(index)
-        // For simplicity in reporting for now, we still use stepCompletionTimes/Notes
-        // but might need mapping if they are out of order
-        stepCompletionTimes.append(Date.now)
+        
+        // Update new log system
+        let log = ensureLogExists(at: index)
+        log.completedAt = now
+        if !note.isEmpty {
+            log.note = note
+        }
+        
+        // Maintain old arrays for backward compatibility and simpler reporting
+        stepCompletionTimes.append(now)
         stepNotes.append(note)
         
         // Check if all steps are done
@@ -123,7 +164,7 @@ final class ManufacturingEntity {
 
     var progress: Double {
         guard recipe.steps.count > 0 else { return 1.0 }
-        return Double(currentStepIndex) / Double(recipe.steps.count)
+        return Double(completedStepIndices.count) / Double(recipe.steps.count)
     }
 
     var currentStep: RecipeStepEntity? {
@@ -161,32 +202,28 @@ final class ManufacturingEntity {
     }
 
     func stepDuration(at index: Int) -> TimeInterval {
-        guard index < stepCompletionTimes.count else { return 0 }
-        let endTime = stepCompletionTimes[index]
-        let startTime = index == 0 ? startedAt : stepCompletionTimes[index - 1]
-        return endTime.timeIntervalSince(startTime)
+        guard let log = getLog(at: index), let end = log.completedAt else { return 0 }
+        
+        // Find previous completed step in time
+        let previousLogs = stepLogs.filter { $0.completedAt != nil && $0.completedAt! < end }
+        let startTime = previousLogs.max(by: { $0.completedAt! < $1.completedAt! })?.completedAt ?? startedAt
+        
+        return end.timeIntervalSince(startTime)
     }
 
     func stepCompletionTime(at index: Int) -> Date? {
-        guard index < stepCompletionTimes.count else { return nil }
-        return stepCompletionTimes[index]
+        getLog(at: index)?.completedAt
     }
 
     func completeCurrentStep(note: String = "") {
-        stepCompletionTimes.append(Date.now)
-        stepNotes.append(note)
-        currentStepIndex += 1
-        if currentStepIndex >= recipe.steps.count {
-            status = .completed
-            completedAt = Date.now
-        }
+        completeStep(at: currentStepIndex, note: note)
     }
 
     func stepNote(at index: Int) -> String? {
-        guard index < stepNotes.count else { return nil }
-        let note = stepNotes[index]
+        let note = getStepNote(at: index)
         return note.isEmpty ? nil : note
     }
+
 
     /// Log a quality control measurement for a step
     func logMeasurement(type: MeasurementType, value: Double, stepIndex: Int) {

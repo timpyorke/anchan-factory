@@ -79,6 +79,12 @@ final class ManufacturingViewModel {
         completeStep(at: manufacturing.currentStepIndex, note: note)
     }
 
+    func updateStepNote(at index: Int, note: String) {
+        guard let manufacturing, let repository else { return }
+        manufacturing.setStepNote(at: index, note: note)
+        _ = repository.update()
+    }
+
     func logMeasurement(at stepIndex: Int, type: MeasurementType, value: Double) {
         guard let manufacturing, let repository else { return }
         manufacturing.logMeasurement(type: type, value: value, stepIndex: stepIndex)

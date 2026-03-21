@@ -16,6 +16,7 @@ struct ManufacturingView: View {
     @State private var showPhotoLibrary = false
     @State private var cameraImage: Data?
     @State private var previewImage: Data?
+    @State private var parallelStepNotes: [Int: String] = [:]
 
     var body: some View {
         Group {
@@ -83,6 +84,13 @@ struct ManufacturingView: View {
         }
         .onAppear {
             viewModel.setup(modelContext: modelContext, id: id)
+            
+            // Initialize notes from existing data
+            if let manufacturing = viewModel.manufacturing {
+                for log in manufacturing.stepLogs {
+                    parallelStepNotes[log.stepIndex] = log.note
+                }
+            }
         }
         .overlay {
             if let imageData = previewImage, let uiImage = UIImage(data: imageData) {
@@ -159,8 +167,8 @@ struct ManufacturingView: View {
                             let isCompleted = manufacturing.isStepCompleted(at: index)
                             let canComplete = manufacturing.canCompleteStep(at: index)
 
-                            HStack {
-                                VStack(alignment: .leading) {
+                            HStack(alignment: .top) {
+                                VStack(alignment: .leading, spacing: 8) {
                                     Text(step.title)
                                         .font(.headline)
                                         .foregroundStyle(isCompleted ? .secondary : .primary)
@@ -168,6 +176,27 @@ struct ManufacturingView: View {
                                         Text(step.note)
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
+                                    }
+
+                                    if isCompleted {
+                                        if let stepNote = manufacturing.stepNote(at: index) {
+                                            Text(stepNote)
+                                                .font(.caption)
+                                                .foregroundStyle(.blue)
+                                                .padding(6)
+                                                .background(.blue.opacity(0.1))
+                                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                        }
+                                    } else {
+                                        TextField(String(localized: "Add note..."), text: Binding(
+                                            get: { parallelStepNotes[index] ?? "" },
+                                            set: { 
+                                                parallelStepNotes[index] = $0
+                                                viewModel.updateStepNote(at: index, note: $0)
+                                            }
+                                        ))
+                                        .font(.caption)
+                                        .textFieldStyle(.roundedBorder)
                                     }
 
                                     // Measurement inputs for parallel view
@@ -200,12 +229,13 @@ struct ManufacturingView: View {
                                 } else {
                                     let hasQC = manufacturing.hasRequiredMeasurements(at: index)
                                     Button(canComplete ? (hasQC ? String(localized: "Complete") : String(localized: "Need QC")) : String(localized: "Waiting")) {
-                                        viewModel.completeStep(at: index)
+                                        viewModel.completeStep(at: index, note: parallelStepNotes[index] ?? "")
                                     }
                                     .buttonStyle(.bordered)
                                     .disabled(!canComplete || !hasQC)
                                 }
                             }
+                            .padding(.vertical, 4)
                         }
                     }
                 }
@@ -301,11 +331,21 @@ struct ManufacturingView: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
 
-                    TextField(String(localized: "Add a note for this step..."), text: $stepNote, axis: .vertical)
+                    TextField(String(localized: "Add a note for this step..."), text: Binding(
+                        get: { stepNote },
+                        set: {
+                            stepNote = $0
+                            viewModel.updateStepNote(at: manufacturing.currentStepIndex, note: $0)
+                        }
+                    ), axis: .vertical)
                         .lineLimit(3...6)
                         .textFieldStyle(.roundedBorder)
                 }
                 .padding(.top, 8)
+                .task(id: manufacturing.currentStepIndex) {
+                    // Update the local state when step changes
+                    stepNote = manufacturing.getStepNote(at: manufacturing.currentStepIndex)
+                }
 
                 // Required Measurements
                 if !step.requiredMeasurements.isEmpty {
