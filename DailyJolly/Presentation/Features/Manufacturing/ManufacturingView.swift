@@ -80,8 +80,9 @@ struct ManufacturingView: View {
         } message: {
             Text(viewModel.errorMessage ?? "An unknown error occurred")
         }
-        .sheet(isPresented: $showCamera) {
+        .fullScreenCover(isPresented: $showCamera) {
             CameraPicker(imageData: $cameraImage)
+                .ignoresSafeArea()
         }
         .onAppear {
             viewModel.setup(modelContext: modelContext, id: id)
