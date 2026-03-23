@@ -8,13 +8,30 @@ struct SettingView: View {
     @Query(sort: \CustomUnitEntity.name)
     private var customUnits: [CustomUnitEntity]
 
+    @State private var showPinSetup = false
+    @State private var showPinVerify = false
+
     var body: some View {
         Form {
             appearanceSection
             languageSection
+            permissionsSection
             customUnitsSection
             exportSection
             dataSection
+        }
+        .sheet(isPresented: $showPinSetup) {
+            PinEntryView(mode: .setup) { newPin in
+                viewModel.settings.recipePin = newPin
+                viewModel.settings.isRecipeEditLocked = true
+            }
+        }
+        .sheet(isPresented: $showPinVerify) {
+            PinEntryView(mode: .verify) { _ in
+                // Success is handled inside PinEntryView for simplicity in this implementation
+                // but we can also use the callback to toggle the state
+                viewModel.settings.isRecipeEditLocked = false
+            }
         }
         .sheet(isPresented: $viewModel.showExportSheet) {
             if let url = viewModel.exportURL {
@@ -78,6 +95,55 @@ struct SettingView: View {
             Text(String(localized: "Language"))
         } footer: {
             Text(String(localized: "Restart required to apply language change"))
+        }
+    }
+
+    // MARK: - Permissions Section
+
+    private var permissionsSection: some View {
+        Section {
+            Button {
+                if viewModel.settings.isRecipeEditLocked {
+                    showPinVerify = true
+                } else {
+                    if viewModel.settings.recipePin == nil {
+                        showPinSetup = true
+                    } else {
+                        viewModel.settings.isRecipeEditLocked = true
+                    }
+                }
+            } label: {
+                HStack {
+                    Label {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(String(localized: "Lock Recipe Editing"))
+                            Text(String(localized: "Prevent accidental changes to recipes"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: viewModel.settings.isRecipeEditLocked ? "lock.fill" : "lock.open.fill")
+                            .foregroundStyle(viewModel.settings.isRecipeEditLocked ? .orange : .green)
+                    }
+                    
+                    Spacer()
+                    
+                    Text(viewModel.settings.isRecipeEditLocked ? String(localized: "Locked") : String(localized: "Unlocked"))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .foregroundStyle(.primary)
+
+            if !viewModel.settings.isRecipeEditLocked && viewModel.settings.recipePin != nil {
+                Button {
+                    showPinSetup = true
+                } label: {
+                    Label(String(localized: "Change PIN"), systemImage: "key.fill")
+                }
+            }
+        } header: {
+            Text(String(localized: "Permissions"))
         }
     }
 

@@ -8,6 +8,21 @@
 "Dark" = "Dark";
 "Language" = "Language";
 "Restart required to apply language change" = "Restart required to apply language change";
+
+/* Permissions */
+"Permissions" = "Permissions";
+"Lock Recipe Editing" = "Lock Recipe Editing";
+"Prevent accidental changes to recipes" = "Prevent accidental changes to recipes";
+"Locked" = "Locked";
+"Unlocked" = "Unlocked";
+"Change PIN" = "Change PIN";
+"Set 4-Digit PIN" = "Set 4-Digit PIN";
+"Confirm PIN" = "Confirm PIN";
+"Enter PIN" = "Enter PIN";
+"Incorrect PIN" = "Incorrect PIN";
+"PINs do not match. Please try again." = "PINs do not match. Please try again.";
+"Set a PIN to lock recipe editing. You will need this PIN to unlock later." = "Set a PIN to lock recipe editing. You will need this PIN to unlock later.";
+"Please enter your 4-digit PIN to unlock recipe editing." = "Please enter your 4-digit PIN to unlock recipe editing.";
 "Restart Required" = "Restart Required";
 "Please restart the app to apply the language change." = "Please restart the app to apply the language change.";
 

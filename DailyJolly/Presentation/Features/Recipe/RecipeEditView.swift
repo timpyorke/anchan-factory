@@ -42,7 +42,7 @@ struct RecipeEditView: View {
             ingredientsSection
             stepsSection
 
-            if viewModel.isEditing {
+            if viewModel.isEditing && !AppSettings.shared.isRecipeEditLocked {
                 deleteSection
             }
         }
@@ -57,13 +57,18 @@ struct RecipeEditView: View {
             }
 
             ToolbarItem(placement: .confirmationAction) {
-                Button(String(localized: "Save")) {
-                    viewModel.saveRecipe {
-                        stackRouter.pop()
+                if AppSettings.shared.isRecipeEditLocked {
+                    Image(systemName: "lock.fill")
+                        .foregroundStyle(.orange)
+                } else {
+                    Button(String(localized: "Save")) {
+                        viewModel.saveRecipe {
+                            stackRouter.pop()
+                        }
                     }
+                    .fontWeight(.semibold)
+                    .disabled(!viewModel.canSave)
                 }
-                .fontWeight(.semibold)
-                .disabled(!viewModel.canSave)
             }
         }
         .sheet(isPresented: $viewModel.isAddingStep) {
@@ -103,12 +108,15 @@ struct RecipeEditView: View {
         Section {
             TextField(String(localized: "Recipe Name"), text: $viewModel.name)
                 .textInputAutocapitalization(.words)
+                .disabled(AppSettings.shared.isRecipeEditLocked)
 
             TextField(String(localized: "Category (optional)"), text: $viewModel.category)
                 .textInputAutocapitalization(.words)
+                .disabled(AppSettings.shared.isRecipeEditLocked)
 
             TextField(String(localized: "Notes (optional)"), text: $viewModel.note, axis: .vertical)
                 .lineLimit(2...4)
+                .disabled(AppSettings.shared.isRecipeEditLocked)
 
             Picker(String(localized: "Gelling Agent Template"), selection: $viewModel.templateType) {
                 Text(String(localized: "None")).tag(nil as GellingAgentType?)
@@ -119,6 +127,7 @@ struct RecipeEditView: View {
                     }.tag(type as GellingAgentType?)
                 }
             }
+            .disabled(AppSettings.shared.isRecipeEditLocked)
             .onChange(of: viewModel.templateType) { _, newValue in
                 if let template = newValue {
                     viewModel.applyTemplate(template)
@@ -132,9 +141,11 @@ struct RecipeEditView: View {
     private var batchSection: some View {
         Section {
             Stepper(String(localized: "Batch Size") + ": \(viewModel.batchSize)", value: $viewModel.batchSize, in: 1...1000)
+                .disabled(AppSettings.shared.isRecipeEditLocked)
 
             TextField(String(localized: "Unit (e.g., pcs, bottles)"), text: $viewModel.batchUnit)
                 .textInputAutocapitalization(.never)
+                .disabled(AppSettings.shared.isRecipeEditLocked)
 
             if viewModel.totalCost > 0 && viewModel.batchSize > 0 {
                 HStack {
@@ -162,6 +173,7 @@ struct RecipeEditView: View {
                     IngredientRowView(ingredient: ingredient) {
                         viewModel.removeIngredient(ingredient)
                     }
+                    .disabled(AppSettings.shared.isRecipeEditLocked)
                 }
 
                 if viewModel.totalCost > 0 {
@@ -175,10 +187,12 @@ struct RecipeEditView: View {
                 }
             }
 
-            Button {
-                viewModel.isAddingIngredient = true
-            } label: {
-                Label(String(localized: "Add Ingredient"), systemImage: "plus.circle.fill")
+            if !AppSettings.shared.isRecipeEditLocked {
+                Button {
+                    viewModel.isAddingIngredient = true
+                } label: {
+                    Label(String(localized: "Add Ingredient"), systemImage: "plus.circle.fill")
+                }
             }
         } header: {
             Text(String(localized: "Ingredients"))
@@ -196,27 +210,35 @@ struct RecipeEditView: View {
                         StepRowView(step: step)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                editingStep = step
+                                if !AppSettings.shared.isRecipeEditLocked {
+                                    editingStep = step
+                                }
                             }
 
-                        Button(role: .destructive) {
-                            viewModel.removeStep(step)
-                        } label: {
-                            Image(systemName: "trash")
-                                .foregroundStyle(.red)
+                        if !AppSettings.shared.isRecipeEditLocked {
+                            Button(role: .destructive) {
+                                viewModel.removeStep(step)
+                            } label: {
+                                Image(systemName: "trash")
+                                    .foregroundStyle(.red)
+                            }
+                            .buttonStyle(.borderless)
                         }
-                        .buttonStyle(.borderless)
                     }
                 }
                 .onMove { from, to in
-                    viewModel.moveSteps(from: from, to: to)
+                    if !AppSettings.shared.isRecipeEditLocked {
+                        viewModel.moveSteps(from: from, to: to)
+                    }
                 }
             }
 
-            Button {
-                viewModel.isAddingStep = true
-            } label: {
-                Label(String(localized: "Add Step"), systemImage: "plus.circle.fill")
+            if !AppSettings.shared.isRecipeEditLocked {
+                Button {
+                    viewModel.isAddingStep = true
+                } label: {
+                    Label(String(localized: "Add Step"), systemImage: "plus.circle.fill")
+                }
             }
         } header: {
             Text(String(localized: "Steps"))

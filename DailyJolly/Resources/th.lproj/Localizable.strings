@@ -7,7 +7,23 @@
 "Light" = "สว่าง";
 "Dark" = "มืด";
 "Language" = "ภาษา";
-"Restart required to apply language change" = "ต้องรีสตาร์ทแอปเพื่อใช้ภาษาใหม่";
+"Restart required to apply language change" = "กรุณารีสตาร์ทแอปเพื่อใช้ภาษาใหม่";
+
+/* Permissions */
+"Permissions" = "สิทธิ์การเข้าถึง";
+"Lock Recipe Editing" = "ล็อกการแก้ไขสูตร";
+"Prevent accidental changes to recipes" = "ป้องกันการแก้ไขหรือลบสูตรโดยไม่ตั้งใจ";
+"Locked" = "ล็อกอยู่";
+"Unlocked" = "ปลดล็อกอยู่";
+"Change PIN" = "เปลี่ยนรหัส PIN";
+"Set 4-Digit PIN" = "ตั้งค่ารหัส PIN 4 หลัก";
+"Confirm PIN" = "ยืนยันรหัส PIN";
+"Enter PIN" = "ใส่รหัส PIN";
+"Incorrect PIN" = "รหัส PIN ไม่ถูกต้อง";
+"PINs do not match. Please try again." = "รหัส PIN ไม่ตรงกัน กรุณาลองใหม่อีกครั้ง";
+"Set a PIN to lock recipe editing. You will need this PIN to unlock later." = "ตั้งรหัส PIN เพื่อล็อกการแก้ไขสูตร คุณจะต้องใช้รหัสนี้ในการปลดล็อกภายหลัง";
+"Please enter your 4-digit PIN to unlock recipe editing." = "กรุณาใส่รหัส PIN 4 หลักเพื่อปลดล็อกการแก้ไขสูตร";
+
 "Restart Required" = "ต้องรีสตาร์ท";
 "Please restart the app to apply the language change." = "กรุณารีสตาร์ทแอปเพื่อใช้ภาษาใหม่";
 

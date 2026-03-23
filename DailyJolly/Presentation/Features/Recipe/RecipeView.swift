@@ -5,17 +5,29 @@ struct RecipeView: View {
     @Environment(\.modelContext) private var modelContext
     let stackRouter: StackRouter
     @State private var viewModel = RecipeViewModel()
+    @State private var showPinVerify = false
 
     var body: some View {
         VStack(spacing: 0) {
             AppBarView(title: String(localized: "Recipes")) {
-                EmptyView()
+                if AppSettings.shared.isRecipeEditLocked {
+                    Button {
+                        showPinVerify = true
+                    } label: {
+                        Image(systemName: "lock.fill")
+                            .foregroundStyle(.orange)
+                    }
+                } else {
+                    EmptyView()
+                }
             } trailing: {
-                Button {
-                    stackRouter.push(.recipeAdd)
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.title3)
+                if !AppSettings.shared.isRecipeEditLocked {
+                    Button {
+                        stackRouter.push(.recipeAdd)
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.title3)
+                    }
                 }
             }
 
@@ -33,6 +45,11 @@ struct RecipeView: View {
         .onAppear {
             viewModel.setup(modelContext: modelContext)
         }
+        .sheet(isPresented: $showPinVerify) {
+            PinEntryView(mode: .verify) { _ in
+                AppSettings.shared.isRecipeEditLocked = false
+            }
+        }
     }
 
     // MARK: - Empty State
@@ -43,13 +60,15 @@ struct RecipeView: View {
         } description: {
             Text(String(localized: "Add your first recipe to get started."))
         } actions: {
-            Button {
-                stackRouter.push(.recipeAdd)
-            } label: {
-                Text(String(localized: "Add Recipe"))
-                    .fontWeight(.semibold)
+            if !AppSettings.shared.isRecipeEditLocked {
+                Button {
+                    stackRouter.push(.recipeAdd)
+                } label: {
+                    Text(String(localized: "Add Recipe"))
+                        .fontWeight(.semibold)
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
         }
         .frame(maxHeight: .infinity)
     }
@@ -72,15 +91,21 @@ struct RecipeView: View {
                         }
                         .tint(recipe.isFavorite ? .gray : .pink)
 
-                        Button {
-                            viewModel.duplicateRecipe(recipe)
-                        } label: {
-                            Image(systemName: "doc.on.doc")
+                        if !AppSettings.shared.isRecipeEditLocked {
+                            Button {
+                                viewModel.duplicateRecipe(recipe)
+                            } label: {
+                                Image(systemName: "doc.on.doc")
+                            }
+                            .tint(.blue)
                         }
-                        .tint(.blue)
                     }
             }
-            .onDelete(perform: viewModel.deleteRecipes)
+            .onDelete { offsets in
+                if !AppSettings.shared.isRecipeEditLocked {
+                    viewModel.deleteRecipes(at: offsets)
+                }
+            }
         }
         .listStyle(.plain)
         .searchable(text: $viewModel.searchText, prompt: String(localized: "Search recipes"))

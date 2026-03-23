@@ -101,6 +101,7 @@ final class RecipeEditViewModel {
     }
 
     func saveRecipe(onComplete: () -> Void) {
+        guard !AppSettings.shared.isRecipeEditLocked else { return }
         guard let repository, let inventoryRepository else { return }
 
         isSaving = true
