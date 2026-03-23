@@ -230,8 +230,22 @@ final class ManufacturingEntity {
     }
 
     var totalDuration: TimeInterval {
-        guard let completedAt else { return 0 }
-        return completedAt.timeIntervalSince(startedAt)
+        if let completedAt {
+            return completedAt.timeIntervalSince(startedAt)
+        }
+        
+        // If not completed, use the latest step log's completedAt as the end point
+        let latestLogTime = stepLogs.compactMap { $0.completedAt }.max()
+        if let latestLogTime {
+            return latestLogTime.timeIntervalSince(startedAt)
+        }
+        
+        // If no logs, but it's in progress, show elapsed time since start
+        if status == .inProgress {
+            return Date.now.timeIntervalSince(startedAt)
+        }
+        
+        return 0
     }
 
     func stepDuration(at index: Int) -> TimeInterval {

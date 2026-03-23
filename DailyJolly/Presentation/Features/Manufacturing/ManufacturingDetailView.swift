@@ -138,6 +138,11 @@ struct ManufacturingDetailView: View {
                     timeSummary(manufacturing)
                 }
 
+                // Quality Control Summary
+                if !manufacturing.measurements.isEmpty {
+                    qcSummary(manufacturing)
+                }
+
                 // Steps List
                 if !manufacturing.recipe.steps.isEmpty {
                     stepsSection(manufacturing)
@@ -223,11 +228,17 @@ struct ManufacturingDetailView: View {
                     .frame(height: 30)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Total Units")
+                    Text("Produced")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text("\(manufacturing.totalUnits) \(manufacturing.recipe.batchUnit)")
-                        .font(.headline)
+                    if let actual = manufacturing.actualOutput {
+                        Text("\(AppNumberFormatter.format(actual)) \(manufacturing.recipe.batchUnit)")
+                            .font(.headline)
+                            .foregroundStyle(.green)
+                    } else {
+                        Text("\(manufacturing.totalUnits) \(manufacturing.recipe.batchUnit)")
+                            .font(.headline)
+                    }
                 }
 
                 Divider()
@@ -248,9 +259,16 @@ struct ManufacturingDetailView: View {
                     Text("Per Unit")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(CurrencyFormatter.format(manufacturing.costPerUnit))
-                        .font(.headline)
-                        .foregroundStyle(.green)
+                    if let actual = manufacturing.actualOutput, actual > 0 {
+                        let actualPerUnit = manufacturing.totalCost / actual
+                        Text(CurrencyFormatter.format(actualPerUnit))
+                            .font(.headline)
+                            .foregroundStyle(.green)
+                    } else {
+                        Text(CurrencyFormatter.format(manufacturing.costPerUnit))
+                            .font(.headline)
+                            .foregroundStyle(.green)
+                    }
                 }
             }
             .padding(.top, 8)
@@ -311,6 +329,46 @@ struct ManufacturingDetailView: View {
         }
     }
 
+    private func qcSummary(_ manufacturing: ManufacturingEntity) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Quality Control Summary")
+                .font(.title3.bold())
+
+            VStack(alignment: .leading, spacing: 0) {
+                let sortedMeasurements = manufacturing.measurements.sorted(by: { $0.timestamp < $1.timestamp })
+                let steps = manufacturing.recipe.sortedSteps
+                
+                ForEach(Array(sortedMeasurements.enumerated()), id: \.element.persistentModelID) { index, log in
+                    let stepTitle = log.stepIndex < steps.count ? steps[log.stepIndex].title : "Step \(log.stepIndex + 1)"
+                    
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(stepTitle)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(log.type.rawValue)
+                                .font(.subheadline.weight(.medium))
+                        }
+                        
+                        Spacer()
+                        
+                        Text("\(AppNumberFormatter.format(log.value)) \(log.type.symbol)")
+                            .font(.headline)
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    .padding(.vertical, 8)
+                    
+                    if index < sortedMeasurements.count - 1 {
+                        Divider()
+                    }
+                }
+            }
+            .padding()
+            .background(.fill.quinary)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
     private func stepsSection(_ manufacturing: ManufacturingEntity) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Steps")
@@ -365,21 +423,59 @@ struct ManufacturingDetailView: View {
                 }
 
                 // Time Info
-                HStack(spacing: 16) {
-                    // Estimated time
-                    if step.time > 0 {
-                        Label("Est: \(step.time.formattedTimeCompact)", systemImage: "clock")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 16) {
+                        // Estimated time
+                        if step.time > 0 {
+                            Label("Est: \(step.time.formattedTimeCompact)", systemImage: "clock")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        // Actual duration
+                        if isCompleted {
+                            let duration = manufacturing.stepDuration(at: index)
+                            Label("Actual: \(viewModel.formatDuration(duration))", systemImage: "stopwatch")
+                                .font(.caption)
+                                .foregroundStyle(.green)
+                        }
                     }
 
-                    // Actual duration
-                    if isCompleted {
-                        let duration = manufacturing.stepDuration(at: index)
-                        Label("Actual: \(viewModel.formatDuration(duration))", systemImage: "stopwatch")
-                            .font(.caption)
-                            .foregroundStyle(.green)
+                    if isCompleted, let log = manufacturing.getLog(at: index) {
+                        HStack(spacing: 8) {
+                            if let start = log.startedAt {
+                                Text("Started: \(start, format: .dateTime.hour().minute())")
+                            }
+                            if let end = log.completedAt {
+                                Text("Ended: \(end, format: .dateTime.hour().minute())")
+                            }
+                        }
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
                     }
+                }
+
+                // Measurements
+                let measurements = manufacturing.getMeasurements(at: index)
+                if !measurements.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(measurements) { measurement in
+                            HStack {
+                                Image(systemName: "gauge.with.needle")
+                                    .font(.caption)
+                                    .foregroundStyle(.orange)
+                                Text("\(measurement.type.rawValue):")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text("\(AppNumberFormatter.format(measurement.value)) \(measurement.type.symbol)")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.primary)
+                            }
+                        }
+                    }
+                    .padding(8)
+                    .background(.fill.tertiary)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
 
                 // Step Note (user entered during manufacturing)

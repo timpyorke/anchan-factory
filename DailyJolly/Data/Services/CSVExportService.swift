@@ -45,13 +45,20 @@ final class CSVExportService {
         csv += "PRODUCTION\n"
         csv += "Batches,\(manufacturing.quantity)\n"
         csv += "Batch Size,\(manufacturing.recipe.batchSize) \(manufacturing.recipe.batchUnit)\n"
-        csv += "Total Units,\(manufacturing.totalUnits) \(manufacturing.recipe.batchUnit)\n"
+        csv += "Expected Units,\(manufacturing.totalUnits) \(manufacturing.recipe.batchUnit)\n"
+        if let actual = manufacturing.actualOutput {
+            csv += "Actual Units,\(String(format: "%.2f", actual)) \(manufacturing.recipe.batchUnit)\n"
+        }
         csv += "\n"
 
         // Cost Section
         csv += "COSTS\n"
         csv += "Total Cost,฿\(String(format: "%.2f", manufacturing.totalCost))\n"
-        csv += "Cost per Unit,฿\(String(format: "%.2f", manufacturing.costPerUnit))\n"
+        csv += "Expected Cost per Unit,฿\(String(format: "%.2f", manufacturing.costPerUnit))\n"
+        if let actual = manufacturing.actualOutput, actual > 0 {
+            let actualPerUnit = manufacturing.totalCost / actual
+            csv += "Actual Cost per Unit,฿\(String(format: "%.2f", actualPerUnit))\n"
+        }
         csv += "\n"
 
         // Ingredients Section
