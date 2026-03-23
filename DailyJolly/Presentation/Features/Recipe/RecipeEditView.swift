@@ -8,6 +8,7 @@ struct StepInput: Identifiable {
     var title: String
     var note: String
     var time: Int
+    var isTimerRequired: Bool = false
     var requiredMeasurements: [MeasurementType] = []
     var lineIdentifier: String?
 }
@@ -210,16 +211,6 @@ struct RecipeEditView: View {
                 .onMove { from, to in
                     viewModel.moveSteps(from: from, to: to)
                 }
-
-                if viewModel.totalTime > 0 {
-                    HStack {
-                        Text(String(localized: "Total Time"))
-                            .fontWeight(.medium)
-                        Spacer()
-                        Text(viewModel.totalTime.formattedTime)
-                            .foregroundStyle(.secondary)
-                    }
-                }
             }
 
             Button {
@@ -271,12 +262,6 @@ private struct StepRowView: View {
                         Label(line, systemImage: "arrow.branch")
                             .font(.caption)
                             .foregroundStyle(.purple)
-                    }
-
-                    if step.time > 0 {
-                        Label(step.time.formattedTime, systemImage: "clock")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -481,6 +466,7 @@ private struct StepEditSheet: View {
     @State private var title: String = ""
     @State private var note: String = ""
     @State private var time: Int = 0
+    @State private var isTimerRequired: Bool = false
     @State private var requiredMeasurements: [MeasurementType] = []
     @State private var lineIdentifier: String = ""
 
@@ -513,7 +499,7 @@ private struct StepEditSheet: View {
                 }
 
                 Section {
-                    TimePickerView(title: String(localized: "Duration"), seconds: $time)
+                    Toggle(String(localized: "Enable Timer"), isOn: $isTimerRequired)
                 } header: {
                     Text(String(localized: "Time"))
                 }
@@ -554,7 +540,8 @@ private struct StepEditSheet: View {
                             id: step?.id ?? UUID(),
                             title: title.trimmingCharacters(in: .whitespaces),
                             note: note,
-                            time: time,
+                            time: isTimerRequired ? time : 0,
+                            isTimerRequired: isTimerRequired,
                             requiredMeasurements: requiredMeasurements,
                             lineIdentifier: lineIdentifier.isEmpty ? nil : lineIdentifier.trimmingCharacters(in: .whitespaces)
                         )
@@ -570,6 +557,7 @@ private struct StepEditSheet: View {
                     title = step.title
                     note = step.note
                     time = step.time
+                    isTimerRequired = step.isTimerRequired
                     requiredMeasurements = step.requiredMeasurements
                     lineIdentifier = step.lineIdentifier ?? ""
                 }

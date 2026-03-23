@@ -116,10 +116,6 @@ private struct RecipeRowView: View {
                 }
 
                 HStack(spacing: 12) {
-                    if recipe.totalTime > 0 {
-                        Label(recipe.totalTime.formattedTimeCompact, systemImage: "clock")
-                    }
-
                     if !recipe.steps.isEmpty {
                         Label("\(recipe.steps.count) \(String(localized: "steps"))", systemImage: "list.number")
                     }

@@ -179,6 +179,7 @@
 "Description (optional)" = "รายละเอียด (ไม่บังคับ)";
 "Time" = "เวลา";
 "Duration" = "ระยะเวลา";
+"Enable Timer" = "เปิดใช้งานตัวจับเวลา";
 
 /* Formatting */
 "steps" = "ขั้นตอน";

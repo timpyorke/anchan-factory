@@ -21,6 +21,7 @@ struct RecipeStepInput {
     let title: String
     let note: String
     let time: Int
+    let isTimerRequired: Bool
     let requiredMeasurements: [MeasurementType]
     let lineIdentifier: String?
 }
@@ -143,6 +144,7 @@ final class RecipeRepository: RecipeRepositoryProtocol {
                 title: stepInput.title,
                 note: stepInput.note,
                 time: stepInput.time,
+                isTimerRequired: stepInput.isTimerRequired,
                 order: index,
                 requiredMeasurements: stepInput.requiredMeasurements,
                 lineIdentifier: stepInput.lineIdentifier
@@ -189,6 +191,7 @@ final class RecipeRepository: RecipeRepositoryProtocol {
                 title: step.title,
                 note: step.note,
                 time: step.time,
+                isTimerRequired: step.isTimerRequired,
                 order: step.order,
                 requiredMeasurements: step.requiredMeasurements,
                 lineIdentifier: step.lineIdentifier

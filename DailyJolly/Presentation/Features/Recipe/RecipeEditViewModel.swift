@@ -84,6 +84,7 @@ final class RecipeEditViewModel {
                     title: step.title,
                     note: step.note,
                     time: step.time,
+                    isTimerRequired: step.isTimerRequired || step.time > 0,
                     requiredMeasurements: step.requiredMeasurements,
                     lineIdentifier: step.lineIdentifier
                 )
@@ -126,6 +127,7 @@ final class RecipeEditViewModel {
                         title: step.title,
                         note: step.note,
                         time: step.time,
+                        isTimerRequired: step.isTimerRequired,
                         requiredMeasurements: step.requiredMeasurements,
                         lineIdentifier: step.lineIdentifier
                     )
@@ -165,6 +167,7 @@ final class RecipeEditViewModel {
                     title: stepInput.title,
                     note: stepInput.note,
                     time: stepInput.time,
+                    isTimerRequired: stepInput.isTimerRequired,
                     order: index,
                     requiredMeasurements: stepInput.requiredMeasurements,
                     lineIdentifier: stepInput.lineIdentifier
@@ -239,6 +242,7 @@ final class RecipeEditViewModel {
                 title: step.title,
                 note: step.note,
                 time: step.time,
+                isTimerRequired: step.isTimerRequired || step.time > 0,
                 requiredMeasurements: step.requiredMeasurements,
                 lineIdentifier: step.lineIdentifier
             )

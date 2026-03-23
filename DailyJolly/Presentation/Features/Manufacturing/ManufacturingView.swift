@@ -199,12 +199,6 @@ struct ManufacturingView: View {
                     .foregroundStyle(Color.accentColor)
 
                 Spacer()
-
-                if manufacturing.recipe.totalTime > 0 {
-                    Label(manufacturing.recipe.totalTime.formattedTimeCompact, systemImage: "clock")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
             }
 
             // Progress Bar
@@ -249,12 +243,6 @@ struct ManufacturingView: View {
                         .clipShape(Capsule())
 
                     Spacer()
-
-                    if step.time > 0 {
-                        Label(step.time.formattedTimeCompact, systemImage: "clock")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
                 }
 
                 // Step Title
@@ -262,59 +250,61 @@ struct ManufacturingView: View {
                     .font(.title2.bold())
 
                 // Timer & Record Section
-                HStack(spacing: 16) {
-                    let index = manufacturing.currentStepIndex
-                    let isStarted = manufacturing.isStepStarted(at: index)
-                    let recordedTime = manufacturing.stepCompletionTime(at: index)
-                    
-                    if !isStarted {
-                        Button {
-                            viewModel.startStep(at: index)
-                        } label: {
-                            Label(String(localized: "Start Timer"), systemImage: "play.fill")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(.green)
-                                .foregroundStyle(.white)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                    } else if let recordedTime = recordedTime {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(String(localized: "Time Recorded"))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            let duration = manufacturing.stepDuration(at: index)
-                            Text(TimeFormatter.formatDuration(duration))
-                                .font(.title3.bold())
-                                .foregroundStyle(.green)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.green.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                if step.isTimerRequired {
+                    HStack(spacing: 16) {
+                        let index = manufacturing.currentStepIndex
+                        let isStarted = manufacturing.isStepStarted(at: index)
+                        let recordedTime = manufacturing.stepCompletionTime(at: index)
                         
-                        Button {
-                            viewModel.recordStepTime(at: index)
-                        } label: {
-                            Label(String(localized: "Re-record"), systemImage: "arrow.clockwise")
-                                .font(.caption)
-                        }
-                        .buttonStyle(.bordered)
-                    } else {
-                        StepTimerView(startTime: manufacturing.getStepStartTime(at: index) ?? Date.now)
-                            .scaleEffect(1.2)
-                        
-                        Button {
-                            viewModel.recordStepTime(at: index)
-                        } label: {
-                            Label(String(localized: "Record Time"), systemImage: "stopwatch.fill")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(.orange)
-                                .foregroundStyle(.white)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        if !isStarted {
+                            Button {
+                                viewModel.startStep(at: index)
+                            } label: {
+                                Label(String(localized: "Start Timer"), systemImage: "play.fill")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(.green)
+                                    .foregroundStyle(.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                            }
+                        } else if let recordedTime = recordedTime {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(String(localized: "Time Recorded"))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                let duration = manufacturing.stepDuration(at: index)
+                                Text(TimeFormatter.formatDuration(duration))
+                                    .font(.title3.bold())
+                                    .foregroundStyle(.green)
+                            }
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(.green.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            
+                            Button {
+                                viewModel.recordStepTime(at: index)
+                            } label: {
+                                Label(String(localized: "Re-record"), systemImage: "arrow.clockwise")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                        } else {
+                            StepTimerView(startTime: manufacturing.getStepStartTime(at: index) ?? Date.now)
+                                .scaleEffect(1.2)
+                            
+                            Button {
+                                viewModel.recordStepTime(at: index)
+                            } label: {
+                                Label(String(localized: "Record Time"), systemImage: "stopwatch.fill")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(.orange)
+                                    .foregroundStyle(.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                            }
                         }
                     }
                 }
@@ -440,8 +430,9 @@ struct ManufacturingView: View {
             Divider()
 
             let hasQC = manufacturing.hasRequiredMeasurements(at: manufacturing.currentStepIndex)
+            let isTimerRequired = manufacturing.currentStep?.isTimerRequired ?? false
             let isTimeRecorded = manufacturing.stepCompletionTime(at: manufacturing.currentStepIndex) != nil
-            let canComplete = hasQC && isTimeRecorded
+            let canComplete = hasQC && (!isTimerRequired || isTimeRecorded)
 
             Button {
                 viewModel.completeCurrentStep(note: stepNote)
@@ -468,7 +459,7 @@ struct ManufacturingView: View {
             .disabled(!canComplete)
 
             if !canComplete {
-                let message = !isTimeRecorded ? String(localized: "Please record the completion time") : String(localized: "Please enter all required measurements")
+                let message = (isTimerRequired && !isTimeRecorded) ? String(localized: "Please record the completion time") : String(localized: "Please enter all required measurements")
                 Text(message)
                     .font(.caption)
                     .foregroundStyle(.orange)
@@ -713,7 +704,7 @@ private struct ParallelStepRow: View {
                 }
 
                 // Timer & Record Section
-                if !isCompleted {
+                if !isCompleted && step.isTimerRequired {
                     HStack {
                         if !isStarted {
                             Button {
@@ -781,12 +772,13 @@ private struct ParallelStepRow: View {
             } else {
                 let hasQC = manufacturing.hasRequiredMeasurements(at: index)
                 let isTimeRecorded = recordedTime != nil
+                let timerRequired = step.isTimerRequired
                 
-                Button(canComplete ? (hasQC ? (isTimeRecorded ? String(localized: "Complete") : String(localized: "Need Time")) : String(localized: "Need QC")) : String(localized: "Waiting")) {
+                Button(canComplete ? (hasQC ? (!timerRequired || isTimeRecorded ? String(localized: "Complete") : String(localized: "Need Time")) : String(localized: "Need QC")) : String(localized: "Waiting")) {
                     viewModel.completeStep(at: index, note: note)
                 }
                 .buttonStyle(.bordered)
-                .disabled(!canComplete || !hasQC || !isTimeRecorded)
+                .disabled(!canComplete || !hasQC || (timerRequired && !isTimeRecorded))
             }
         }
         .padding(.vertical, 4)

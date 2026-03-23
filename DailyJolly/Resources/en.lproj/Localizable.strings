@@ -179,6 +179,7 @@
 "Description (optional)" = "Description (optional)";
 "Time" = "Time";
 "Duration" = "Duration";
+"Enable Timer" = "Enable Timer";
 
 /* Formatting */
 "steps" = "steps";

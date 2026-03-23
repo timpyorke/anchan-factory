@@ -7,6 +7,7 @@ final class RecipeStepEntity {
     var title: String
     var note: String
     var time: Int              // minutes
+    var isTimerRequired: Bool = false
     var order: Int
     var requiredMeasurementRawValues: [String] = []
     var lineIdentifier: String? // "Line A", "Line B"
@@ -26,6 +27,7 @@ final class RecipeStepEntity {
         title: String,
         note: String = "",
         time: Int = 0,
+        isTimerRequired: Bool = false,
         order: Int = 0,
         requiredMeasurements: [MeasurementType] = [],
         lineIdentifier: String? = nil,
@@ -34,6 +36,7 @@ final class RecipeStepEntity {
         self.title = title
         self.note = note
         self.time = time
+        self.isTimerRequired = isTimerRequired
         self.order = order
         self.requiredMeasurementRawValues = []
         self.lineIdentifier = lineIdentifier

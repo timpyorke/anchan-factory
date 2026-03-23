@@ -443,10 +443,6 @@ private struct RecipeSelectionRow: View {
                 }
 
                 HStack(spacing: 12) {
-                    if recipe.totalTime > 0 {
-                        Label(recipe.totalTime.formattedTimeCompact, systemImage: "clock")
-                    }
-
                     Label("\(recipe.steps.count) \(String(localized: "steps"))", systemImage: "list.number")
 
                     if recipe.totalCost > 0 {

@@ -120,13 +120,6 @@ struct RecipeDetailView: View {
             }
 
             HStack(spacing: 16) {
-                if recipe.totalTime > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "clock")
-                        Text(recipe.totalTime.formattedTime)
-                    }
-                }
-
                 HStack(spacing: 4) {
                     Image(systemName: "shippingbox")
                     Text("\(recipe.batchSize) \(recipe.batchUnit)")
@@ -188,12 +181,6 @@ struct RecipeDetailView: View {
                                     .font(.headline)
 
                                 Spacer()
-
-                                if step.time > 0 {
-                                    Label(step.time.formattedTime, systemImage: "clock")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
                             }
 
                             if !step.note.isEmpty {
