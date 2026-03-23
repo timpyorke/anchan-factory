@@ -63,19 +63,14 @@ final class ManufacturingDetailViewModel {
         }
     }
 
-    func exportToCSV() {
+    func exportData() {
         guard let manufacturing else { return }
-        exportURL = exportService.exportManufacturing(manufacturing)
+        exportURL = exportService.exportManufacturingDetail(manufacturing)
         if exportURL != nil {
             showShareSheet = true
         }
     }
 
-    // MARK: - Helpers
-
-    func formatDuration(_ interval: TimeInterval) -> String {
-        return TimeFormatter.formatDuration(interval)
-    }
 
     // MARK: - Error Handling
 

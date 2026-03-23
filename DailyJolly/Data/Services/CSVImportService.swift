@@ -11,7 +11,7 @@ final class CSVImportService {
     func importInventory(from url: URL, modelContext: ModelContext) -> Result<Int, AppError> {
         do {
             let data = try String(contentsOf: url, encoding: .utf8)
-            let rows = parseCSV(data)
+            let rows = CSVEngine.shared.parse(data)
             
             guard rows.count > 1 else { return .success(0) }
             
@@ -20,7 +20,6 @@ final class CSVImportService {
             
             for i in 1..<rows.count {
                 let row = rows[i]
-                guard row.count >= headers.count else { continue }
                 
                 var name = ""
                 var category: String?
@@ -31,6 +30,7 @@ final class CSVImportService {
                 var phValue: Double?
                 
                 for (index, header) in headers.enumerated() {
+                    guard index < row.count else { break }
                     let value = row[index].trimmingCharacters(in: .whitespaces)
                     
                     switch header {
@@ -40,10 +40,14 @@ final class CSVImportService {
                     case "stock": stock = Double(value) ?? 0
                     case "min stock": minStock = Double(value) ?? 0
                     case "unit price", "price": 
-                        // Strip currency symbol if present
                         let cleanPrice = value.replacingOccurrences(of: "฿", with: "").replacingOccurrences(of: ",", with: "")
-                        unitPrice = Double(cleanPrice) ?? 0
-                    case "ph": phValue = Double(value)
+                        if let price = Double(cleanPrice) {
+                            unitPrice = price
+                        }
+                    case "ph": 
+                        if let ph = Double(value) {
+                            phValue = ph
+                        }
                     default: break
                     }
                 }
@@ -63,7 +67,8 @@ final class CSVImportService {
                 }
             }
             
-            try modelContext.save()
+            // Note: We don't call modelContext.save() here to avoid crashes on main actor.
+            // SwiftData will auto-save.
             return .success(importCount)
             
         } catch {
@@ -75,7 +80,7 @@ final class CSVImportService {
     func importRecipes(from url: URL, modelContext: ModelContext) -> Result<Int, AppError> {
         do {
             let data = try String(contentsOf: url, encoding: .utf8)
-            let rows = parseCSV(data)
+            let rows = CSVEngine.shared.parse(data)
             
             guard rows.count > 1 else { return .success(0) }
             
@@ -84,7 +89,6 @@ final class CSVImportService {
             
             for i in 1..<rows.count {
                 let row = rows[i]
-                guard row.count >= headers.count else { continue }
                 
                 var name = ""
                 var category: String?
@@ -92,6 +96,7 @@ final class CSVImportService {
                 var batchUnit = "pcs"
                 
                 for (index, header) in headers.enumerated() {
+                    guard index < row.count else { break }
                     let value = row[index].trimmingCharacters(in: .whitespaces)
                     
                     switch header {
@@ -115,49 +120,10 @@ final class CSVImportService {
                 }
             }
             
-            try modelContext.save()
             return .success(importCount)
             
         } catch {
             return .failure(.databaseError("Import failed: \(error.localizedDescription)"))
         }
-    }
-    
-    private func parseCSV(_ data: String) -> [[String]] {
-        var result: [[String]] = []
-        let rows = data.components(separatedBy: .newlines)
-        
-        for row in rows {
-            if row.isEmpty { continue }
-            
-            var columns: [String] = []
-            var currentColumn = ""
-            var insideQuotes = false
-            
-            let characters = Array(row)
-            var i = 0
-            while i < characters.count {
-                let char = characters[i]
-                
-                if char == "\"" {
-                    if insideQuotes && i + 1 < characters.count && characters[i+1] == "\"" {
-                        currentColumn.append("\"")
-                        i += 1
-                    } else {
-                        insideQuotes.toggle()
-                    }
-                } else if char == "," && !insideQuotes {
-                    columns.append(currentColumn)
-                    currentColumn = ""
-                } else {
-                    currentColumn.append(char)
-                }
-                i += 1
-            }
-            columns.append(currentColumn)
-            result.append(columns)
-        }
-        
-        return result
     }
 }

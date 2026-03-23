@@ -333,13 +333,13 @@ private struct ManufacturingCard: View {
 
 // MARK: - Completed Manufacturing Row
 
-private struct CompletedManufacturingRow: View {
+struct CompletedManufacturingRow: View {
     let manufacturing: ManufacturingEntity
     let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
-            HStack {
+        ListRow(action: onTap) {
+            HStack(spacing: 12) {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
 
@@ -367,10 +367,7 @@ private struct CompletedManufacturingRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            .contentShape(Rectangle())
-            .padding(.vertical, 8)
         }
-        .buttonStyle(.row)
     }
 }
 
@@ -395,13 +392,12 @@ private struct RecipeSelectionSheet: View {
                     )
                 } else {
                     List(viewModel.filteredRecipes, id: \.persistentModelID) { recipe in
-                        Button {
+                        ListRow(action: {
                             onSelect(recipe)
                             dismiss()
-                        } label: {
+                        }) {
                             RecipeSelectionRow(recipe: recipe)
                         }
-                        .buttonStyle(.row)
                     }
                     .searchable(text: $viewModel.searchText, prompt: String(localized: "Search recipes"))
                 }
@@ -482,7 +478,7 @@ private struct LowStockRow: View {
     let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
+        ListRow(action: onTap) {
             HStack(spacing: 12) {
                 // Stock level indicator
                 ZStack {
@@ -524,10 +520,7 @@ private struct LowStockRow: View {
                         .foregroundStyle(.orange)
                 }
             }
-            .contentShape(Rectangle())
-            .padding(.vertical, 4)
         }
-        .buttonStyle(.row)
     }
 
     private var stockColor: Color {

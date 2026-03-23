@@ -70,12 +70,11 @@ struct InventoryView: View {
     private var listContent: some View {
         List {
             ForEach(viewModel.filteredItems, id: \.persistentModelID) { item in
-                Button {
+                ListRow(action: {
                     viewModel.edit(item)
-                } label: {
+                }) {
                     InventoryRowView(item: item)
                 }
-                .buttonStyle(.row)
             }
             .onDelete(perform: viewModel.deleteItems)
         }

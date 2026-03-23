@@ -24,7 +24,7 @@ struct ManufacturingDetailView: View {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button {
-                        viewModel.exportToCSV()
+                        viewModel.exportData()
                     } label: {
                         Label("Export to Sheets", systemImage: "tablecells")
                     }
@@ -286,25 +286,10 @@ struct ManufacturingDetailView: View {
             HStack(spacing: 16) {
                 // Total Duration
                 VStack(spacing: 4) {
-                    Text(viewModel.formatDuration(manufacturing.totalDuration))
+                    Text(TimeFormatter.formatDuration(manufacturing.totalDuration))
                         .font(.title2.bold())
                         .foregroundStyle(Color.accentColor)
                     Text("Total Time")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(.fill.quinary)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                // Estimated vs Actual
-                VStack(spacing: 4) {
-                    let estimated = manufacturing.recipe.totalTime
-                    Text("\(estimated)m")
-                        .font(.title2.bold())
-                        .foregroundStyle(.secondary)
-                    Text("Estimated")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -425,17 +410,10 @@ struct ManufacturingDetailView: View {
                 // Time Info
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 16) {
-                        // Estimated time
-                        if step.time > 0 {
-                            Label("Est: \(step.time.formattedTimeCompact)", systemImage: "clock")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-
                         // Actual duration
                         if isCompleted {
                             let duration = manufacturing.stepDuration(at: index)
-                            Label("Actual: \(viewModel.formatDuration(duration))", systemImage: "stopwatch")
+                            Label("Actual: \(TimeFormatter.formatDuration(duration))", systemImage: "stopwatch")
                                 .font(.caption)
                                 .foregroundStyle(.green)
                         }
