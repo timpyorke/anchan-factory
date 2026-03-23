@@ -9,9 +9,12 @@ final class SettingViewModel {
     private var recipeRepository: RecipeRepository?
     private var inventoryRepository: InventoryRepository?
     private let exportService = CSVExportService.shared
+    private let importService = CSVImportService.shared
 
     var showExportSheet = false
     var exportURL: URL?
+    var showImportSuccess = false
+    var importCount = 0
     var showClearDataAlert = false
     var showAddUnitSheet = false
     var showRestartAlert = false
@@ -169,6 +172,34 @@ final class SettingViewModel {
             if exportURL != nil {
                 showExportSheet = true
             }
+        case .failure(let error):
+            handleError(error)
+        }
+    }
+
+    // MARK: - Import Data
+
+    func importInventory(from url: URL, modelContext: ModelContext) {
+        isLoading = true
+        defer { isLoading = false }
+
+        switch importService.importInventory(from: url, modelContext: modelContext) {
+        case .success(let count):
+            importCount = count
+            showImportSuccess = true
+        case .failure(let error):
+            handleError(error)
+        }
+    }
+
+    func importRecipes(from url: URL, modelContext: ModelContext) {
+        isLoading = true
+        defer { isLoading = false }
+
+        switch importService.importRecipes(from: url, modelContext: modelContext) {
+        case .success(let count):
+            importCount = count
+            showImportSuccess = true
         case .failure(let error):
             handleError(error)
         }

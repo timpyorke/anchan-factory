@@ -111,15 +111,13 @@ final class InventoryAddViewModel {
             // Create new
             let item = InventoryEntity(
                 name: name.trimmingCharacters(in: .whitespaces),
+                category: category.isEmpty ? nil : category.trimmingCharacters(in: .whitespaces),
                 unitSymbol: unitSymbol,
                 unitPrice: price,
                 stock: stockValue,
                 minStock: minStockValue,
                 phValue: ph
             )
-            if !category.isEmpty {
-                item.category = category.trimmingCharacters(in: .whitespaces)
-            }
 
             switch repository.create(item) {
             case .success:

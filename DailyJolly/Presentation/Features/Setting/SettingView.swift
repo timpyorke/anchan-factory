@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
 
 struct SettingView: View {
     @Environment(\.modelContext) private var modelContext
@@ -10,6 +11,8 @@ struct SettingView: View {
 
     @State private var showPinSetup = false
     @State private var showPinVerify = false
+    @State private var showInventoryPicker = false
+    @State private var showRecipePicker = false
 
     var body: some View {
         Form {
@@ -17,8 +20,51 @@ struct SettingView: View {
             languageSection
             permissionsSection
             customUnitsSection
+            importSection
             exportSection
             dataSection
+        }
+        .fileImporter(
+            isPresented: $showInventoryPicker,
+            allowedContentTypes: [.commaSeparatedText],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let url = urls.first {
+                    // Start accessing security-scoped resource
+                    if url.startAccessingSecurityScopedResource() {
+                        viewModel.importInventory(from: url, modelContext: modelContext)
+                        url.stopAccessingSecurityScopedResource()
+                    }
+                }
+            case .failure(let error):
+                viewModel.errorMessage = error.localizedDescription
+                viewModel.showError = true
+            }
+        }
+        .fileImporter(
+            isPresented: $showRecipePicker,
+            allowedContentTypes: [.commaSeparatedText],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let url = urls.first {
+                    if url.startAccessingSecurityScopedResource() {
+                        viewModel.importRecipes(from: url, modelContext: modelContext)
+                        url.stopAccessingSecurityScopedResource()
+                    }
+                }
+            case .failure(let error):
+                viewModel.errorMessage = error.localizedDescription
+                viewModel.showError = true
+            }
+        }
+        .alert(String(localized: "Import Successful"), isPresented: $viewModel.showImportSuccess) {
+            Button(String(localized: "OK")) { }
+        } message: {
+            Text(String(localized: "Successfully imported \(viewModel.importCount) items."))
         }
         .sheet(isPresented: $showPinSetup) {
             PinEntryView(mode: .setup) { newPin in
@@ -173,6 +219,28 @@ struct SettingView: View {
             Text(String(localized: "Custom Units"))
         } footer: {
             Text(String(localized: "Add custom measurement units for your inventory"))
+        }
+    }
+
+    // MARK: - Import Section
+
+    private var importSection: some View {
+        Section {
+            Button {
+                showInventoryPicker = true
+            } label: {
+                Label(String(localized: "Import Inventory (CSV)"), systemImage: "square.and.arrow.down")
+            }
+
+            Button {
+                showRecipePicker = true
+            } label: {
+                Label(String(localized: "Import Recipes (CSV)"), systemImage: "book.closed.fill")
+            }
+        } header: {
+            Text(String(localized: "Import"))
+        } footer: {
+            Text(String(localized: "Import items from CSV files. The first row must contain headers like Name, Category, etc."))
         }
     }
 

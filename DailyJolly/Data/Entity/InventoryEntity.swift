@@ -15,6 +15,7 @@ final class InventoryEntity {
 
     init(
         name: String,
+        category: String? = nil,
         unitSymbol: String,
         unitPrice: Double,
         stock: Double,
@@ -22,6 +23,7 @@ final class InventoryEntity {
         phValue: Double? = nil
     ) {
         self.name = name
+        self.category = category
         self.unitSymbol = unitSymbol
         self.unitPrice = unitPrice
         self.stock = stock

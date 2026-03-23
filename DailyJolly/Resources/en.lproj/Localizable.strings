@@ -42,6 +42,14 @@
 "Export Recipe Data" = "Export Recipe Data";
 "Export data as CSV for Google Sheets or Excel" = "Export data as CSV for Google Sheets or Excel";
 
+/* Import */
+"Import" = "Import";
+"Import Inventory (CSV)" = "Import Inventory (CSV)";
+"Import Recipes (CSV)" = "Import Recipes (CSV)";
+"Import Successful" = "Import Successful";
+"Successfully imported %lld items." = "Successfully imported %lld items.";
+"Import items from CSV files. The first row must contain headers like Name, Category, etc." = "Import items from CSV files. The first row must contain headers like Name, Category, etc.";
+
 /* Data Management */
 "Data Management" = "Data Management";
 "Clear All Data" = "Clear All Data";

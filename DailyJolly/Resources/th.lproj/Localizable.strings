@@ -41,7 +41,16 @@
 "Export Manufacturing Data" = "ส่งออกข้อมูลการผลิต";
 "Export Inventory Data" = "ส่งออกข้อมูลสินค้าคงคลัง";
 "Export Recipe Data" = "ส่งออกข้อมูลสูตร";
-"Export data as CSV for Google Sheets or Excel" = "ส่งออกข้อมูลเป็น CSV สำหรับ Google Sheets หรือ Excel";
+"Export data as CSV for Google Sheets or Excel" = "ส่งออกข้อมูลเป็นไฟล์ CSV สำหรับเปิดใน Google Sheets หรือ Excel";
+
+/* Import */
+"Import" = "นำเข้า";
+"Import Inventory (CSV)" = "นำเข้าสต็อก (CSV)";
+"Import Recipes (CSV)" = "นำเข้าสูตร (CSV)";
+"Import Successful" = "นำเข้าข้อมูลสำเร็จ";
+"Successfully imported %lld items." = "นำเข้าข้อมูลสำเร็จจำนวน %lld รายการ";
+"Import items from CSV files. The first row must contain headers like Name, Category, etc." = "นำเข้าข้อมูลจากไฟล์ CSV โดยแถวแรกต้องเป็นชื่อหัวข้อ (เช่น Name, Category, ฯลฯ)";
+
 
 /* Data Management */
 "Data Management" = "จัดการข้อมูล";
