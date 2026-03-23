@@ -367,9 +367,10 @@ private struct CompletedManufacturingRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            .contentShape(Rectangle())
             .padding(.vertical, 8)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.row)
     }
 }
 
@@ -400,7 +401,7 @@ private struct RecipeSelectionSheet: View {
                         } label: {
                             RecipeSelectionRow(recipe: recipe)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.row)
                     }
                     .searchable(text: $viewModel.searchText, prompt: String(localized: "Search recipes"))
                 }
@@ -469,6 +470,7 @@ private struct RecipeSelectionRow: View {
             Image(systemName: "chevron.right")
                 .foregroundStyle(.secondary)
         }
+        .contentShape(Rectangle())
         .padding(.vertical, 4)
     }
 }
@@ -522,9 +524,10 @@ private struct LowStockRow: View {
                         .foregroundStyle(.orange)
                 }
             }
+            .contentShape(Rectangle())
             .padding(.vertical, 4)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.row)
     }
 
     private var stockColor: Color {

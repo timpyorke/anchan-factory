@@ -225,9 +225,10 @@ private struct ManufacturingListRow: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .contentShape(Rectangle())
             .padding(.vertical, 8)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.row)
     }
 
     private var statusIcon: some View {

@@ -70,11 +70,12 @@ struct InventoryView: View {
     private var listContent: some View {
         List {
             ForEach(viewModel.filteredItems, id: \.persistentModelID) { item in
-                InventoryRowView(item: item)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        viewModel.edit(item)
-                    }
+                Button {
+                    viewModel.edit(item)
+                } label: {
+                    InventoryRowView(item: item)
+                }
+                .buttonStyle(.row)
             }
             .onDelete(perform: viewModel.deleteItems)
         }

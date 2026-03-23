@@ -78,28 +78,29 @@ struct RecipeView: View {
     private var listContent: some View {
         List {
             ForEach(viewModel.filteredRecipes, id: \.persistentModelID) { recipe in
-                RecipeRowView(recipe: recipe)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        stackRouter.push(.recipeDetail(id: recipe.persistentModelID))
+                Button {
+                    stackRouter.push(.recipeDetail(id: recipe.persistentModelID))
+                } label: {
+                    RecipeRowView(recipe: recipe)
+                }
+                .buttonStyle(.row)
+                .swipeActions(edge: .leading) {
+                    Button {
+                        viewModel.toggleFavorite(recipe)
+                    } label: {
+                        Image(systemName: recipe.isFavorite ? "heart.slash" : "heart")
                     }
-                    .swipeActions(edge: .leading) {
-                        Button {
-                            viewModel.toggleFavorite(recipe)
-                        } label: {
-                            Image(systemName: recipe.isFavorite ? "heart.slash" : "heart")
-                        }
-                        .tint(recipe.isFavorite ? .gray : .pink)
+                    .tint(recipe.isFavorite ? .gray : .pink)
 
-                        if !AppSettings.shared.isRecipeEditLocked {
-                            Button {
-                                viewModel.duplicateRecipe(recipe)
-                            } label: {
-                                Image(systemName: "doc.on.doc")
-                            }
-                            .tint(.blue)
+                    if !AppSettings.shared.isRecipeEditLocked {
+                        Button {
+                            viewModel.duplicateRecipe(recipe)
+                        } label: {
+                            Image(systemName: "doc.on.doc")
                         }
+                        .tint(.blue)
                     }
+                }
             }
             .onDelete { offsets in
                 if !AppSettings.shared.isRecipeEditLocked {
