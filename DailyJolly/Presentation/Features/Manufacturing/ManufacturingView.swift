@@ -18,6 +18,7 @@ struct ManufacturingView: View {
     @State private var cameraImage: Data?
     @State private var previewImage: Data?
     @State private var parallelStepNotes: [Int: String] = [:]
+    @State private var currentStepIndexForPhoto: Int?
 
     var body: some View {
         Group {
@@ -127,6 +128,29 @@ struct ManufacturingView: View {
             }
         }
         .animation(.easeInOut, value: previewImage != nil)
+        .photosPicker(isPresented: $showPhotoLibrary, selection: $selectedPhotos, matching: .images)
+        .onChange(of: selectedPhotos) { _, newValue in
+            // Handle global selectedPhotos change
+            // StepPhotoSection has its own onChange that filters by currentStepIndexForPhoto
+            // Here we handle the final result photos (where currentStepIndexForPhoto is nil)
+            if currentStepIndexForPhoto == nil && !newValue.isEmpty {
+                Task {
+                    for item in newValue {
+                        if let data = try? await item.loadTransferable(type: Data.self) {
+                            viewModel.addImageData(data, stepIndex: nil)
+                        }
+                    }
+                    selectedPhotos = []
+                }
+            }
+        }
+        .onChange(of: cameraImage) { _, newValue in
+            if let newValue {
+                viewModel.addImageData(newValue, stepIndex: currentStepIndexForPhoto)
+                cameraImage = nil
+                currentStepIndexForPhoto = nil
+            }
+        }
     }
 
     // MARK: - Step View
@@ -177,7 +201,12 @@ struct ManufacturingView: View {
                                         parallelStepNotes[index] = $0
                                         viewModel.updateStepNote(at: index, note: $0)
                                     }
-                                )
+                                ),
+                                previewImage: $previewImage,
+                                showCamera: $showCamera,
+                                showPhotoLibrary: $showPhotoLibrary,
+                                selectedPhotos: $selectedPhotos,
+                                currentStepIndexForPhoto: $currentStepIndexForPhoto
                             )
                         }
                     }
@@ -268,7 +297,7 @@ struct ManufacturingView: View {
                                     .foregroundStyle(.white)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                             }
-                        } else if let recordedTime = recordedTime {
+                        } else if manufacturing.stepCompletionTime(at: index) != nil {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(String(localized: "Time Recorded"))
                                     .font(.caption)
@@ -315,6 +344,18 @@ struct ManufacturingView: View {
                         .font(.body)
                         .foregroundStyle(.secondary)
                 }
+
+                // Step Photos
+                StepPhotoSection(
+                    index: manufacturing.currentStepIndex,
+                    manufacturing: manufacturing,
+                    viewModel: viewModel,
+                    previewImage: $previewImage,
+                    showCamera: $showCamera,
+                    showPhotoLibrary: $showPhotoLibrary,
+                    selectedPhotos: $selectedPhotos,
+                    currentStepIndexForPhoto: $currentStepIndexForPhoto
+                )
 
                 // Step Note Input
                 VStack(alignment: .leading, spacing: 8) {
@@ -517,14 +558,17 @@ struct ManufacturingView: View {
                 .background(.fill.quinary)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
 
-                // Photo Section
+                // Photo Section (Final Result)
                 VStack(alignment: .leading, spacing: 12) {
                     Text(String(localized: "Work Result Photo"))
                         .font(.headline)
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(alignment: .center, spacing: 12) {
-                            ForEach(manufacturing.images.sorted(by: { $0.createdAt < $1.createdAt })) { imageEntity in
+                            // Filter only final result images (stepIndex == nil)
+                            let finalImages = manufacturing.images.filter { $0.stepIndex == nil }
+                            
+                            ForEach(finalImages.sorted(by: { $0.createdAt < $1.createdAt })) { imageEntity in
                                 if let uiImage = UIImage(data: imageEntity.imageData) {
                                     Image(uiImage: uiImage)
                                         .resizable()
@@ -581,22 +625,59 @@ struct ManufacturingView: View {
                     }
                 }
                 .padding(.horizontal)
-                .photosPicker(isPresented: $showPhotoLibrary, selection: $selectedPhotos, matching: .images)
-                .onChange(of: selectedPhotos) { _, newValue in
-                    Task {
-                        for item in newValue {
-                            if let data = try? await item.loadTransferable(type: Data.self) {
-                                viewModel.addImageData(data)
+
+                // Step Photos Summary
+                let allStepImages = manufacturing.images.filter { $0.stepIndex != nil }
+                if !allStepImages.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(String(localized: "Step Photos Summary"))
+                            .font(.headline)
+                        
+                        VStack(spacing: 16) {
+                            let sortedSteps = manufacturing.recipe.sortedSteps
+                            ForEach(Array(sortedSteps.enumerated()), id: \.offset) { index, step in
+                                let stepImages = allStepImages.filter { $0.stepIndex == index }
+                                if !stepImages.isEmpty {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack {
+                                            Text("\(index + 1). \(step.title)")
+                                                .font(.subheadline.bold())
+                                            
+                                            Spacer()
+                                            
+                                            if manufacturing.stepCompletionTime(at: index) != nil {
+                                                Text(TimeFormatter.formatDuration(manufacturing.stepDuration(at: index)))
+                                                    .font(.caption)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                        
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            HStack(spacing: 8) {
+                                                ForEach(stepImages.sorted(by: { $0.createdAt < $1.createdAt })) { imageEntity in
+                                                    StepPhotoThumbnail(
+                                                        imageEntity: imageEntity,
+                                                        isCompact: true,
+                                                        onPreview: { previewImage = imageEntity.imageData },
+                                                        onDelete: { },
+                                                        showDelete: false
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    if index < sortedSteps.count - 1 {
+                                        Divider()
+                                    }
+                                }
                             }
                         }
-                        selectedPhotos = []
+                        .padding()
+                        .background(.fill.quinary)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                }
-                .onChange(of: cameraImage) { _, newValue in
-                    if let newValue {
-                        viewModel.addImageData(newValue)
-                        cameraImage = nil
-                    }
+                    .padding(.horizontal)
                 }
 
                 // Completed Measurements Summary
@@ -670,6 +751,13 @@ private struct ParallelStepRow: View {
     let viewModel: ManufacturingViewModel
     @Binding var note: String
     
+    // Bindings for Photo Section
+    @Binding var previewImage: Data?
+    @Binding var showCamera: Bool
+    @Binding var showPhotoLibrary: Bool
+    @Binding var selectedPhotos: [PhotosPickerItem]
+    @Binding var currentStepIndexForPhoto: Int?
+    
     var isCompleted: Bool { manufacturing.isStepCompleted(at: index) }
     var canComplete: Bool { manufacturing.canCompleteStep(at: index) }
     var isStarted: Bool { manufacturing.isStepStarted(at: index) }
@@ -687,6 +775,19 @@ private struct ParallelStepRow: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+
+                // Step Photos
+                StepPhotoSection(
+                    index: index,
+                    manufacturing: manufacturing,
+                    viewModel: viewModel,
+                    previewImage: $previewImage,
+                    showCamera: $showCamera,
+                    showPhotoLibrary: $showPhotoLibrary,
+                    selectedPhotos: $selectedPhotos,
+                    currentStepIndexForPhoto: $currentStepIndexForPhoto,
+                    isCompact: true
+                )
 
                 if isCompleted {
                     if let stepNote = manufacturing.stepNote(at: index) {
@@ -782,6 +883,124 @@ private struct ParallelStepRow: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Step Photo Section
+
+private struct StepPhotoSection: View {
+    let index: Int
+    let manufacturing: ManufacturingEntity
+    let viewModel: ManufacturingViewModel
+    @Binding var previewImage: Data?
+    @Binding var showCamera: Bool
+    @Binding var showPhotoLibrary: Bool
+    @Binding var selectedPhotos: [PhotosPickerItem]
+    @Binding var currentStepIndexForPhoto: Int?
+    var isCompact: Bool = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(String(localized: "Step Photos"))
+                    .font(isCompact ? .caption.bold() : .subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+                
+                Spacer()
+                
+                if !manufacturing.isStepCompleted(at: index) {
+                    Menu {
+                        #if !targetEnvironment(simulator)
+                        Button {
+                            currentStepIndexForPhoto = index
+                            showCamera = true
+                        } label: {
+                            Label(String(localized: "Take Photo"), systemImage: "camera")
+                        }
+                        #endif
+                        
+                        Button {
+                            currentStepIndexForPhoto = index
+                            showPhotoLibrary = true
+                        } label: {
+                            Label(String(localized: "Choose from Library"), systemImage: "photo.on.rectangle")
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus.circle.fill")
+                            Text(String(localized: "Add Photo"))
+                        }
+                        .font(.caption)
+                    }
+                }
+            }
+
+            let stepImages = manufacturing.images.filter { $0.stepIndex == index }
+            if !stepImages.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(stepImages.sorted(by: { $0.createdAt < $1.createdAt })) { imageEntity in
+                            StepPhotoThumbnail(
+                                imageEntity: imageEntity,
+                                isCompact: isCompact,
+                                onPreview: { previewImage = imageEntity.imageData },
+                                onDelete: { viewModel.removeImage(imageEntity) },
+                                showDelete: !manufacturing.isStepCompleted(at: index)
+                            )
+                        }
+                    }
+                }
+            } else if !isCompact && !manufacturing.isStepCompleted(at: index) {
+                Text(String(localized: "No photos added for this step"))
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .padding(.vertical, 4)
+            }
+        }
+        .onChange(of: selectedPhotos) { _, newValue in
+            if currentStepIndexForPhoto == index {
+                Task {
+                    for item in newValue {
+                        if let data = try? await item.loadTransferable(type: Data.self) {
+                            viewModel.addImageData(data, stepIndex: index)
+                        }
+                    }
+                    selectedPhotos = []
+                    currentStepIndexForPhoto = nil
+                }
+            }
+        }
+        // Handle camera image in the main view because it's a single state
+    }
+}
+
+private struct StepPhotoThumbnail: View {
+    let imageEntity: ManufacturingImageEntity
+    let isCompact: Bool
+    let onPreview: () -> Void
+    let onDelete: () -> Void
+    let showDelete: Bool
+
+    var body: some View {
+        if let uiImage = UIImage(data: imageEntity.imageData) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+                .frame(width: isCompact ? 60 : 100, height: isCompact ? 60 : 100)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .contentShape(Rectangle())
+                .onTapGesture(perform: onPreview)
+                .overlay(alignment: .topTrailing) {
+                    if showDelete {
+                        Button(action: onDelete) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.white, .red)
+                                .font(isCompact ? .caption : .subheadline)
+                        }
+                        .padding(2)
+                    }
+                }
+        }
     }
 }
 

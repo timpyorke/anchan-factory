@@ -43,10 +43,6 @@ final class RecipeEditViewModel {
         !name.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
-    var totalTime: Int {
-        steps.reduce(0) { $0 + $1.time }
-    }
-
     var totalCost: Double {
         calculateTotalCost()
     }

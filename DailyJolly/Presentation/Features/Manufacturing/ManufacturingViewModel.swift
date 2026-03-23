@@ -109,9 +109,9 @@ final class ManufacturingViewModel {
         _ = repository.update()
     }
 
-    func addImageData(_ data: Data) {
+    func addImageData(_ data: Data, stepIndex: Int? = nil) {
         guard let manufacturing, let repository else { return }
-        manufacturing.addImage(data)
+        manufacturing.addImage(data, stepIndex: stepIndex)
         _ = repository.update()
     }
 

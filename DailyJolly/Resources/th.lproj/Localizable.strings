@@ -158,6 +158,9 @@
 "Need QC" = "รอค่า QC";
 "Please record the completion time" = "กรุณากดบันทึกเวลาที่เสร็จสิ้น";
 "Work Result Photo" = "รูปภาพผลงาน";
+"Step Photos" = "รูปถ่ายขั้นตอน";
+"Step Photos Summary" = "สรุปรูปถ่ายแต่ละขั้นตอน";
+"No photos added for this step" = "ยังไม่ได้เพิ่มรูปสำหรับขั้นตอนนี้";
 "Add Photo" = "เพิ่มรูปภาพ";
 "Take Photo" = "ถ่ายรูป";
 "Choose from Library" = "เลือกจากอัลบั้ม";

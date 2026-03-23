@@ -106,9 +106,9 @@ final class ManufacturingEntity {
         getLog(at: index)?.startedAt
     }
 
-    /// Add a photo of the work result
-    func addImage(_ data: Data) {
-        let newImage = ManufacturingImageEntity(imageData: data, manufacturing: self)
+    /// Add a photo for a specific step or final work result
+    func addImage(_ data: Data, stepIndex: Int? = nil) {
+        let newImage = ManufacturingImageEntity(imageData: data, stepIndex: stepIndex, manufacturing: self)
         images.append(newImage)
     }
 
