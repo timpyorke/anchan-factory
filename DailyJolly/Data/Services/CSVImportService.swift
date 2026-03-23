@@ -20,7 +20,6 @@ final class CSVImportService {
             
             for i in 1..<rows.count {
                 let row = rows[i]
-                guard row.count >= headers.count else { continue }
                 
                 var name = ""
                 var category: String?
@@ -31,6 +30,7 @@ final class CSVImportService {
                 var phValue: Double?
                 
                 for (index, header) in headers.enumerated() {
+                    guard index < row.count else { break }
                     let value = row[index].trimmingCharacters(in: .whitespaces)
                     
                     switch header {
@@ -41,8 +41,13 @@ final class CSVImportService {
                     case "min stock": minStock = Double(value) ?? 0
                     case "unit price", "price": 
                         let cleanPrice = value.replacingOccurrences(of: "฿", with: "").replacingOccurrences(of: ",", with: "")
-                        unitPrice = Double(cleanPrice) ?? 0
-                    case "ph": phValue = Double(value)
+                        if let price = Double(cleanPrice) {
+                            unitPrice = price
+                        }
+                    case "ph": 
+                        if let ph = Double(value) {
+                            phValue = ph
+                        }
                     default: break
                     }
                 }
@@ -62,7 +67,8 @@ final class CSVImportService {
                 }
             }
             
-            try modelContext.save()
+            // Note: We don't call modelContext.save() here to avoid crashes on main actor.
+            // SwiftData will auto-save.
             return .success(importCount)
             
         } catch {
@@ -83,7 +89,6 @@ final class CSVImportService {
             
             for i in 1..<rows.count {
                 let row = rows[i]
-                guard row.count >= headers.count else { continue }
                 
                 var name = ""
                 var category: String?
@@ -91,6 +96,7 @@ final class CSVImportService {
                 var batchUnit = "pcs"
                 
                 for (index, header) in headers.enumerated() {
+                    guard index < row.count else { break }
                     let value = row[index].trimmingCharacters(in: .whitespaces)
                     
                     switch header {
@@ -114,7 +120,6 @@ final class CSVImportService {
                 }
             }
             
-            try modelContext.save()
             return .success(importCount)
             
         } catch {

@@ -256,8 +256,8 @@ final class ManufacturingEntity {
         }
         
         // Fallback: Find previous completed step in time
-        let previousLogs = stepLogs.filter { $0.completedAt != nil && $0.completedAt! < end }
-        let startTime = previousLogs.max(by: { $0.completedAt! < $1.completedAt! })?.completedAt ?? startedAt
+        let previousLogs = stepLogs.filter { $0.completedAt != nil && ($0.completedAt ?? Date.distantPast) < end }
+        let startTime = previousLogs.compactMap { $0.completedAt }.max() ?? startedAt
         
         return end.timeIntervalSince(startTime)
     }

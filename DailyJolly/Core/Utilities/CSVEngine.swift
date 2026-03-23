@@ -9,16 +9,20 @@ final class CSVEngine {
     /// Parse a CSV string into rows and columns
     func parse(_ data: String) -> [[String]] {
         var result: [[String]] = []
-        let rows = data.components(separatedBy: .newlines)
         
-        for row in rows {
-            if row.isEmpty { continue }
+        // Normalize line endings and split
+        let normalizedData = data.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
+        let lines = normalizedData.components(separatedBy: "\n")
+        
+        for line in lines {
+            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+            if trimmedLine.isEmpty { continue }
             
             var columns: [String] = []
             var currentColumn = ""
             var insideQuotes = false
             
-            let characters = Array(row)
+            let characters = Array(line)
             var i = 0
             while i < characters.count {
                 let char = characters[i]

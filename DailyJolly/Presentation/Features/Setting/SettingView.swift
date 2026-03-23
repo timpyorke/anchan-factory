@@ -32,10 +32,12 @@ struct SettingView: View {
             switch result {
             case .success(let urls):
                 if let url = urls.first {
-                    // Start accessing security-scoped resource
-                    if url.startAccessingSecurityScopedResource() {
-                        viewModel.importInventory(from: url, modelContext: modelContext)
-                        url.stopAccessingSecurityScopedResource()
+                    Task {
+                        // Start accessing security-scoped resource
+                        if url.startAccessingSecurityScopedResource() {
+                            viewModel.importInventory(from: url, modelContext: modelContext)
+                            url.stopAccessingSecurityScopedResource()
+                        }
                     }
                 }
             case .failure(let error):
@@ -51,9 +53,11 @@ struct SettingView: View {
             switch result {
             case .success(let urls):
                 if let url = urls.first {
-                    if url.startAccessingSecurityScopedResource() {
-                        viewModel.importRecipes(from: url, modelContext: modelContext)
-                        url.stopAccessingSecurityScopedResource()
+                    Task {
+                        if url.startAccessingSecurityScopedResource() {
+                            viewModel.importRecipes(from: url, modelContext: modelContext)
+                            url.stopAccessingSecurityScopedResource()
+                        }
                     }
                 }
             case .failure(let error):

@@ -131,23 +131,21 @@ final class CSVExportService {
     func exportInventory(_ items: [InventoryEntity]) -> URL? {
         guard !items.isEmpty else { return nil }
 
-        let headers = ["Name", "Category", "Unit", "Stock", "Min Stock", "pH", "Unit Price", "Status"]
+        let headers = ["Name", "Category", "Unit", "Stock", "Min Stock", "pH", "Unit Price"]
         var csv = CSVEngine.shared.formatRow(headers) + "\n"
 
         for item in items {
             let category = item.category ?? "-"
-            let status = item.isLowStock ? "Low Stock" : "OK"
             let phValue = item.phValue.map { String(format: "%.2f", $0) } ?? "-"
 
             let row = [
                 item.name,
                 category,
-                item.displaySymbol,
+                item.unitSymbol,
                 String(format: "%.2f", item.stock),
                 String(format: "%.2f", item.minStock),
                 phValue,
-                String(format: "%.2f", item.unitPrice),
-                status
+                String(format: "%.2f", item.unitPrice)
             ]
             csv += CSVEngine.shared.formatRow(row) + "\n"
         }
