@@ -101,6 +101,8 @@
 "%@ ingredient%@ with insufficient stock" = "%@ ingredient%@ with insufficient stock";
 "Stock: %@ %@" = "Stock: %@ %@";
 "Notes" = "Notes";
+"Duplicate" = "Duplicate";
+"(Copy)" = "(Copy)";
 
 /* Inventory */
 "New Item" = "New Item";

@@ -60,6 +60,20 @@ final class RecipeDetailViewModel {
         }
     }
 
+    func duplicateRecipe(onComplete: (PersistentIdentifier) -> Void) {
+        guard let recipe, let repository else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        switch repository.duplicate(recipe) {
+        case .success(let newRecipe):
+            onComplete(newRecipe.persistentModelID)
+        case .failure(let error):
+            handleError(error)
+        }
+    }
+
     func toggleFavorite() {
         recipe?.isFavorite.toggle()
     }

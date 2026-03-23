@@ -12,6 +12,7 @@ protocol RecipeRepositoryProtocol {
     func delete(_ recipe: RecipeEntity) -> Result<Void, AppError>
     func updateBasicInfo(_ recipe: RecipeEntity, name: String, note: String, category: String?, batchSize: Int, batchUnit: String) -> Result<Void, AppError>
     func rebuildRelationships(_ recipe: RecipeEntity, steps: [RecipeStepInput], ingredients: [RecipeIngredientInput]) -> Result<Void, AppError>
+    func duplicate(_ recipe: RecipeEntity) -> Result<RecipeEntity, AppError>
 }
 
 // MARK: - Input Models for Recipe Updates
@@ -165,6 +166,55 @@ final class RecipeRepository: RecipeRepositoryProtocol {
         }
 
         return save()
+    }
+
+    func duplicate(_ recipe: RecipeEntity) -> Result<RecipeEntity, AppError> {
+        // 1. Create a new recipe with the same basic info
+        let duplicatedName = "\(recipe.name) \(String(localized: "(Copy)"))"
+        let newRecipe = RecipeEntity(
+            name: duplicatedName,
+            note: recipe.note,
+            category: recipe.category,
+            batchSize: recipe.batchSize,
+            batchUnit: recipe.batchUnit,
+            templateType: recipe.templateType
+        )
+
+        // 2. Insert to model context so we can add related objects
+        modelContext.insert(newRecipe)
+
+        // 3. Clone Steps
+        for step in recipe.sortedSteps {
+            let newStep = RecipeStepEntity(
+                title: step.title,
+                note: step.note,
+                time: step.time,
+                order: step.order,
+                requiredMeasurements: step.requiredMeasurements,
+                lineIdentifier: step.lineIdentifier
+            )
+            newStep.recipe = newRecipe
+            newRecipe.steps.append(newStep)
+        }
+
+        // 4. Clone Ingredients
+        for ingredient in recipe.ingredients {
+            let newIngredient = IngredientEntity(
+                inventoryItem: ingredient.inventoryItem,
+                quantity: ingredient.quantity,
+                unitSymbol: ingredient.unitSymbol,
+                note: ingredient.note,
+                recipe: newRecipe
+            )
+            newRecipe.ingredients.append(newIngredient)
+        }
+
+        switch save() {
+        case .success:
+            return .success(newRecipe)
+        case .failure(let error):
+            return .failure(error)
+        }
     }
 
     // MARK: - Private

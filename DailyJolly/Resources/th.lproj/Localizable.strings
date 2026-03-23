@@ -101,6 +101,8 @@
 "%@ ingredient%@ with insufficient stock" = "วัตถุดิบ %@ รายการ%@มีสต็อกไม่เพียงพอ";
 "Stock: %@ %@" = "สต็อก: %@ %@";
 "Notes" = "บันทึก";
+"Duplicate" = "คัดลอกสูตร";
+"(Copy)" = "(สำเนา)";
 
 /* Inventory */
 "New Item" = "รายการใหม่";

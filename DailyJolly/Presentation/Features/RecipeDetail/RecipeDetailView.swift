@@ -37,6 +37,14 @@ struct RecipeDetailView: View {
                             )
                         }
 
+                        Button {
+                            viewModel.duplicateRecipe { newId in
+                                stackRouter.push(.recipeDetail(id: newId))
+                            }
+                        } label: {
+                            Label(String(localized: "Duplicate"), systemImage: "doc.on.doc")
+                        }
+
                         Divider()
 
                         Button(role: .destructive) {

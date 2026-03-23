@@ -71,6 +71,13 @@ struct RecipeView: View {
                             Image(systemName: recipe.isFavorite ? "heart.slash" : "heart")
                         }
                         .tint(recipe.isFavorite ? .gray : .pink)
+
+                        Button {
+                            viewModel.duplicateRecipe(recipe)
+                        } label: {
+                            Image(systemName: "doc.on.doc")
+                        }
+                        .tint(.blue)
                     }
             }
             .onDelete(perform: viewModel.deleteRecipes)

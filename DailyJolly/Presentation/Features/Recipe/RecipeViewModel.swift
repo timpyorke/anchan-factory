@@ -60,6 +60,20 @@ final class RecipeViewModel {
         loadRecipes()
     }
 
+    func duplicateRecipe(_ recipe: RecipeEntity) {
+        guard let repository else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        switch repository.duplicate(recipe) {
+        case .success:
+            loadRecipes()
+        case .failure(let error):
+            handleError(error)
+        }
+    }
+
     func deleteRecipes(at offsets: IndexSet) {
         guard let repository else { return }
 
