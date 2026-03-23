@@ -11,7 +11,7 @@ final class CSVImportService {
     func importInventory(from url: URL, modelContext: ModelContext) -> Result<Int, AppError> {
         do {
             let data = try String(contentsOf: url, encoding: .utf8)
-            let rows = parseCSV(data)
+            let rows = CSVEngine.shared.parse(data)
             
             guard rows.count > 1 else { return .success(0) }
             
@@ -40,7 +40,6 @@ final class CSVImportService {
                     case "stock": stock = Double(value) ?? 0
                     case "min stock": minStock = Double(value) ?? 0
                     case "unit price", "price": 
-                        // Strip currency symbol if present
                         let cleanPrice = value.replacingOccurrences(of: "฿", with: "").replacingOccurrences(of: ",", with: "")
                         unitPrice = Double(cleanPrice) ?? 0
                     case "ph": phValue = Double(value)
@@ -75,7 +74,7 @@ final class CSVImportService {
     func importRecipes(from url: URL, modelContext: ModelContext) -> Result<Int, AppError> {
         do {
             let data = try String(contentsOf: url, encoding: .utf8)
-            let rows = parseCSV(data)
+            let rows = CSVEngine.shared.parse(data)
             
             guard rows.count > 1 else { return .success(0) }
             
@@ -121,43 +120,5 @@ final class CSVImportService {
         } catch {
             return .failure(.databaseError("Import failed: \(error.localizedDescription)"))
         }
-    }
-    
-    private func parseCSV(_ data: String) -> [[String]] {
-        var result: [[String]] = []
-        let rows = data.components(separatedBy: .newlines)
-        
-        for row in rows {
-            if row.isEmpty { continue }
-            
-            var columns: [String] = []
-            var currentColumn = ""
-            var insideQuotes = false
-            
-            let characters = Array(row)
-            var i = 0
-            while i < characters.count {
-                let char = characters[i]
-                
-                if char == "\"" {
-                    if insideQuotes && i + 1 < characters.count && characters[i+1] == "\"" {
-                        currentColumn.append("\"")
-                        i += 1
-                    } else {
-                        insideQuotes.toggle()
-                    }
-                } else if char == "," && !insideQuotes {
-                    columns.append(currentColumn)
-                    currentColumn = ""
-                } else {
-                    currentColumn.append(char)
-                }
-                i += 1
-            }
-            columns.append(currentColumn)
-            result.append(columns)
-        }
-        
-        return result
     }
 }

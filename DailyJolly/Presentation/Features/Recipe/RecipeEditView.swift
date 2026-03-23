@@ -42,7 +42,7 @@ struct RecipeEditView: View {
             ingredientsSection
             stepsSection
 
-            if viewModel.isEditing && !AppSettings.shared.isRecipeEditLocked {
+            if viewModel.isEditing {
                 deleteSection
             }
         }
@@ -57,18 +57,14 @@ struct RecipeEditView: View {
             }
 
             ToolbarItem(placement: .confirmationAction) {
-                if AppSettings.shared.isRecipeEditLocked {
-                    Image(systemName: "lock.fill")
-                        .foregroundStyle(.orange)
-                } else {
-                    Button(String(localized: "Save")) {
-                        viewModel.saveRecipe {
-                            stackRouter.pop()
-                        }
+                Button(String(localized: "Save")) {
+                    viewModel.saveRecipe {
+                        stackRouter.pop()
                     }
-                    .fontWeight(.semibold)
-                    .disabled(!viewModel.canSave)
                 }
+                .fontWeight(.semibold)
+                .disabled(!viewModel.canSave)
+                .recipeEditLocked(hide: false, showIcon: true)
             }
         }
         .sheet(isPresented: $viewModel.isAddingStep) {
@@ -86,7 +82,6 @@ struct RecipeEditView: View {
                 viewModel.addIngredient(newIngredient)
             }
         }
-
         .alert(String(localized: "Delete Recipe"), isPresented: $viewModel.showDeleteAlert) {
             Button(String(localized: "Cancel"), role: .cancel) { }
             Button(String(localized: "Delete"), role: .destructive) {
@@ -187,13 +182,12 @@ struct RecipeEditView: View {
                 }
             }
 
-            if !AppSettings.shared.isRecipeEditLocked {
-                Button {
-                    viewModel.isAddingIngredient = true
-                } label: {
-                    Label(String(localized: "Add Ingredient"), systemImage: "plus.circle.fill")
-                }
+            Button {
+                viewModel.isAddingIngredient = true
+            } label: {
+                Label(String(localized: "Add Ingredient"), systemImage: "plus.circle.fill")
             }
+            .recipeEditLocked(hide: true)
         } header: {
             Text(String(localized: "Ingredients"))
         }
@@ -233,13 +227,12 @@ struct RecipeEditView: View {
                 }
             }
 
-            if !AppSettings.shared.isRecipeEditLocked {
-                Button {
-                    viewModel.isAddingStep = true
-                } label: {
-                    Label(String(localized: "Add Step"), systemImage: "plus.circle.fill")
-                }
+            Button {
+                viewModel.isAddingStep = true
+            } label: {
+                Label(String(localized: "Add Step"), systemImage: "plus.circle.fill")
             }
+            .recipeEditLocked(hide: true)
         } header: {
             Text(String(localized: "Steps"))
         }
@@ -250,15 +243,12 @@ struct RecipeEditView: View {
             Button(role: .destructive) {
                 viewModel.showDeleteAlert = true
             } label: {
-                HStack {
-                    Spacer()
-                    Text(String(localized: "Delete Recipe"))
-                    Spacer()
-                }
+                Text(String(localized: "Delete Recipe"))
+                    .frame(maxWidth: .infinity)
             }
         }
+        .recipeEditLocked(hide: true)
     }
-
 }
 
 // MARK: - Step Row View
@@ -276,7 +266,7 @@ private struct StepRowView: View {
                     Text(step.note)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
+                        .lineLimit(1)
                 }
 
                 HStack(spacing: 8) {
@@ -290,21 +280,25 @@ private struct StepRowView: View {
                 if !step.requiredMeasurements.isEmpty {
                     HStack(spacing: 8) {
                         ForEach(step.requiredMeasurements) { measurement in
-                            HStack(spacing: 2) {
-                                Image(systemName: measurement.icon)
-                                Text(measurement.symbol)
-                            }
-                            .font(.system(size: 10, weight: .medium))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(.blue.opacity(0.1))
-                            .foregroundStyle(.blue)
-                            .clipShape(Capsule())
+                            Label(measurement.rawValue, systemImage: measurement.icon)
+                                .font(.system(size: 10))
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.accentColor.opacity(0.1))
+                                .foregroundStyle(Color.accentColor)
+                                .clipShape(Capsule())
                         }
                     }
                 }
             }
+
             Spacer()
+
+            if step.isTimerRequired {
+                Image(systemName: "stopwatch")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
         }
         .padding(.vertical, 4)
     }
@@ -317,122 +311,84 @@ private struct IngredientRowView: View {
     let onDelete: () -> Void
 
     var body: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(ingredient.inventoryName)
-                    .font(.headline)
-
-                Text("\(AppNumberFormatter.format(ingredient.quantity)) \(ingredient.unitSymbol.uppercased())")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
+                    .font(.subheadline.weight(.medium))
                 if !ingredient.note.isEmpty {
                     Text(ingredient.note)
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
                 }
             }
 
             Spacer()
 
-            Button(role: .destructive) {
-                onDelete()
-            } label: {
-                Image(systemName: "trash")
-                    .font(.caption)
+            Text("\(AppNumberFormatter.format(ingredient.quantity)) \(ingredient.unitSymbol)")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            if !AppSettings.shared.isRecipeEditLocked {
+                Button(action: onDelete) {
+                    Image(systemName: "minus.circle.fill")
+                        .foregroundStyle(.red)
+                }
+                .buttonStyle(.borderless)
+                .padding(.leading, 8)
             }
-            .buttonStyle(.borderless)
         }
-        .padding(.vertical, 4)
     }
 }
 
 // MARK: - Add Ingredient Sheet
 
 private struct AddIngredientSheet: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-
-    @Query(sort: \CustomUnitEntity.name)
-    private var customUnits: [CustomUnitEntity]
-
-    @State private var inventoryItems: [InventoryEntity] = []
-    @State private var selectedInventory: InventoryEntity?
-    @State private var quantity: Double = 1
+    @Environment(\.modelContext) private var modelContext
+    
+    @Query(sort: \InventoryEntity.name)
+    private var inventoryItems: [InventoryEntity]
+    
+    let onSave: (IngredientInput) -> Void
+    
+    @State private var selectedItemId: PersistentIdentifier?
+    @State private var quantity: Double = 0
     @State private var unitSymbol: String = "g"
     @State private var note: String = ""
-    @State private var searchText: String = ""
-
-    let onAdd: (IngredientInput) -> Void
-
-    private var canAdd: Bool {
-        selectedInventory != nil && quantity > 0
-    }
-
-    private var filteredItems: [InventoryEntity] {
-        if searchText.isEmpty {
-            return inventoryItems
-        }
-        return inventoryItems.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-    }
-
+    
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    if inventoryItems.isEmpty {
-                        Text(String(localized: "No inventory items available"))
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Picker(String(localized: "Select Item"), selection: $selectedInventory) {
-                            Text(String(localized: "Select an item")).tag(nil as InventoryEntity?)
-                            ForEach(filteredItems, id: \.persistentModelID) { item in
-                                Text(item.name).tag(item as InventoryEntity?)
-                            }
-                        }
-                        .onChange(of: selectedInventory) { _, newValue in
-                            if let inventory = newValue {
-                                unitSymbol = inventory.unitSymbol
-                            }
+                    Picker(String(localized: "Item"), selection: $selectedItemId) {
+                        Text(String(localized: "Select an item")).tag(nil as PersistentIdentifier?)
+                        ForEach(inventoryItems) { item in
+                            Text(item.name).tag(item.persistentModelID as PersistentIdentifier?)
                         }
                     }
-                } header: {
-                    Text(String(localized: "Inventory Item"))
                 }
-
-                if selectedInventory != nil {
+                
+                if let selectedItemId, let item = inventoryItems.first(where: { $0.persistentModelID == selectedItemId }) {
                     Section {
                         HStack {
                             Text(String(localized: "Quantity"))
                             Spacer()
-                            TextField(String(localized: "Amount"), value: $quantity, format: .number)
+                            TextField("0", value: $quantity, format: .number)
                                 .keyboardType(.decimalPad)
                                 .multilineTextAlignment(.trailing)
                                 .frame(width: 100)
+                            Text(unitSymbol)
+                                .foregroundStyle(.secondary)
                         }
-
+                        
                         Picker(String(localized: "Unit"), selection: $unitSymbol) {
-                            ForEach(InventoryUnit.allCases) { unit in
-                                Text(unit.displayName).tag(unit.rawValue)
-                            }
-
-                            if !customUnits.isEmpty {
-                                Divider()
-                                ForEach(customUnits, id: \.persistentModelID) { unit in
-                                    Text("\(unit.name) (\(unit.symbol.uppercased()))").tag(unit.symbol)
-                                }
-                            }
+                            Text(item.unitSymbol).tag(item.unitSymbol)
+                            // Could add other compatible units here
                         }
-                    } header: {
-                        Text(String(localized: "Amount"))
                     }
-
+                    
                     Section {
-                        TextField(String(localized: "Note (optional)"), text: $note, axis: .vertical)
-                            .lineLimit(2...3)
-                    } header: {
-                        Text(String(localized: "Additional Info"))
+                        TextField(String(localized: "Note (optional)"), text: $note)
                     }
                 }
             }
@@ -444,36 +400,35 @@ private struct AddIngredientSheet: View {
                         dismiss()
                     }
                 }
-
                 ToolbarItem(placement: .confirmationAction) {
                     Button(String(localized: "Add")) {
-                        if let inventory = selectedInventory {
-                            let ingredient = IngredientInput(
-                                inventoryId: inventory.persistentModelID,
-                                inventoryName: inventory.name,
+                        if let selectedItemId, let item = inventoryItems.first(where: { $0.persistentModelID == selectedItemId }) {
+                            let input = IngredientInput(
+                                inventoryId: selectedItemId,
+                                inventoryName: item.name,
                                 quantity: quantity,
                                 unitSymbol: unitSymbol,
                                 note: note
                             )
-                            onAdd(ingredient)
+                            onSave(input)
                             dismiss()
                         }
                     }
-                    .fontWeight(.semibold)
-                    .disabled(!canAdd)
+                    .disabled(selectedItemId == nil || quantity <= 0)
                 }
             }
             .onAppear {
-                loadInventoryItems()
+                if let first = inventoryItems.first {
+                    selectedItemId = first.persistentModelID
+                    unitSymbol = first.unitSymbol
+                }
+            }
+            .onChange(of: selectedItemId) { _, newValue in
+                if let id = newValue, let item = inventoryItems.first(where: { $0.persistentModelID == id }) {
+                    unitSymbol = item.unitSymbol
+                }
             }
         }
-    }
-
-    private func loadInventoryItems() {
-        let descriptor = FetchDescriptor<InventoryEntity>(
-            sortBy: [SortDescriptor(\.name)]
-        )
-        inventoryItems = (try? modelContext.fetch(descriptor)) ?? []
     }
 }
 
@@ -481,8 +436,8 @@ private struct AddIngredientSheet: View {
 
 private struct StepEditSheet: View {
     @Environment(\.dismiss) private var dismiss
-
-    var step: StepInput? = nil
+    
+    var step: StepInput?
     let onSave: (StepInput) -> Void
 
     @State private var title: String = ""
@@ -493,29 +448,24 @@ private struct StepEditSheet: View {
     @State private var lineIdentifier: String = ""
 
     private var isEditing: Bool { step != nil }
-
-    private var canSave: Bool {
-        !title.trimmingCharacters(in: .whitespaces).isEmpty
-    }
+    private var canSave: Bool { !title.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     TextField(String(localized: "Step Title"), text: $title)
-                        .textInputAutocapitalization(.words)
-
                     TextField(String(localized: "Description (optional)"), text: $note, axis: .vertical)
-                        .lineLimit(2...4)
+                        .lineLimit(3...5)
                 } header: {
                     Text(String(localized: "Step Info"))
                 }
 
                 Section {
-                    TextField(String(localized: "Line Identifier (e.g., Line A)"), text: $lineIdentifier)
-                        .textInputAutocapitalization(.sentences)
+                    TextField(String(localized: "Production Line (optional)"), text: $lineIdentifier)
+                        .textInputAutocapitalization(.words)
                 } header: {
-                    Text(String(localized: "Production Line"))
+                    Text(String(localized: "Workflow"))
                 } footer: {
                     Text(String(localized: "Leave empty for main production line"))
                 }
@@ -527,27 +477,29 @@ private struct StepEditSheet: View {
                 }
 
                 Section {
-                    ForEach(MeasurementType.allCases) { measurement in
+                    ForEach(MeasurementType.allCases) { type in
                         Toggle(isOn: Binding(
-                            get: { requiredMeasurements.contains(measurement) },
+                            get: { requiredMeasurements.contains(type) },
                             set: { isOn in
                                 if isOn {
-                                    requiredMeasurements.append(measurement)
+                                    if !requiredMeasurements.contains(type) {
+                                        requiredMeasurements.append(type)
+                                    }
                                 } else {
-                                    requiredMeasurements.removeAll { $0 == measurement }
+                                    requiredMeasurements.removeAll { $0 == type }
                                 }
                             }
                         )) {
-                            Label(measurement.rawValue, systemImage: measurement.icon)
+                            Label(type.rawValue, systemImage: type.icon)
                         }
                     }
                 } header: {
-                    Text(String(localized: "Quality Control"))
+                    Text(String(localized: "Required Measurements"))
                 } footer: {
-                    Text(String(localized: "Select measurements required for this step"))
+                    Text(String(localized: "User must record these values to complete this step"))
                 }
             }
-            .navigationTitle(isEditing ? String(localized: "Edit Step") : String(localized: "Add Step"))
+            .navigationTitle(isEditing ? String(localized: "Edit Step") : String(localized: "New Step"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -555,14 +507,13 @@ private struct StepEditSheet: View {
                         dismiss()
                     }
                 }
-
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isEditing ? String(localized: "Save") : String(localized: "Add")) {
                         let resultStep = StepInput(
                             id: step?.id ?? UUID(),
                             title: title.trimmingCharacters(in: .whitespaces),
                             note: note,
-                            time: isTimerRequired ? time : 0,
+                            time: time,
                             isTimerRequired: isTimerRequired,
                             requiredMeasurements: requiredMeasurements,
                             lineIdentifier: lineIdentifier.isEmpty ? nil : lineIdentifier.trimmingCharacters(in: .whitespaces)

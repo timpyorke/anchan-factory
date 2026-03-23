@@ -22,13 +22,12 @@ struct RecipeDetailView: View {
             if viewModel.recipe != nil {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
-                        if !AppSettings.shared.isRecipeEditLocked {
-                            Button {
-                                stackRouter.push(.recipeEdit(id: id))
-                            } label: {
-                                Label(String(localized: "Edit"), systemImage: "pencil")
-                            }
+                        Button {
+                            stackRouter.push(.recipeEdit(id: id))
+                        } label: {
+                            Label(String(localized: "Edit"), systemImage: "pencil")
                         }
+                        .recipeEditLocked(hide: true)
 
                         Button {
                             viewModel.toggleFavorite()
@@ -39,23 +38,24 @@ struct RecipeDetailView: View {
                             )
                         }
 
-                        if !AppSettings.shared.isRecipeEditLocked {
-                            Button {
-                                viewModel.duplicateRecipe { newId in
-                                    stackRouter.push(.recipeDetail(id: newId))
-                                }
-                            } label: {
-                                Label(String(localized: "Duplicate"), systemImage: "doc.on.doc")
+                        Button {
+                            viewModel.duplicateRecipe { newId in
+                                stackRouter.push(.recipeDetail(id: newId))
                             }
-
-                            Divider()
-
-                            Button(role: .destructive) {
-                                viewModel.showDeleteAlert = true
-                            } label: {
-                                Label(String(localized: "Delete"), systemImage: "trash")
-                            }
+                        } label: {
+                            Label(String(localized: "Duplicate"), systemImage: "doc.on.doc")
                         }
+                        .recipeEditLocked(hide: true)
+
+                        Divider()
+                            .recipeEditLocked(hide: true)
+
+                        Button(role: .destructive) {
+                            viewModel.showDeleteAlert = true
+                        } label: {
+                            Label(String(localized: "Delete"), systemImage: "trash")
+                        }
+                        .recipeEditLocked(hide: true)
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }

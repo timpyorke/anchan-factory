@@ -18,81 +18,51 @@ final class CSVExportService {
 
     private lazy var fileDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd_HHmmss"
+        formatter.dateFormat = "yyyyMMdd_HHmm"
         return formatter
     }()
 
     // MARK: - Manufacturing Export
 
-    /// Export a single manufacturing record with detailed sections
-    func exportManufacturing(_ manufacturing: ManufacturingEntity) -> URL? {
-        var csv = "Manufacturing Report\n"
-        csv += "Generated:,\(dateFormatter.string(from: Date.now))\n\n"
-
-        // Summary Section
-        csv += "SUMMARY\n"
-        csv += "Batch Number,\(manufacturing.batchNumber)\n"
-        csv += "Recipe,\(manufacturing.recipe.name)\n"
-        csv += "Status,\(manufacturing.status.rawValue.capitalized)\n"
-        csv += "Started,\(dateFormatter.string(from: manufacturing.startedAt))\n"
+    /// Export detailed manufacturing record including steps and measurements
+    func exportManufacturingDetail(_ manufacturing: ManufacturingEntity) -> URL? {
+        var csv = "MANUFACTURING RECORD\n"
+        csv += CSVEngine.shared.formatRow(["Batch Number", manufacturing.batchNumber]) + "\n"
+        csv += CSVEngine.shared.formatRow(["Recipe", manufacturing.recipe.name]) + "\n"
+        csv += CSVEngine.shared.formatRow(["Category", manufacturing.recipe.category ?? "-"]) + "\n"
+        csv += CSVEngine.shared.formatRow(["Status", manufacturing.status.rawValue.capitalized]) + "\n"
+        csv += CSVEngine.shared.formatRow(["Started", dateFormatter.string(from: manufacturing.startedAt)]) + "\n"
+        
         if let completedAt = manufacturing.completedAt {
-            csv += "Completed,\(dateFormatter.string(from: completedAt))\n"
-            csv += "Duration,\(formatDuration(manufacturing.totalDuration))\n"
+            csv += CSVEngine.shared.formatRow(["Completed", dateFormatter.string(from: completedAt)]) + "\n"
+            csv += CSVEngine.shared.formatRow(["Total Duration", TimeFormatter.formatDuration(manufacturing.totalDuration)]) + "\n"
         }
+        
+        csv += CSVEngine.shared.formatRow(["Batches", "\(manufacturing.quantity)"]) + "\n"
+        csv += CSVEngine.shared.formatRow(["Total Units", "\(manufacturing.totalUnits) \(manufacturing.recipe.batchUnit)"]) + "\n"
+        csv += CSVEngine.shared.formatRow(["Actual Output", "\(manufacturing.actualOutput ?? Double(manufacturing.totalUnits))"]) + "\n"
+        csv += CSVEngine.shared.formatRow(["Total Cost", String(format: "%.2f", manufacturing.totalCost)]) + "\n"
         csv += "\n"
-
-        // Production Section
-        csv += "PRODUCTION\n"
-        csv += "Batches,\(manufacturing.quantity)\n"
-        csv += "Batch Size,\(manufacturing.recipe.batchSize) \(manufacturing.recipe.batchUnit)\n"
-        csv += "Expected Units,\(manufacturing.totalUnits) \(manufacturing.recipe.batchUnit)\n"
-        if let actual = manufacturing.actualOutput {
-            csv += "Actual Units,\(String(format: "%.2f", actual)) \(manufacturing.recipe.batchUnit)\n"
-        }
-        csv += "\n"
-
-        // Cost Section
-        csv += "COSTS\n"
-        csv += "Total Cost,฿\(String(format: "%.2f", manufacturing.totalCost))\n"
-        csv += "Expected Cost per Unit,฿\(String(format: "%.2f", manufacturing.costPerUnit))\n"
-        if let actual = manufacturing.actualOutput, actual > 0 {
-            let actualPerUnit = manufacturing.totalCost / actual
-            csv += "Actual Cost per Unit,฿\(String(format: "%.2f", actualPerUnit))\n"
-        }
-        csv += "\n"
-
-        // Ingredients Section
-        if !manufacturing.recipe.ingredients.isEmpty {
-            csv += "INGREDIENTS\n"
-            csv += "Item,Quantity,Unit,Unit Price,Subtotal\n"
-            for ingredient in manufacturing.recipe.ingredients {
-                let subtotal = ingredient.quantityInBaseUnit * ingredient.inventoryItem.unitPrice
-                csv += "\(ingredient.inventoryItem.name),"
-                csv += "\(ingredient.quantity),"
-                csv += "\(ingredient.displaySymbol),"
-                csv += "฿\(String(format: "%.2f", ingredient.inventoryItem.unitPrice)),"
-                csv += "฿\(String(format: "%.2f", subtotal))\n"
-            }
-            csv += "\n"
-        }
 
         // Steps Section
         if !manufacturing.recipe.steps.isEmpty {
             csv += "STEPS\n"
-            csv += "Step,Title,Est. Time,Actual Time,Completed At\n"
+            csv += CSVEngine.shared.formatRow(["Step", "Title", "Actual Time", "Completed At"]) + "\n"
             for (index, step) in manufacturing.recipe.sortedSteps.enumerated() {
                 let isCompleted = manufacturing.isStepCompleted(at: index)
                 let actualTime = isCompleted
-                    ? formatDuration(manufacturing.stepDuration(at: index))
+                    ? TimeFormatter.formatDuration(manufacturing.stepDuration(at: index))
                     : "-"
                 let completedAt = manufacturing.stepCompletionTime(at: index)
                     .map { dateFormatter.string(from: $0) } ?? "-"
 
-                csv += "\(index + 1),"
-                csv += "\"\(escapeCSV(step.title))\","
-                csv += "\(TimeFormatter.formatSeconds(step.time)),"
-                csv += "\(actualTime),"
-                csv += "\(completedAt)\n"
+                let row = [
+                    "\(index + 1)",
+                    step.title,
+                    actualTime,
+                    completedAt
+                ]
+                csv += CSVEngine.shared.formatRow(row) + "\n"
             }
             csv += "\n"
         }
@@ -101,19 +71,22 @@ final class CSVExportService {
         let measurements = manufacturing.measurements
         if !measurements.isEmpty {
             csv += "QUALITY CONTROL MEASUREMENTS\n"
-            csv += "Step,Measurement,Value,Unit,Timestamp\n"
+            csv += CSVEngine.shared.formatRow(["Step", "Measurement", "Value", "Unit", "Timestamp"]) + "\n"
             let sortedSteps = manufacturing.recipe.sortedSteps
             for log in measurements.sorted(by: { $0.timestamp < $1.timestamp }) {
                 let stepTitle = log.stepIndex < sortedSteps.count ? sortedSteps[log.stepIndex].title : "Unknown"
-                csv += "\"\(escapeCSV(stepTitle))\","
-                csv += "\(log.type.rawValue),"
-                csv += "\(String(format: "%.2f", log.value)),"
-                csv += "\(log.type.symbol),"
-                csv += "\(dateFormatter.string(from: log.timestamp))\n"
+                let row = [
+                    stepTitle,
+                    log.type.rawValue,
+                    String(format: "%.2f", log.value),
+                    log.type.symbol,
+                    dateFormatter.string(from: log.timestamp)
+                ]
+                csv += CSVEngine.shared.formatRow(row) + "\n"
             }
         }
 
-        let fileName = "Manufacturing_\(manufacturing.batchNumber).csv"
+        let fileName = "Manufacturing_\(manufacturing.batchNumber)"
         return saveCSV(csv, fileName: fileName)
     }
 
@@ -121,23 +94,33 @@ final class CSVExportService {
     func exportAllManufacturing(_ items: [ManufacturingEntity]) -> URL? {
         guard !items.isEmpty else { return nil }
 
-        var csv = "Batch Number,Recipe,Category,Status,Started,Completed,Duration,Batches,Batch Size,Total Units,Actual Units,Total Cost,Cost Per Unit\n"
+        let headers = ["Batch Number", "Recipe", "Category", "Status", "Started", "Completed", "Duration", "Batches", "Batch Size", "Total Units", "Actual Units", "Total Cost", "Cost Per Unit"]
+        var csv = CSVEngine.shared.formatRow(headers) + "\n"
 
         for m in items {
             let status = m.status.rawValue.capitalized
             let started = dateFormatter.string(from: m.startedAt)
             let completed = m.completedAt.map { dateFormatter.string(from: $0) } ?? "-"
-            let duration = m.isCompleted ? formatDuration(m.totalDuration) : "-"
+            let duration = m.isCompleted ? TimeFormatter.formatDuration(m.totalDuration) : "-"
             let category = m.recipe.category ?? "-"
             let actualUnits = m.actualOutput.map { String(format: "%.2f", $0) } ?? String(m.totalUnits)
 
-            csv += "\(m.batchNumber),"
-            csv += "\"\(escapeCSV(m.recipe.name))\","
-            csv += "\"\(escapeCSV(category))\","
-            csv += "\(status),\(started),\(completed),\(duration),"
-            csv += "\(m.quantity),\(m.recipe.batchSize) \(m.recipe.batchUnit),"
-            csv += "\(m.totalUnits),\(actualUnits),฿\(String(format: "%.2f", m.totalCost)),"
-            csv += "฿\(String(format: "%.2f", m.costPerUnit))\n"
+            let row = [
+                m.batchNumber,
+                m.recipe.name,
+                category,
+                status,
+                started,
+                completed,
+                duration,
+                "\(m.quantity)",
+                "\(m.recipe.batchSize) \(m.recipe.batchUnit)",
+                "\(m.totalUnits)",
+                actualUnits,
+                String(format: "%.2f", m.totalCost),
+                String(format: "%.2f", m.costPerUnit)
+            ]
+            csv += CSVEngine.shared.formatRow(row) + "\n"
         }
 
         return saveCSV(csv, fileName: "Manufacturing_Report")
@@ -148,21 +131,25 @@ final class CSVExportService {
     func exportInventory(_ items: [InventoryEntity]) -> URL? {
         guard !items.isEmpty else { return nil }
 
-        var csv = "Name,Category,Unit,Stock,Min Stock,pH,Unit Price,Status\n"
+        let headers = ["Name", "Category", "Unit", "Stock", "Min Stock", "pH", "Unit Price", "Status"]
+        var csv = CSVEngine.shared.formatRow(headers) + "\n"
 
         for item in items {
             let category = item.category ?? "-"
             let status = item.isLowStock ? "Low Stock" : "OK"
             let phValue = item.phValue.map { String(format: "%.2f", $0) } ?? "-"
 
-            csv += "\"\(escapeCSV(item.name))\","
-            csv += "\"\(escapeCSV(category))\","
-            csv += "\(item.displaySymbol),"
-            csv += "\(String(format: "%.2f", item.stock)),"
-            csv += "\(String(format: "%.2f", item.minStock)),"
-            csv += "\(phValue),"
-            csv += "฿\(String(format: "%.2f", item.unitPrice)),"
-            csv += "\(status)\n"
+            let row = [
+                item.name,
+                category,
+                item.displaySymbol,
+                String(format: "%.2f", item.stock),
+                String(format: "%.2f", item.minStock),
+                phValue,
+                String(format: "%.2f", item.unitPrice),
+                status
+            ]
+            csv += CSVEngine.shared.formatRow(row) + "\n"
         }
 
         return saveCSV(csv, fileName: "Inventory_Report")
@@ -173,22 +160,26 @@ final class CSVExportService {
     func exportRecipes(_ items: [RecipeEntity]) -> URL? {
         guard !items.isEmpty else { return nil }
 
-        var csv = "Name,Category,Batch Size,Batch Unit,Total Cost,Cost Per Unit,Steps,Ingredients,Required QC\n"
+        let headers = ["Name", "Category", "Batch Size", "Batch Unit", "Total Cost", "Cost Per Unit", "Steps", "Ingredients", "Required QC"]
+        var csv = CSVEngine.shared.formatRow(headers) + "\n"
 
         for recipe in items {
             let category = recipe.category ?? "-"
             let ingredientNames = recipe.ingredients.map { $0.inventoryItem.name }.joined(separator: "; ")
             let qcTypes = Set(recipe.steps.flatMap { $0.requiredMeasurements }).map { $0.rawValue }.joined(separator: "; ")
 
-            csv += "\"\(escapeCSV(recipe.name))\","
-            csv += "\"\(escapeCSV(category))\","
-            csv += "\(recipe.batchSize),"
-            csv += "\(recipe.batchUnit),"
-            csv += "฿\(String(format: "%.2f", recipe.totalCost)),"
-            csv += "฿\(String(format: "%.2f", recipe.costPerUnit)),"
-            csv += "\(recipe.steps.count),"
-            csv += "\"\(escapeCSV(ingredientNames))\","
-            csv += "\"\(escapeCSV(qcTypes))\"\n"
+            let row = [
+                recipe.name,
+                category,
+                "\(recipe.batchSize)",
+                recipe.batchUnit,
+                String(format: "%.2f", recipe.totalCost),
+                String(format: "%.2f", recipe.costPerUnit),
+                "\(recipe.steps.count)",
+                ingredientNames,
+                qcTypes
+            ]
+            csv += CSVEngine.shared.formatRow(row) + "\n"
         }
 
         return saveCSV(csv, fileName: "Recipe_Report")
@@ -207,24 +198,5 @@ final class CSVExportService {
             print("[CSVExportService] Failed to save CSV: \(error)")
             return nil
         }
-    }
-
-    private func formatDuration(_ interval: TimeInterval) -> String {
-        let totalSeconds = Int(interval)
-        let hours = totalSeconds / 3600
-        let minutes = (totalSeconds % 3600) / 60
-        let seconds = totalSeconds % 60
-
-        if hours > 0 {
-            return "\(hours)h \(minutes)m"
-        } else if minutes > 0 {
-            return "\(minutes)m \(seconds)s"
-        } else {
-            return "\(seconds)s"
-        }
-    }
-
-    private func escapeCSV(_ text: String) -> String {
-        text.replacingOccurrences(of: "\"", with: "\"\"")
     }
 }

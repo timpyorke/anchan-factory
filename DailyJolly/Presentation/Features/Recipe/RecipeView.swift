@@ -21,14 +21,13 @@ struct RecipeView: View {
                     EmptyView()
                 }
             } trailing: {
-                if !AppSettings.shared.isRecipeEditLocked {
-                    Button {
-                        stackRouter.push(.recipeAdd)
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.title3)
-                    }
+                Button {
+                    stackRouter.push(.recipeAdd)
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.title3)
                 }
+                .recipeEditLocked(hide: true)
             }
 
             if viewModel.recipes.isEmpty {
@@ -60,15 +59,14 @@ struct RecipeView: View {
         } description: {
             Text(String(localized: "Add your first recipe to get started."))
         } actions: {
-            if !AppSettings.shared.isRecipeEditLocked {
-                Button {
-                    stackRouter.push(.recipeAdd)
-                } label: {
-                    Text(String(localized: "Add Recipe"))
-                        .fontWeight(.semibold)
-                }
-                .buttonStyle(.borderedProminent)
+            Button {
+                stackRouter.push(.recipeAdd)
+            } label: {
+                Text(String(localized: "Add Recipe"))
+                    .fontWeight(.semibold)
             }
+            .buttonStyle(.borderedProminent)
+            .recipeEditLocked(hide: true)
         }
         .frame(maxHeight: .infinity)
     }
@@ -78,12 +76,11 @@ struct RecipeView: View {
     private var listContent: some View {
         List {
             ForEach(viewModel.filteredRecipes, id: \.persistentModelID) { recipe in
-                Button {
+                ListRow(action: {
                     stackRouter.push(.recipeDetail(id: recipe.persistentModelID))
-                } label: {
+                }) {
                     RecipeRowView(recipe: recipe)
                 }
-                .buttonStyle(.row)
                 .swipeActions(edge: .leading) {
                     Button {
                         viewModel.toggleFavorite(recipe)
@@ -92,14 +89,13 @@ struct RecipeView: View {
                     }
                     .tint(recipe.isFavorite ? .gray : .pink)
 
-                    if !AppSettings.shared.isRecipeEditLocked {
-                        Button {
-                            viewModel.duplicateRecipe(recipe)
-                        } label: {
-                            Image(systemName: "doc.on.doc")
-                        }
-                        .tint(.blue)
+                    Button {
+                        viewModel.duplicateRecipe(recipe)
+                    } label: {
+                        Image(systemName: "doc.on.doc")
                     }
+                    .tint(.blue)
+                    .recipeEditLocked(hide: true)
                 }
             }
             .onDelete { offsets in

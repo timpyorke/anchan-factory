@@ -44,4 +44,19 @@ final class RecipeStepEntity {
         // Now set computed property
         self.requiredMeasurements = requiredMeasurements
     }
+
+    /// Create a clone of this step for a new recipe
+    func clone(for recipe: RecipeEntity) -> RecipeStepEntity {
+        let newStep = RecipeStepEntity(
+            title: title,
+            note: note,
+            time: time,
+            isTimerRequired: isTimerRequired,
+            order: order,
+            requiredMeasurements: requiredMeasurements,
+            lineIdentifier: lineIdentifier
+        )
+        newStep.recipe = recipe
+        return newStep
+    }
 }

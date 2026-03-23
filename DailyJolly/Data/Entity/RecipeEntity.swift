@@ -88,4 +88,34 @@ final class RecipeEntity {
     var insufficientCount: Int {
         insufficientIngredients.count
     }
+
+    /// Create a deep clone of this recipe
+    func clone(into context: ModelContext) -> RecipeEntity {
+        let duplicatedName = "\(name) \(String(localized: "(Copy)"))"
+        let newRecipe = RecipeEntity(
+            name: duplicatedName,
+            note: note,
+            category: category,
+            batchSize: batchSize,
+            batchUnit: batchUnit,
+            templateType: templateType
+        )
+
+        // Insert to context first so we can add relationships
+        context.insert(newRecipe)
+
+        // Clone steps
+        for step in sortedSteps {
+            let newStep = step.clone(for: newRecipe)
+            newRecipe.steps.append(newStep)
+        }
+
+        // Clone ingredients
+        for ingredient in ingredients {
+            let newIngredient = ingredient.clone(for: newRecipe)
+            newRecipe.ingredients.append(newIngredient)
+        }
+
+        return newRecipe
+    }
 }

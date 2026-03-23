@@ -57,4 +57,15 @@ final class IngredientEntity {
     var shortage: Double {
         max(0, quantityInBaseUnit - inventoryItem.stock)
     }
+
+    /// Create a clone of this ingredient for a new recipe
+    func clone(for recipe: RecipeEntity) -> IngredientEntity {
+        IngredientEntity(
+            inventoryItem: inventoryItem,
+            quantity: quantity,
+            unitSymbol: unitSymbol,
+            note: note,
+            recipe: recipe
+        )
+    }
 }
