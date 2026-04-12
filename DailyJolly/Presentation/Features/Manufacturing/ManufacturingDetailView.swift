@@ -133,6 +133,14 @@ struct ManufacturingDetailView: View {
                     }
                 }
 
+                // Process Visualization
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Process Analysis")
+                        .font(.title3.bold())
+                    
+                    ManufacturingProcessVisualizer(manufacturing: manufacturing)
+                }
+
                 // Time Summary
                 if !manufacturing.recipe.steps.isEmpty {
                     timeSummary(manufacturing)
