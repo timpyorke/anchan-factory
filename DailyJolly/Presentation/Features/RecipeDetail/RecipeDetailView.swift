@@ -10,13 +10,16 @@ struct RecipeDetailView: View {
 
     var body: some View {
         Group {
-            if let recipe = viewModel.recipe {
+            if viewModel.isDeleting {
+                ProgressView(String(localized: "Deleting..."))
+                    .frame(maxHeight: .infinity)
+            } else if let recipe = viewModel.recipe {
                 recipeContent(recipe)
             } else {
                 ContentUnavailableView(String(localized: "Recipe Not Found"), systemImage: "book")
             }
         }
-        .navigationTitle(viewModel.recipe?.name ?? String(localized: "Recipe"))
+        .navigationTitle(viewModel.recipeName.isEmpty ? String(localized: "Recipe") : viewModel.recipeName)
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             if viewModel.recipe != nil {
@@ -70,7 +73,11 @@ struct RecipeDetailView: View {
                 }
             }
         } message: {
-            Text(String(localized: "Are you sure you want to delete this recipe?"))
+            if let recipe = viewModel.recipe, !recipe.manufacturingRecords.isEmpty {
+                Text(String(localized: "This recipe has \(recipe.manufacturingRecords.count) manufacturing records. Deleting it will also delete all associated history. Are you sure?"))
+            } else {
+                Text(String(localized: "Are you sure you want to delete this recipe?"))
+            }
         }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK") { }

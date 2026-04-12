@@ -3,6 +3,8 @@ import SwiftData
 
 struct RecipeView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query(sort: \RecipeEntity.createdAt, order: .reverse) private var recipes: [RecipeEntity]
+    
     let stackRouter: StackRouter
     @State private var viewModel = RecipeViewModel()
     @State private var showPinVerify = false
@@ -30,7 +32,7 @@ struct RecipeView: View {
                 .recipeEditLocked(hide: true)
             }
 
-            if viewModel.recipes.isEmpty {
+            if recipes.isEmpty {
                 emptyState
             } else {
                 listContent
@@ -74,8 +76,12 @@ struct RecipeView: View {
     // MARK: - List Content
 
     private var listContent: some View {
-        List {
-            ForEach(viewModel.filteredRecipes, id: \.persistentModelID) { recipe in
+        let filteredRecipes = recipes.filter { recipe in
+            viewModel.searchText.isEmpty || recipe.name.localizedCaseInsensitiveContains(viewModel.searchText)
+        }
+        
+        return List {
+            ForEach(filteredRecipes, id: \.persistentModelID) { recipe in
                 ListRow(action: {
                     stackRouter.push(.recipeDetail(id: recipe.persistentModelID))
                 }) {
@@ -100,7 +106,11 @@ struct RecipeView: View {
             }
             .onDelete { offsets in
                 if !AppSettings.shared.isRecipeEditLocked {
-                    viewModel.deleteRecipes(at: offsets)
+                    let itemsToDelete = offsets.map { filteredRecipes[$0] }
+                    for recipe in itemsToDelete {
+                        modelContext.delete(recipe)
+                    }
+                    try? modelContext.save()
                 }
             }
         }

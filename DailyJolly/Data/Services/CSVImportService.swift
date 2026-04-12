@@ -67,8 +67,8 @@ final class CSVImportService {
                 }
             }
             
-            // Note: We don't call modelContext.save() here to avoid crashes on main actor.
-            // SwiftData will auto-save.
+            // Promote IDs by saving
+            try modelContext.save()
             return .success(importCount)
             
         } catch {
@@ -120,6 +120,7 @@ final class CSVImportService {
                 }
             }
             
+            try modelContext.save()
             return .success(importCount)
             
         } catch {

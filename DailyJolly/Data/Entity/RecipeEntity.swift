@@ -24,6 +24,9 @@ final class RecipeEntity {
     @Relationship(deleteRule: .cascade)
     var steps: [RecipeStepEntity] = []
 
+    @Relationship(deleteRule: .cascade, inverse: \ManufacturingEntity.recipe)
+    var manufacturingRecords: [ManufacturingEntity] = []
+
     init(
         name: String,
         note: String = "",
@@ -41,6 +44,7 @@ final class RecipeEntity {
         self.templateTypeRawValue = nil
         self.createdAt = Date.now
         self.templateType = templateType
+        self.manufacturingRecords = []
     }
 
     var totalTime: Int {

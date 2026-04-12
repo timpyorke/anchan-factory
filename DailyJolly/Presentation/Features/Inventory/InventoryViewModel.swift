@@ -72,11 +72,12 @@ final class InventoryViewModel {
         isDeleting = true
         defer { isDeleting = false }
 
-        for index in offsets {
-            let item = filteredItems[index]
+        let itemsToDelete = offsets.map { filteredItems[$0] }
+
+        for item in itemsToDelete {
             switch repository.delete(item) {
             case .success:
-                break
+                items.removeAll { $0.persistentModelID == item.persistentModelID }
             case .failure(let error):
                 handleError(error)
                 return

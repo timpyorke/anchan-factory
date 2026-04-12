@@ -12,13 +12,16 @@ struct ManufacturingDetailView: View {
 
     var body: some View {
         Group {
-            if let manufacturing = viewModel.manufacturing {
+            if viewModel.isDeleting {
+                ProgressView(String(localized: "Deleting..."))
+                    .frame(maxHeight: .infinity)
+            } else if let manufacturing = viewModel.manufacturing {
                 contentView(manufacturing)
             } else {
                 ContentUnavailableView("Not Found", systemImage: "exclamationmark.triangle")
             }
         }
-        .navigationTitle(viewModel.manufacturing?.recipe.name ?? "Manufacturing")
+        .navigationTitle(viewModel.manufacturingName.isEmpty ? String(localized: "Manufacturing") : viewModel.manufacturingName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

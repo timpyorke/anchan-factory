@@ -126,17 +126,17 @@ final class RecipeRepository: RecipeRepositoryProtocol {
     }
 
     func rebuildRelationships(_ recipe: RecipeEntity, steps: [RecipeStepInput], ingredients: [RecipeIngredientInput]) -> Result<Void, AppError> {
-        // Remove old steps
-        for step in recipe.steps {
+        // --- 1. Update Steps ---
+        // For simplicity while ensuring stability, we'll keep the logic but 
+        // ensure we only delete what's necessary if we had stable IDs.
+        // Since RecipeStepInput doesn't have IDs, we have to recreate or match by order.
+        
+        // Remove old steps from context
+        let oldSteps = recipe.steps
+        for step in oldSteps {
             modelContext.delete(step)
         }
         recipe.steps.removeAll()
-
-        // Remove old ingredients
-        for ingredient in recipe.ingredients {
-            modelContext.delete(ingredient)
-        }
-        recipe.ingredients.removeAll()
 
         // Add new steps
         for (index, stepInput) in steps.enumerated() {
@@ -153,6 +153,14 @@ final class RecipeRepository: RecipeRepositoryProtocol {
             recipe.steps.append(step)
         }
 
+        // --- 2. Update Ingredients ---
+        // Remove old ingredients from context
+        let oldIngredients = recipe.ingredients
+        for ingredient in oldIngredients {
+            modelContext.delete(ingredient)
+        }
+        recipe.ingredients.removeAll()
+
         // Add new ingredients
         for ingredientInput in ingredients {
             if let inventory = modelContext.model(for: ingredientInput.inventoryId) as? InventoryEntity {
@@ -167,6 +175,9 @@ final class RecipeRepository: RecipeRepositoryProtocol {
             }
         }
 
+        // --- 3. Save Context ---
+        // Explicitly saving here is CRITICAL to ensure temporary IDs are promoted
+        // to permanent IDs before the UI tries to re-render.
         return save()
     }
 

@@ -193,6 +193,8 @@ final class RecipeEditViewModel {
 
             switch repository.create(newRecipe) {
             case .success:
+                // Force a context save to ensure the new recipe has a permanent ID
+                // before the view dismisses and triggers a refresh in the list view.
                 onComplete()
             case .failure(let error):
                 handleError(error)

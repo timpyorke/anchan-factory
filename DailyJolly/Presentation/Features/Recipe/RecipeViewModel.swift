@@ -80,16 +80,18 @@ final class RecipeViewModel {
         isDeleting = true
         defer { isDeleting = false }
 
-        for index in offsets {
-            let recipe = filteredRecipes[index]
+        let itemsToDelete = offsets.map { filteredRecipes[$0] }
+        
+        for recipe in itemsToDelete {
             switch repository.delete(recipe) {
             case .success:
-                break
+                recipes.removeAll { $0.persistentModelID == recipe.persistentModelID }
             case .failure(let error):
                 handleError(error)
                 return
             }
         }
+        // Final refresh to ensure alignment
         loadRecipes()
     }
 

@@ -3,6 +3,8 @@ import SwiftData
 
 struct InventoryView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query(sort: \InventoryEntity.name) private var items: [InventoryEntity]
+    
     @State private var viewModel = InventoryViewModel()
 
     var body: some View {
@@ -18,7 +20,7 @@ struct InventoryView: View {
                 }
             }
 
-            if viewModel.items.isEmpty {
+            if items.isEmpty {
                 emptyState
             } else {
                 listContent
@@ -26,13 +28,13 @@ struct InventoryView: View {
         }
         .sheet(isPresented: $viewModel.isShowingAddSheet) {
             InventoryAddView {
-                viewModel.loadItems()
+                // Refresh handled by @Query
             }
         }
         .sheet(isPresented: $viewModel.isShowingEditSheet) {
             if let item = viewModel.editingItem {
                 InventoryAddView(editingItem: item) {
-                    viewModel.loadItems()
+                    // Refresh handled by @Query
                 }
             }
         }
@@ -68,15 +70,25 @@ struct InventoryView: View {
     // MARK: - List Content
 
     private var listContent: some View {
-        List {
-            ForEach(viewModel.filteredItems, id: \.persistentModelID) { item in
+        let filteredItems = items.filter { item in
+            viewModel.searchText.isEmpty || item.name.localizedCaseInsensitiveContains(viewModel.searchText)
+        }
+        
+        return List {
+            ForEach(filteredItems, id: \.persistentModelID) { item in
                 ListRow(action: {
                     viewModel.edit(item)
                 }) {
                     InventoryRowView(item: item)
                 }
             }
-            .onDelete(perform: viewModel.deleteItems)
+            .onDelete { offsets in
+                let itemsToDelete = offsets.map { filteredItems[$0] }
+                for item in itemsToDelete {
+                    modelContext.delete(item)
+                }
+                try? modelContext.save()
+            }
         }
         .listStyle(.plain)
         .searchable(text: $viewModel.searchText, prompt: String(localized: "Search inventory"))

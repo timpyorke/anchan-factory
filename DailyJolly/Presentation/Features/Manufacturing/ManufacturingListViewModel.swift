@@ -91,6 +91,7 @@ final class ManufacturingListViewModel {
 
         switch repository.delete(manufacturing) {
         case .success:
+            allManufacturing.removeAll { $0.persistentModelID == manufacturing.persistentModelID }
             loadData()
         case .failure(let error):
             handleError(error)

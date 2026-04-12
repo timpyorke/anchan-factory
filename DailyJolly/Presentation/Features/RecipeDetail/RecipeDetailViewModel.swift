@@ -9,6 +9,7 @@ final class RecipeDetailViewModel {
     // MARK: - State
 
     private(set) var recipe: RecipeEntity?
+    private(set) var recipeName: String = ""
 
     // MARK: - UI State
 
@@ -40,6 +41,7 @@ final class RecipeDetailViewModel {
         switch repository.fetch(by: id) {
         case .success(let fetchedRecipe):
             recipe = fetchedRecipe
+            recipeName = fetchedRecipe.name
         case .failure(let error):
             print("[RecipeDetailViewModel] Failed to load recipe: \(error)")
             recipe = nil
@@ -50,12 +52,13 @@ final class RecipeDetailViewModel {
         guard let recipe, let repository else { return }
 
         isDeleting = true
-        defer { isDeleting = false }
 
         switch repository.delete(recipe) {
         case .success:
+            self.recipe = nil
             onComplete()
         case .failure(let error):
+            isDeleting = false
             handleError(error)
         }
     }

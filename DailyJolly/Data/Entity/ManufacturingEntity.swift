@@ -31,7 +31,6 @@ final class ManufacturingEntity {
     @Relationship(deleteRule: .cascade)
     var measurements: [MeasurementLogEntity] = []
 
-    @Relationship
     var recipe: RecipeEntity
 
     init(

@@ -4,12 +4,14 @@ import SwiftData
 struct ManufacturingListView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(StackRouter.self) private var stackRouter
+    
+    @Query(sort: \ManufacturingEntity.startedAt, order: .reverse) private var allManufacturing: [ManufacturingEntity]
 
     @State private var viewModel = ManufacturingListViewModel()
 
     var body: some View {
         Group {
-            if viewModel.allManufacturing.isEmpty {
+            if allManufacturing.isEmpty {
                 emptyState
             } else {
                 listContent
@@ -31,7 +33,23 @@ struct ManufacturingListView: View {
     // MARK: - List Content
 
     private var listContent: some View {
-        VStack(spacing: 0) {
+        let filteredManufacturing = allManufacturing.filter { item in
+            let matchesStatus: Bool
+            switch viewModel.selectedFilter {
+            case .all: matchesStatus = true
+            case .active: matchesStatus = item.status == .inProgress
+            case .completed: matchesStatus = item.status == .completed
+            case .cancelled: matchesStatus = item.status == .cancelled
+            }
+            
+            let matchesSearch = viewModel.searchText.isEmpty || 
+                item.recipe.name.localizedCaseInsensitiveContains(viewModel.searchText) ||
+                item.batchNumber.localizedCaseInsensitiveContains(viewModel.searchText)
+            
+            return matchesStatus && matchesSearch
+        }
+        
+        return VStack(spacing: 0) {
             // Filter Picker
             filterPicker
                 .padding(.horizontal)
@@ -41,14 +59,15 @@ struct ManufacturingListView: View {
 
             // List
             List {
-                ForEach(viewModel.filteredManufacturing, id: \.persistentModelID) { manufacturing in
+                ForEach(filteredManufacturing, id: \.persistentModelID) { manufacturing in
                     ManufacturingListRow(manufacturing: manufacturing) {
                         navigateToDetail(manufacturing)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         if manufacturing.status != .inProgress {
                             Button(role: .destructive) {
-                                viewModel.deleteManufacturing(manufacturing)
+                                modelContext.delete(manufacturing)
+                                try? modelContext.save()
                             } label: {
                                 Label(String(localized: "Delete"), systemImage: "trash")
                             }
@@ -82,13 +101,13 @@ struct ManufacturingListView: View {
     private func countForFilter(_ filter: ManufacturingFilter) -> Int {
         switch filter {
         case .all:
-            return viewModel.allManufacturing.count
+            return allManufacturing.count
         case .active:
-            return viewModel.activeCount
+            return allManufacturing.filter { $0.status == .inProgress }.count
         case .completed:
-            return viewModel.completedCount
+            return allManufacturing.filter { $0.status == .completed }.count
         case .cancelled:
-            return viewModel.cancelledCount
+            return allManufacturing.filter { $0.status == .cancelled }.count
         }
     }
 

@@ -9,6 +9,7 @@ final class ManufacturingDetailViewModel {
     // MARK: - State
 
     private(set) var manufacturing: ManufacturingEntity?
+    private(set) var manufacturingName: String = ""
 
     // MARK: - UI State
 
@@ -43,6 +44,7 @@ final class ManufacturingDetailViewModel {
         switch repository.fetch(by: id) {
         case .success(let item):
             manufacturing = item
+            manufacturingName = item.recipe.name
         case .failure(let error):
             print("[ManufacturingDetailViewModel] Failed to load manufacturing: \(error)")
             manufacturing = nil
@@ -53,12 +55,13 @@ final class ManufacturingDetailViewModel {
         guard let manufacturing, let repository else { return }
 
         isDeleting = true
-        defer { isDeleting = false }
 
         switch repository.delete(manufacturing) {
         case .success:
+            self.manufacturing = nil
             onComplete()
         case .failure(let error):
+            isDeleting = false
             handleError(error)
         }
     }
