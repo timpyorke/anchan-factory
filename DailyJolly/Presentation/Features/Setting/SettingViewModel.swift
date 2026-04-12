@@ -15,6 +15,7 @@ final class SettingViewModel {
     var exportURL: URL?
     var showImportSuccess = false
     var importCount = 0
+    var skippedCount = 0
     var showClearDataAlert = false
     var showAddUnitSheet = false
     var showRestartAlert = false
@@ -184,8 +185,9 @@ final class SettingViewModel {
         defer { isLoading = false }
 
         switch importService.importInventory(from: url, modelContext: modelContext) {
-        case .success(let count):
-            importCount = count
+        case .success(let result):
+            importCount = result.0
+            skippedCount = result.1
             showImportSuccess = true
         case .failure(let error):
             handleError(error)
@@ -197,8 +199,9 @@ final class SettingViewModel {
         defer { isLoading = false }
 
         switch importService.importRecipes(from: url, modelContext: modelContext) {
-        case .success(let count):
-            importCount = count
+        case .success(let result):
+            importCount = result.0
+            skippedCount = result.1
             showImportSuccess = true
         case .failure(let error):
             handleError(error)

@@ -65,10 +65,14 @@ struct SettingView: View {
                 viewModel.showError = true
             }
         }
-        .alert(String(localized: "Import Successful"), isPresented: $viewModel.showImportSuccess) {
+        .alert(String(localized: "Import Result"), isPresented: $viewModel.showImportSuccess) {
             Button(String(localized: "OK")) { }
         } message: {
-            Text(String(localized: "Successfully imported \(viewModel.importCount) items."))
+            if viewModel.skippedCount > 0 {
+                Text(String(localized: "Successfully imported \(viewModel.importCount) items.\nSkipped \(viewModel.skippedCount) invalid rows."))
+            } else {
+                Text(String(localized: "Successfully imported \(viewModel.importCount) items."))
+            }
         }
         .sheet(isPresented: $showPinSetup) {
             PinEntryView(mode: .setup) { newPin in

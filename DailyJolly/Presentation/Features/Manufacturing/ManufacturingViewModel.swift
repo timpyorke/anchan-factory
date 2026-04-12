@@ -130,7 +130,8 @@ final class ManufacturingViewModel {
             let inventoryItem = ingredient.inventoryItem
             let oldStock = inventoryItem.stock
 
-            inventoryItem.stock -= quantityToDeduct
+            // Prevent stock from dropping below 0
+            inventoryItem.stock = max(0, inventoryItem.stock - quantityToDeduct)
 
             print("[ManufacturingViewModel]   - \(inventoryItem.name): \(oldStock) → \(inventoryItem.stock) \(inventoryItem.displaySymbol) (-\(quantityToDeduct))")
         }

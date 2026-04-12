@@ -13,11 +13,22 @@ final class RecipeDetailViewModel {
 
     // MARK: - UI State
 
+    var targetBatchCount: Int = 1
     var showDeleteAlert = false
     var isLoading = false
     var isDeleting = false
     var errorMessage: String?
     var showError = false
+
+    // MARK: - Computed
+
+    var scaledTotalCost: Double {
+        (recipe?.totalCost ?? 0) * Double(targetBatchCount)
+    }
+
+    var scaledOutput: Int {
+        (recipe?.batchSize ?? 1) * targetBatchCount
+    }
 
     // MARK: - Dependencies
 

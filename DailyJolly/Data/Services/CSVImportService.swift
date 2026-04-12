@@ -8,15 +8,16 @@ final class CSVImportService {
     private init() {}
     
     /// Import inventory from CSV
-    func importInventory(from url: URL, modelContext: ModelContext) -> Result<Int, AppError> {
+    func importInventory(from url: URL, modelContext: ModelContext) -> Result<(Int, Int), AppError> {
         do {
             let data = try String(contentsOf: url, encoding: .utf8)
             let rows = CSVEngine.shared.parse(data)
             
-            guard rows.count > 1 else { return .success(0) }
+            guard rows.count > 1 else { return .success((0, 0)) }
             
             let headers = rows[0].map { $0.lowercased().trimmingCharacters(in: .whitespaces) }
             var importCount = 0
+            var skippedCount = 0
             
             for i in 1..<rows.count {
                 let row = rows[i]
@@ -64,12 +65,15 @@ final class CSVImportService {
                     )
                     modelContext.insert(item)
                     importCount += 1
+                } else {
+                    skippedCount += 1
                 }
             }
             
             // Promote IDs by saving
             try modelContext.save()
-            return .success(importCount)
+            print("[CSVImportService] Imported \(importCount) inventory items. Skipped \(skippedCount) invalid rows.")
+            return .success((importCount, skippedCount))
             
         } catch {
             return .failure(.databaseError("Import failed: \(error.localizedDescription)"))
@@ -77,15 +81,16 @@ final class CSVImportService {
     }
     
     /// Import recipes from CSV (Basic info only)
-    func importRecipes(from url: URL, modelContext: ModelContext) -> Result<Int, AppError> {
+    func importRecipes(from url: URL, modelContext: ModelContext) -> Result<(Int, Int), AppError> {
         do {
             let data = try String(contentsOf: url, encoding: .utf8)
             let rows = CSVEngine.shared.parse(data)
             
-            guard rows.count > 1 else { return .success(0) }
+            guard rows.count > 1 else { return .success((0, 0)) }
             
             let headers = rows[0].map { $0.lowercased().trimmingCharacters(in: .whitespaces) }
             var importCount = 0
+            var skippedCount = 0
             
             for i in 1..<rows.count {
                 let row = rows[i]
@@ -117,11 +122,14 @@ final class CSVImportService {
                     )
                     modelContext.insert(recipe)
                     importCount += 1
+                } else {
+                    skippedCount += 1
                 }
             }
             
             try modelContext.save()
-            return .success(importCount)
+            print("[CSVImportService] Imported \(importCount) recipes. Skipped \(skippedCount) invalid rows.")
+            return .success((importCount, skippedCount))
             
         } catch {
             return .failure(.databaseError("Import failed: \(error.localizedDescription)"))

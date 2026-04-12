@@ -130,14 +130,28 @@ struct RecipeDetailView: View {
                 }
             }
 
-            HStack(spacing: 16) {
-                HStack(spacing: 4) {
-                    Image(systemName: "shippingbox")
-                    Text("\(recipe.batchSize) \(recipe.batchUnit)")
+            // Target Batch Scaling
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(String(localized: "Target Output"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Image(systemName: "shippingbox.fill")
+                            .foregroundStyle(Color.accentColor)
+                        Text("\(viewModel.scaledOutput) \(recipe.batchUnit)")
+                            .font(.headline)
+                    }
                 }
+                
+                Spacer()
+                
+                Stepper("", value: $viewModel.targetBatchCount, in: 1...100)
+                    .labelsHidden()
             }
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .padding()
+            .background(.fill.quinary)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
 
             // Cost breakdown
             if recipe.totalCost > 0 {
@@ -149,10 +163,10 @@ struct RecipeDetailView: View {
     private func costBreakdownView(_ recipe: RecipeEntity) -> some View {
         VStack(spacing: 8) {
             HStack {
-                Text(String(localized: "Batch Cost"))
+                Text(String(localized: "Total Cost"))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text(CurrencyFormatter.format(recipe.totalCost))
+                Text(CurrencyFormatter.format(viewModel.scaledTotalCost))
                     .fontWeight(.medium)
             }
 
@@ -221,7 +235,7 @@ struct RecipeDetailView: View {
                 Text(String(localized: "Ingredients"))
                     .font(.title2.bold())
 
-                if !recipe.hasEnoughInventory {
+                if !hasEnoughScaledInventory(recipe) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
                 }
@@ -229,18 +243,19 @@ struct RecipeDetailView: View {
                 Spacer()
 
                 if recipe.totalCost > 0 {
-                    Text(CurrencyFormatter.format(recipe.totalCost))
+                    Text(CurrencyFormatter.format(viewModel.scaledTotalCost))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
             }
 
             // Warning banner if insufficient
-            if !recipe.hasEnoughInventory {
+            if !hasEnoughScaledInventory(recipe) {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                    let pluralSuffix = recipe.insufficientCount > 1 ? "s" : ""
-                    Text(String(localized: "\(recipe.insufficientCount) ingredient\(pluralSuffix) with insufficient stock"))
+                    let count = insufficientScaledCount(recipe)
+                    let pluralSuffix = count > 1 ? "s" : ""
+                    Text(String(localized: "\(count) ingredient\(pluralSuffix) with insufficient stock"))
                 }
                 .font(.caption)
                 .foregroundStyle(.orange)
@@ -262,8 +277,11 @@ struct RecipeDetailView: View {
     }
 
     private func ingredientRow(_ ingredient: IngredientEntity) -> some View {
-        let hasStock = ingredient.hasEnoughStock
-        let cost = ingredient.quantityInBaseUnit * ingredient.inventoryItem.unitPrice
+        let scaledQuantity = ingredient.quantity * Double(viewModel.targetBatchCount)
+        let scaledBaseQuantity = ingredient.quantityInBaseUnit * Double(viewModel.targetBatchCount)
+        let hasStock = ingredient.inventoryItem.stock >= scaledBaseQuantity
+        let scaledCost = scaledBaseQuantity * ingredient.inventoryItem.unitPrice
+        
         return HStack {
             Image(systemName: hasStock ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                 .font(.system(size: 12))
@@ -275,20 +293,31 @@ struct RecipeDetailView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(AppNumberFormatter.format(ingredient.quantity)) \(ingredient.displaySymbol)")
+                Text("\(AppNumberFormatter.format(scaledQuantity)) \(ingredient.displaySymbol)")
                     .foregroundStyle(.secondary)
 
                 if !hasStock {
                     Text(String(localized: "Stock: \(AppNumberFormatter.format(ingredient.inventoryItem.stock)) \(ingredient.inventoryItem.displaySymbol)"))
                         .font(.caption2)
                         .foregroundStyle(Color.orange)
-                } else if cost > 0 {
-                    Text(CurrencyFormatter.format(cost))
+                } else if scaledCost > 0 {
+                    Text(CurrencyFormatter.format(scaledCost))
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
             }
         }
+    }
+    
+    private func hasEnoughScaledInventory(_ recipe: RecipeEntity) -> Bool {
+        return insufficientScaledCount(recipe) == 0
+    }
+    
+    private func insufficientScaledCount(_ recipe: RecipeEntity) -> Int {
+        recipe.ingredients.filter { ingredient in
+            let scaledBaseQuantity = ingredient.quantityInBaseUnit * Double(viewModel.targetBatchCount)
+            return ingredient.inventoryItem.stock < scaledBaseQuantity
+        }.count
     }
 
     private func notesSection(_ recipe: RecipeEntity) -> some View {

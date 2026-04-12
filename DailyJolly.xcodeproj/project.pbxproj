@@ -6,19 +6,48 @@
 	objectVersion = 90;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		39C3DB27F0D531E981A0FEE7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCE7EE460D0177F3784849C0 /* Foundation.framework */; };
+		C1EE74A9DBF68FBF6F070398 /* DailyJollyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3A92396040380E635EE364 /* DailyJollyTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F1F6B996A9A65F592F96A6BA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 89EF15532F21185000493825 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 89EF155A2F21185000493825;
+			remoteInfo = DailyJolly;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		0B998E7313FCEA393C9735C4 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		20D6D0CB30C3E0D29218AFE3 /* DailyJollyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DailyJollyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2C3A92396040380E635EE364 /* DailyJollyTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DailyJollyTests.swift; sourceTree = "<group>"; };
 		89EF155B2F21185000493825 /* DailyJolly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyJolly.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CCE7EE460D0177F3784849C0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		89EF155D2F21185000493825 /* DailyJolly */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = DailyJolly;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		17AB970BEA70CD735AAF50C8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				39C3DB27F0D531E981A0FEE7 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		89EF15582F21185000493825 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -27,11 +56,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		71DD19E99AC0BED18F54D501 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				CCE7EE460D0177F3784849C0 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
 		89EF15522F21185000493825 = {
 			isa = PBXGroup;
 			children = (
 				89EF155D2F21185000493825 /* DailyJolly */,
 				89EF155C2F21185000493825 /* Products */,
+				C53FD05D65C6D8692C9C06C1 /* Frameworks */,
+				ACC5CDE2CB0E0EC37505689D /* DailyJollyTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -39,8 +78,27 @@
 			isa = PBXGroup;
 			children = (
 				89EF155B2F21185000493825 /* DailyJolly.app */,
+				20D6D0CB30C3E0D29218AFE3 /* DailyJollyTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		ACC5CDE2CB0E0EC37505689D /* DailyJollyTests */ = {
+			isa = PBXGroup;
+			children = (
+				0B998E7313FCEA393C9735C4 /* Info.plist */,
+				2C3A92396040380E635EE364 /* DailyJollyTests.swift */,
+			);
+			name = DailyJollyTests;
+			path = DailyJollyTests;
+			sourceTree = "<group>";
+		};
+		C53FD05D65C6D8692C9C06C1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				71DD19E99AC0BED18F54D501 /* iOS */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -56,6 +114,8 @@
 			);
 			buildRules = (
 			);
+			dependencies = (
+			);
 			fileSystemSynchronizedGroups = (
 				89EF155D2F21185000493825 /* DailyJolly */,
 			);
@@ -63,6 +123,24 @@
 			productName = DailyJolly;
 			productReference = 89EF155B2F21185000493825 /* DailyJolly.app */;
 			productType = "com.apple.product-type.application";
+		};
+		8D74FDE21D100554A66F1A88 /* DailyJollyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2FA297348A16A0F2AEFA80DF /* Build configuration list for PBXNativeTarget "DailyJollyTests" */;
+			buildPhases = (
+				3FE8E8451CE202036E432CF7 /* Sources */,
+				17AB970BEA70CD735AAF50C8 /* Frameworks */,
+				074230158406481DF41C1EBF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F29B9F557FF161DC06040B83 /* PBXTargetDependency */,
+			);
+			name = DailyJollyTests;
+			productName = DailyJollyTests;
+			productReference = 20D6D0CB30C3E0D29218AFE3 /* DailyJollyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -95,11 +173,20 @@
 			projectRoot = "";
 			targets = (
 				89EF155A2F21185000493825 /* DailyJolly */,
+				8D74FDE21D100554A66F1A88 /* DailyJollyTests */,
+				8D74FDE21D100554A66F1A88 /* DailyJollyTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		074230158406481DF41C1EBF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		89EF15592F21185000493825 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
@@ -108,6 +195,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3FE8E8451CE202036E432CF7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C1EE74A9DBF68FBF6F070398 /* DailyJollyTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		89EF15572F21185000493825 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -115,8 +210,44 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		F29B9F557FF161DC06040B83 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = DailyJolly;
+			target = 89EF155A2F21185000493825 /* DailyJolly */;
+			targetProxy = F1F6B996A9A65F592F96A6BA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		89EF15642F21185200493825 /* Debug configuration for PBXProject "DailyJolly" */ = {
+		256488682BDC5CDE39E2BB7A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				INFOPLIST_FILE = DailyJollyTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codenour.anchan.DailyJollyTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DailyJolly.app/DailyJolly";
+			};
+			name = Debug;
+		};
+		4BF4C1B76B3F896DCC6071C2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				INFOPLIST_FILE = DailyJollyTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codenour.anchan.DailyJollyTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DailyJolly.app/DailyJolly";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		89EF15642F21185200493825 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -181,7 +312,7 @@
 			};
 			name = Debug;
 		};
-		89EF15652F21185200493825 /* Release configuration for PBXProject "DailyJolly" */ = {
+		89EF15652F21185200493825 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -239,7 +370,7 @@
 			};
 			name = Release;
 		};
-		89EF15672F21185200493825 /* Debug configuration for PBXNativeTarget "DailyJolly" */ = {
+		89EF15672F21185200493825 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -274,7 +405,7 @@
 			};
 			name = Debug;
 		};
-		89EF15682F21185200493825 /* Release configuration for PBXNativeTarget "DailyJolly" */ = {
+		89EF15682F21185200493825 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -312,19 +443,28 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2FA297348A16A0F2AEFA80DF /* Build configuration list for PBXNativeTarget "DailyJollyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4BF4C1B76B3F896DCC6071C2 /* Release */,
+				256488682BDC5CDE39E2BB7A /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		89EF15562F21185000493825 /* Build configuration list for PBXProject "DailyJolly" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				89EF15642F21185200493825 /* Debug configuration for PBXProject "DailyJolly" */,
-				89EF15652F21185200493825 /* Release configuration for PBXProject "DailyJolly" */,
+				89EF15642F21185200493825 /* Debug */,
+				89EF15652F21185200493825 /* Release */,
 			);
 			defaultConfigurationName = Release;
 		};
 		89EF15662F21185200493825 /* Build configuration list for PBXNativeTarget "DailyJolly" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				89EF15672F21185200493825 /* Debug configuration for PBXNativeTarget "DailyJolly" */,
-				89EF15682F21185200493825 /* Release configuration for PBXNativeTarget "DailyJolly" */,
+				89EF15672F21185200493825 /* Debug */,
+				89EF15682F21185200493825 /* Release */,
 			);
 			defaultConfigurationName = Release;
 		};
