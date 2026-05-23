@@ -111,7 +111,7 @@ jobs:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
             PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PROVISIONING_PROFILE_NAME }}" \
-            | xcpretty
+            2>&1 | tee "$RUNNER_TEMP/xcodebuild-archive.log" | xcpretty
 
       - name: Export IPA
         run: |
@@ -120,7 +120,15 @@ jobs:
             -archivePath "$RUNNER_TEMP/DailyJolly.xcarchive" \
             -exportOptionsPlist "$EXPORT_OPTIONS_PLIST" \
             -exportPath "$RUNNER_TEMP/export" \
-            | xcpretty
+            2>&1 | tee "$RUNNER_TEMP/xcodebuild-export.log" | xcpretty
+
+      - name: Upload xcodebuild logs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-logs
+          path: ${{ runner.temp }}/xcodebuild-*.log
+          retention-days: 3
 
       - name: Verify IPA exists
         run: |
