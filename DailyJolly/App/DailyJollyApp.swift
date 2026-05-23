@@ -11,10 +11,10 @@ struct DailyJollyApp: App {
         WindowGroup {
             MainView()
                 .preferredColorScheme(settings.theme.colorScheme)
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
         .modelContainer(container)
-        .onOpenURL { url in
-            GIDSignIn.sharedInstance.handle(url)
-        }
     }
 }
