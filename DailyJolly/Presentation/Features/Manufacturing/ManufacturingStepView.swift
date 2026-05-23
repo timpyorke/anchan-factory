@@ -165,8 +165,7 @@ struct ManufacturingStepView: View {
                             }
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.green.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .liquidGlassCard(tint: .green, opacity: 0.15, cornerRadius: 12)
                             
                             Button {
                                 viewModel.recordStepTime(at: index)
@@ -257,8 +256,7 @@ struct ManufacturingStepView: View {
                             }
                         }
                         .padding()
-                        .background(.fill.quinary)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .liquidGlassMaterial(cornerRadius: 12)
                     }
                 }
 
@@ -293,8 +291,7 @@ struct ManufacturingStepView: View {
             }
         }
         .padding()
-        .background(.fill.quinary)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .liquidGlassMaterial(cornerRadius: 12)
     }
 
     private func ingredientRow(_ ingredient: IngredientEntity) -> some View {

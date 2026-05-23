@@ -88,9 +88,9 @@ struct BackupSyncView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     if let date = viewModel.lastBackupDate {
-                        Text(date, style: .relative)
-                            .font(.body)
                         Text(date, style: .date)
+                            .font(.body)
+                        Text(date, style: .time)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     } else {
