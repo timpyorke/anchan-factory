@@ -6,6 +6,8 @@ enum AppError: LocalizedError {
     case exportError(String)
     case notFound(String)
     case insufficientStock(String)
+    case backupError(String)
+    case authenticationError(String)
     case unknown(Error)
 
     var errorDescription: String? {
@@ -20,6 +22,10 @@ enum AppError: LocalizedError {
             return "\(message) not found"
         case .insufficientStock(let message):
             return "Insufficient Stock: \(message)"
+        case .backupError(let message):
+            return "Backup Error: \(message)"
+        case .authenticationError(let message):
+            return "Authentication Error: \(message)"
         case .unknown(let error):
             return "An unexpected error occurred: \(error.localizedDescription)"
         }
@@ -37,6 +43,10 @@ enum AppError: LocalizedError {
             return "The item may have been deleted."
         case .insufficientStock:
             return "Please add more inventory before manufacturing."
+        case .backupError:
+            return "Please check your internet connection and try again."
+        case .authenticationError:
+            return "Please sign in to your Google account and try again."
         case .unknown:
             return "Please try again later."
         }

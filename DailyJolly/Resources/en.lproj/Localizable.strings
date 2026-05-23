@@ -211,3 +211,27 @@
 "steps" = "steps";
 "ingredient" = "ingredient";
 "ingredients" = "ingredients";
+
+/* Cloud Backup */
+"Cloud Backup" = "Cloud Backup";
+"Google Drive Backup" = "Google Drive Backup";
+"Google Account" = "Google Account";
+"Connect Google Account" = "Connect Google Account";
+"Sign in with Google to back up your data to Google Drive." = "Sign in with Google to back up your data to Google Drive.";
+"Connected" = "Connected";
+"Backup" = "Backup";
+"Last Backup" = "Last Backup";
+"Never backed up" = "Never backed up";
+"Back Up Now" = "Back Up Now";
+"Automation" = "Automation";
+"Auto-backup on Launch" = "Auto-backup on Launch";
+"Automatically back up your data each time the app opens." = "Automatically back up your data each time the app opens.";
+"Restore from Backup" = "Restore from Backup";
+"No backups found" = "No backups found";
+"Restoring will replace all current data. This cannot be undone." = "Restoring will replace all current data. This cannot be undone.";
+"Restore Backup" = "Restore Backup";
+"Restore" = "Restore";
+"This will replace all existing data with \"%@\". This action cannot be undone." = "This will replace all existing data with \"%@\". This action cannot be undone.";
+"Backup Restored" = "Backup Restored";
+"Your data has been successfully restored from the backup." = "Your data has been successfully restored from the backup.";
+"Disconnect Google Account" = "Disconnect Google Account";

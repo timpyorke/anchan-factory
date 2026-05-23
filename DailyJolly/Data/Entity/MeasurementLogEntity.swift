@@ -3,6 +3,7 @@ import Foundation
 
 @Model
 final class MeasurementLogEntity {
+    var backupId: String = ""
     var typeRawValue: String
     var value: Double
     var timestamp: Date

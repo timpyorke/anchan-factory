@@ -3,6 +3,7 @@ import Foundation
 
 @Model
 final class CustomUnitEntity {
+    var backupId: String = ""
     var symbol: String          // "cup", "tbsp"
     var name: String            // "Cup", "Tablespoon"
     var createdAt: Date

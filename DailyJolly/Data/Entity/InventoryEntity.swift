@@ -4,6 +4,7 @@ import Foundation
 @Model
 final class InventoryEntity {
 
+    var backupId: String = ""
     var name: String               // "Sugar"
     var category: String?          // "Baking"
     var unitSymbol: String         // "g", "ml", "pcs", or custom like "cup"

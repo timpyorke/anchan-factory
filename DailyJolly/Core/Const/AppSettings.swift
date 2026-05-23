@@ -29,6 +29,22 @@ final class AppSettings {
         }
     }
 
+    var lastBackupDate: Date? {
+        didSet {
+            if let date = lastBackupDate {
+                UserDefaults.standard.set(date.timeIntervalSince1970, forKey: "last_backup_date")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "last_backup_date")
+            }
+        }
+    }
+
+    var autoBackupOnLaunch: Bool {
+        didSet {
+            UserDefaults.standard.set(autoBackupOnLaunch, forKey: "auto_backup_on_launch")
+        }
+    }
+
     private init() {
         let themeRaw = UserDefaults.standard.string(forKey: "app_theme") ?? "system"
         self.theme = AppTheme(rawValue: themeRaw) ?? .system
@@ -38,6 +54,10 @@ final class AppSettings {
 
         self.isRecipeEditLocked = UserDefaults.standard.bool(forKey: "is_recipe_edit_locked")
         self.recipePin = UserDefaults.standard.string(forKey: "recipe_pin")
+
+        let interval = UserDefaults.standard.double(forKey: "last_backup_date")
+        self.lastBackupDate = interval > 0 ? Date(timeIntervalSince1970: interval) : nil
+        self.autoBackupOnLaunch = UserDefaults.standard.bool(forKey: "auto_backup_on_launch")
     }
 
     private func updateLanguage() {

@@ -4,6 +4,7 @@ import Foundation
 @Model
 final class RecipeStepEntity {
 
+    var backupId: String = ""
     var title: String
     var note: String
     var time: Int              // minutes
