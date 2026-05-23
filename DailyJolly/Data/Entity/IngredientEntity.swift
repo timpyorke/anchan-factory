@@ -3,6 +3,7 @@ import Foundation
 
 @Model
 final class IngredientEntity {
+    var backupId: String = ""
     var quantity: Double            // 100
     var unitSymbol: String          // "g", "ml", or custom
     var note: String?

@@ -4,6 +4,7 @@ import Foundation
 @Model
 final class RecipeEntity {
 
+    var backupId: String = ""
     var name: String
     var note: String
     var category: String?

@@ -22,9 +22,8 @@ struct HomeView: View {
                         .font(.subheadline.bold())
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.1))
                         .foregroundStyle(.blue)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .liquidGlassCard(tint: .blue, opacity: 0.15)
                 }
 
                 // Low Stock Alert Section
@@ -163,9 +162,8 @@ struct HomeView: View {
             }
             .padding()
             .frame(maxWidth: .infinity)
-            .background(Color.accentColor)
             .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .liquidGlassProminent(tint: .accentColor, cornerRadius: 16)
         }
     }
 
@@ -196,8 +194,7 @@ struct HomeView: View {
             }
         }
         .padding()
-        .background(.orange.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .liquidGlassCard(tint: .orange, opacity: 0.12, cornerRadius: 16)
     }
 
     private var activeSection: some View {
@@ -324,8 +321,7 @@ private struct ManufacturingCard: View {
                 }
             }
             .padding()
-            .background(.fill.quinary)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .liquidGlassMaterial(cornerRadius: 12)
         }
         .buttonStyle(.plain)
     }
@@ -568,8 +564,7 @@ private struct SummaryCard: View {
         }
         .frame(maxWidth: fullWidth ? .infinity : nil)
         .padding()
-        .background(color.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .liquidGlassCard(tint: color, opacity: 0.12)
     }
 }
 

@@ -1,6 +1,8 @@
 import SwiftUI
+import SwiftData
 
 struct MainView: View {
+    @Environment(\.modelContext) private var modelContext
     @State private var tabRouter = TabRouter()
     @State private var stackRouter = StackRouter()
 
@@ -54,5 +56,11 @@ struct MainView: View {
             }
         }
         .environment(stackRouter)
+        .task {
+            await BackupService.shared.restorePreviousSession()
+            if AppSettings.shared.autoBackupOnLaunch && BackupService.shared.isSignedIn {
+                try? await BackupService.shared.performBackup(modelContext: modelContext)
+            }
+        }
     }
 }

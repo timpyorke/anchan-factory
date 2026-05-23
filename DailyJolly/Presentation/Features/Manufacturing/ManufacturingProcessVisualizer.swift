@@ -172,19 +172,22 @@ struct ProcessAnalyticsView: View {
                 let completedIndices = manufacturing.completedStepIndices.sorted()
                 
                 Chart {
+                    let sortedSteps = manufacturing.recipe.sortedSteps
                     ForEach(completedIndices, id: \.self) { index in
-                        let duration = manufacturing.stepDuration(at: index)
-                        let step = manufacturing.recipe.sortedSteps[index]
-                        
-                        BarMark(
-                            x: .value("Step", "Step \(index + 1)"),
-                            y: .value("Duration", duration / 60)
-                        )
-                        .foregroundStyle(duration / 60 > Double(step.time) ? Color.orange : Color.green)
-                        .annotation(position: .top) {
-                            Text("\(Int(duration / 60))m")
-                                .font(.system(size: 8))
-                                .foregroundStyle(.secondary)
+                        if index >= 0 && index < sortedSteps.count {
+                            let duration = manufacturing.stepDuration(at: index)
+                            let step = sortedSteps[index]
+
+                            BarMark(
+                                x: .value("Step", "Step \(index + 1)"),
+                                y: .value("Duration", duration / 60)
+                            )
+                            .foregroundStyle(duration / 60 > Double(step.time) ? Color.orange : Color.green)
+                            .annotation(position: .top) {
+                                Text("\(Int(duration / 60))m")
+                                    .font(.system(size: 8))
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }

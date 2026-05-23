@@ -67,14 +67,17 @@ final class InventoryViewModel {
     }
 
     func deleteItems(at offsets: IndexSet) {
+        let itemsToDelete = offsets.map { filteredItems[$0] }
+        delete(items: itemsToDelete)
+    }
+
+    func delete(items toDelete: [InventoryEntity]) {
         guard let repository else { return }
 
         isDeleting = true
         defer { isDeleting = false }
 
-        let itemsToDelete = offsets.map { filteredItems[$0] }
-
-        for item in itemsToDelete {
+        for item in toDelete {
             switch repository.delete(item) {
             case .success:
                 items.removeAll { $0.persistentModelID == item.persistentModelID }

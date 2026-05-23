@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		39C3DB27F0D531E981A0FEE7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCE7EE460D0177F3784849C0 /* Foundation.framework */; };
+		A5560EE12FC1A4D30025A7D8 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A5560EE02FC1A4D30025A7D8 /* GoogleSignIn */; };
 		C1EE74A9DBF68FBF6F070398 /* DailyJollyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3A92396040380E635EE364 /* DailyJollyTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -23,16 +24,27 @@
 
 /* Begin PBXFileReference section */
 		0B998E7313FCEA393C9735C4 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		20D6D0CB30C3E0D29218AFE3 /* DailyJollyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DailyJollyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		20D6D0CB30C3E0D29218AFE3 /* DailyJollyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = DailyJollyTests.xctest; path = .xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2C3A92396040380E635EE364 /* DailyJollyTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DailyJollyTests.swift; sourceTree = "<group>"; };
 		89EF155B2F21185000493825 /* DailyJolly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyJolly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCE7EE460D0177F3784849C0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A5560E1B2FC1A2AF0025A7D8 /* Exceptions for "DailyJolly" folder in "DailyJolly" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 89EF155A2F21185000493825 /* DailyJolly */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		89EF155D2F21185000493825 /* DailyJolly */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				A5560E1B2FC1A2AF0025A7D8 /* Exceptions for "DailyJolly" folder in "DailyJolly" target */,
 			);
 			path = DailyJolly;
 			sourceTree = "<group>";
@@ -42,15 +54,14 @@
 /* Begin PBXFrameworksBuildPhase section */
 		17AB970BEA70CD735AAF50C8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				39C3DB27F0D531E981A0FEE7 /* Foundation.framework in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		89EF15582F21185000493825 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				A5560EE12FC1A4D30025A7D8 /* GoogleSignIn in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -89,7 +100,6 @@
 				0B998E7313FCEA393C9735C4 /* Info.plist */,
 				2C3A92396040380E635EE364 /* DailyJollyTests.swift */,
 			);
-			name = DailyJollyTests;
 			path = DailyJollyTests;
 			sourceTree = "<group>";
 		};
@@ -114,12 +124,13 @@
 			);
 			buildRules = (
 			);
-			dependencies = (
-			);
 			fileSystemSynchronizedGroups = (
 				89EF155D2F21185000493825 /* DailyJolly */,
 			);
 			name = DailyJolly;
+			packageProductDependencies = (
+				A5560EE02FC1A4D30025A7D8 /* GoogleSignIn */,
+			);
 			productName = DailyJolly;
 			productReference = 89EF155B2F21185000493825 /* DailyJolly.app */;
 			productType = "com.apple.product-type.application";
@@ -167,13 +178,15 @@
 			);
 			mainGroup = 89EF15522F21185000493825;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A5560E192FC1A1DF0025A7D8 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 89EF155C2F21185000493825 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				89EF155A2F21185000493825 /* DailyJolly */,
-				8D74FDE21D100554A66F1A88 /* DailyJollyTests */,
 				8D74FDE21D100554A66F1A88 /* DailyJollyTests */,
 			);
 		};
@@ -182,10 +195,8 @@
 /* Begin PBXResourcesBuildPhase section */
 		074230158406481DF41C1EBF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		89EF15592F21185000493825 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
@@ -197,11 +208,9 @@
 /* Begin PBXSourcesBuildPhase section */
 		3FE8E8451CE202036E432CF7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				C1EE74A9DBF68FBF6F070398 /* DailyJollyTests.swift in Sources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		89EF15572F21185000493825 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -220,7 +229,7 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		256488682BDC5CDE39E2BB7A /* Debug */ = {
+		256488682BDC5CDE39E2BB7A /* Debug configuration for PBXNativeTarget "DailyJollyTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -233,7 +242,7 @@
 			};
 			name = Debug;
 		};
-		4BF4C1B76B3F896DCC6071C2 /* Release */ = {
+		4BF4C1B76B3F896DCC6071C2 /* Release configuration for PBXNativeTarget "DailyJollyTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -247,7 +256,7 @@
 			};
 			name = Release;
 		};
-		89EF15642F21185200493825 /* Debug */ = {
+		89EF15642F21185200493825 /* Debug configuration for PBXProject "DailyJolly" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -312,7 +321,7 @@
 			};
 			name = Debug;
 		};
-		89EF15652F21185200493825 /* Release */ = {
+		89EF15652F21185200493825 /* Release configuration for PBXProject "DailyJolly" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -370,7 +379,7 @@
 			};
 			name = Release;
 		};
-		89EF15672F21185200493825 /* Debug */ = {
+		89EF15672F21185200493825 /* Debug configuration for PBXNativeTarget "DailyJolly" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -380,6 +389,7 @@
 				DEVELOPMENT_TEAM = K2C2F57T2L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DailyJolly/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Daily Jolly";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera to take photos of manufacturing steps.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "We need access to your photo library to save and select photos.";
@@ -405,7 +415,7 @@
 			};
 			name = Debug;
 		};
-		89EF15682F21185200493825 /* Release */ = {
+		89EF15682F21185200493825 /* Release configuration for PBXNativeTarget "DailyJolly" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -415,6 +425,7 @@
 				DEVELOPMENT_TEAM = K2C2F57T2L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DailyJolly/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Daily Jolly";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to your camera to take photos of manufacturing steps.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "We need access to your photo library to save and select photos.";
@@ -446,29 +457,47 @@
 		2FA297348A16A0F2AEFA80DF /* Build configuration list for PBXNativeTarget "DailyJollyTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4BF4C1B76B3F896DCC6071C2 /* Release */,
-				256488682BDC5CDE39E2BB7A /* Debug */,
+				4BF4C1B76B3F896DCC6071C2 /* Release configuration for PBXNativeTarget "DailyJollyTests" */,
+				256488682BDC5CDE39E2BB7A /* Debug configuration for PBXNativeTarget "DailyJollyTests" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		89EF15562F21185000493825 /* Build configuration list for PBXProject "DailyJolly" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				89EF15642F21185200493825 /* Debug */,
-				89EF15652F21185200493825 /* Release */,
+				89EF15642F21185200493825 /* Debug configuration for PBXProject "DailyJolly" */,
+				89EF15652F21185200493825 /* Release configuration for PBXProject "DailyJolly" */,
 			);
 			defaultConfigurationName = Release;
 		};
 		89EF15662F21185200493825 /* Build configuration list for PBXNativeTarget "DailyJolly" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				89EF15672F21185200493825 /* Debug */,
-				89EF15682F21185200493825 /* Release */,
+				89EF15672F21185200493825 /* Debug configuration for PBXNativeTarget "DailyJolly" */,
+				89EF15682F21185200493825 /* Release configuration for PBXNativeTarget "DailyJolly" */,
 			);
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A5560E192FC1A1DF0025A7D8 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A5560EE02FC1A4D30025A7D8 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A5560E192FC1A1DF0025A7D8 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 89EF15532F21185000493825 /* Project object */;
 }

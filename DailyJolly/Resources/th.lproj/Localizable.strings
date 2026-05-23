@@ -266,3 +266,27 @@
 "High-temperature activation, heat stable" = "กระตุ้นที่อุณหภูมิสูง, ทนความร้อน";
 "Shear thinning, thermoreversible" = "คืนรูปได้ด้วยความร้อน";
 "Gelatinization at specific temperature" = "เกิดเจลที่อุณหภูมิเฉพาะ";
+
+/* Cloud Backup */
+"Cloud Backup" = "สำรองข้อมูลบนคลาวด์";
+"Google Drive Backup" = "สำรองข้อมูลใน Google Drive";
+"Google Account" = "บัญชี Google";
+"Connect Google Account" = "เชื่อมต่อบัญชี Google";
+"Sign in with Google to back up your data to Google Drive." = "ลงชื่อเข้าใช้ Google เพื่อสำรองข้อมูลไปยัง Google Drive";
+"Connected" = "เชื่อมต่อแล้ว";
+"Backup" = "สำรองข้อมูล";
+"Last Backup" = "สำรองข้อมูลล่าสุด";
+"Never backed up" = "ยังไม่เคยสำรองข้อมูล";
+"Back Up Now" = "สำรองข้อมูลเดี๋ยวนี้";
+"Automation" = "การทำงานอัตโนมัติ";
+"Auto-backup on Launch" = "สำรองข้อมูลอัตโนมัติเมื่อเปิดแอป";
+"Automatically back up your data each time the app opens." = "สำรองข้อมูลโดยอัตโนมัติทุกครั้งที่เปิดแอป";
+"Restore from Backup" = "กู้คืนข้อมูลจาก Backup";
+"No backups found" = "ไม่พบข้อมูลสำรอง";
+"Restoring will replace all current data. This cannot be undone." = "การกู้คืนจะแทนที่ข้อมูลปัจจุบันทั้งหมด ไม่สามารถยกเลิกได้";
+"Restore Backup" = "กู้คืนข้อมูล";
+"Restore" = "กู้คืน";
+"This will replace all existing data with \"%@\". This action cannot be undone." = "ข้อมูลปัจจุบันทั้งหมดจะถูกแทนที่ด้วย \"%@\" ไม่สามารถยกเลิกได้";
+"Backup Restored" = "กู้คืนข้อมูลสำเร็จ";
+"Your data has been successfully restored from the backup." = "กู้คืนข้อมูลจากไฟล์สำรองเรียบร้อยแล้ว";
+"Disconnect Google Account" = "ยกเลิกการเชื่อมต่อบัญชี Google";

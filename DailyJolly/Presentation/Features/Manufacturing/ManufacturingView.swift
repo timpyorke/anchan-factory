@@ -58,9 +58,20 @@ struct ManufacturingView: View {
             ToolbarItem(placement: .cancellationAction) {
                 if viewModel.manufacturing?.isCompleted == false {
                     Button {
-                        viewModel.showExitOptions = true
+                        stackRouter.pop()
                     } label: {
                         Image(systemName: "chevron.left")
+                    }
+                }
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                if viewModel.manufacturing?.isCompleted == false {
+                    Button(role: .destructive) {
+                        viewModel.showCancelAlert = true
+                    } label: {
+                        Text(String(localized: "Cancel"))
+                            .foregroundStyle(.red)
                     }
                 }
             }
@@ -73,17 +84,6 @@ struct ManufacturingView: View {
                     .fontWeight(.semibold)
                 }
             }
-        }
-        .confirmationDialog(String(localized: "Exit Manufacturing"), isPresented: $viewModel.showExitOptions, titleVisibility: .visible) {
-            Button(String(localized: "Save & Exit")) {
-                stackRouter.pop()
-            }
-            Button(String(localized: "Cancel Manufacturing"), role: .destructive) {
-                viewModel.showCancelAlert = true
-            }
-            Button(String(localized: "Keep Working"), role: .cancel) { }
-        } message: {
-            Text(String(localized: "Your progress is automatically saved. You can continue later."))
         }
         .alert(String(localized: "Cancel Manufacturing"), isPresented: $viewModel.showCancelAlert) {
             Button(String(localized: "Go Back"), role: .cancel) { }

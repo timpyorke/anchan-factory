@@ -3,6 +3,7 @@ import Foundation
 
 @Model
 final class ManufacturingStepLogEntity {
+    var backupId: String = ""
     var stepIndex: Int
     var note: String = ""
     var startedAt: Date?

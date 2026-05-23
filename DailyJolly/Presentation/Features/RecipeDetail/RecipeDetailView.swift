@@ -150,8 +150,7 @@ struct RecipeDetailView: View {
                     .labelsHidden()
             }
             .padding()
-            .background(.fill.quinary)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .liquidGlassMaterial(cornerRadius: 12)
 
             // Cost breakdown
             if recipe.totalCost > 0 {
@@ -224,8 +223,7 @@ struct RecipeDetailView: View {
                 }
             }
             .padding()
-            .background(.fill.quinary)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .liquidGlassMaterial(cornerRadius: 12)
         }
     }
 
@@ -261,8 +259,7 @@ struct RecipeDetailView: View {
                 .foregroundStyle(.orange)
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.orange.opacity(0.15))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .liquidGlassCard(tint: .orange, opacity: 0.18, cornerRadius: 8)
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -271,8 +268,7 @@ struct RecipeDetailView: View {
                 }
             }
             .padding()
-            .background(.fill.quinary)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .liquidGlassMaterial(cornerRadius: 12)
         }
     }
 

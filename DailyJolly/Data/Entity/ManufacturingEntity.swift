@@ -11,6 +11,7 @@ enum ManufacturingStatus: String, Codable {
 @Model
 final class ManufacturingEntity {
 
+    var backupId: String = ""
     var batchNumber: String = ""    // e.g., "250201-001"
     var status: ManufacturingStatus = ManufacturingStatus.pending
     var currentStepIndex: Int = 0 // Keep for backward compatibility/default linear flow

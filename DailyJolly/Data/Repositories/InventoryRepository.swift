@@ -9,6 +9,7 @@ protocol InventoryRepositoryProtocol {
     func search(name: String) -> Result<[InventoryEntity], AppError>
     func create(_ item: InventoryEntity) -> Result<Void, AppError>
     func delete(_ item: InventoryEntity) -> Result<Void, AppError>
+    func recipesUsing(_ item: InventoryEntity) -> [RecipeEntity]
 
     // Ingredient operations
     func fetchIngredients(for inventory: InventoryEntity) -> Result<[IngredientEntity], AppError>
@@ -64,8 +65,35 @@ final class InventoryRepository: InventoryRepositoryProtocol {
     }
 
     func delete(_ item: InventoryEntity) -> Result<Void, AppError> {
+        // Refuse to delete when an ingredient still references this item;
+        // SwiftData would leave the non-optional IngredientEntity.inventoryItem
+        // dangling and crash the next time a recipe touches it.
+        let usedBy = recipesUsing(item)
+        if !usedBy.isEmpty {
+            let names = usedBy.prefix(3).map(\.name).joined(separator: ", ")
+            let suffix = usedBy.count > 3 ? " (+\(usedBy.count - 3) more)" : ""
+            return .failure(.validationError("This item is used by: \(names)\(suffix). Remove it from those recipes first."))
+        }
+
         modelContext.delete(item)
         return save()
+    }
+
+    func recipesUsing(_ item: InventoryEntity) -> [RecipeEntity] {
+        let inventoryId = item.persistentModelID
+        let descriptor = FetchDescriptor<IngredientEntity>(
+            predicate: #Predicate { $0.inventoryItem.persistentModelID == inventoryId }
+        )
+        guard let ingredients = try? modelContext.fetch(descriptor) else { return [] }
+        var seen: Set<PersistentIdentifier> = []
+        var recipes: [RecipeEntity] = []
+        for ingredient in ingredients {
+            let recipe = ingredient.recipe
+            if seen.insert(recipe.persistentModelID).inserted {
+                recipes.append(recipe)
+            }
+        }
+        return recipes
     }
 
     // MARK: - Ingredient Operations

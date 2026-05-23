@@ -22,6 +22,7 @@ struct SettingView: View {
             customUnitsSection
             importSection
             exportSection
+            cloudBackupSection
             dataSection
         }
         .fileImporter(
@@ -277,6 +278,20 @@ struct SettingView: View {
             Text(String(localized: "Export"))
         } footer: {
             Text(String(localized: "Export data as CSV for Google Sheets or Excel"))
+        }
+    }
+
+    // MARK: - Cloud Backup Section
+
+    private var cloudBackupSection: some View {
+        Section {
+            NavigationLink {
+                BackupSyncView()
+            } label: {
+                Label(String(localized: "Google Drive Backup"), systemImage: "icloud.and.arrow.up.fill")
+            }
+        } header: {
+            Text(String(localized: "Cloud Backup"))
         }
     }
 

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import GoogleSignIn
 
 @main
 struct DailyJollyApp: App {
@@ -10,6 +11,9 @@ struct DailyJollyApp: App {
         WindowGroup {
             MainView()
                 .preferredColorScheme(settings.theme.colorScheme)
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
         .modelContainer(container)
     }

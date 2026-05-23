@@ -84,10 +84,7 @@ struct InventoryView: View {
             }
             .onDelete { offsets in
                 let itemsToDelete = offsets.map { filteredItems[$0] }
-                for item in itemsToDelete {
-                    modelContext.delete(item)
-                }
-                try? modelContext.save()
+                viewModel.delete(items: itemsToDelete)
             }
         }
         .listStyle(.plain)

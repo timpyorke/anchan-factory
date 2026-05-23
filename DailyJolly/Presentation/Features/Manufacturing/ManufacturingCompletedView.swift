@@ -56,8 +56,7 @@ struct ManufacturingCompletedView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding()
-                .background(.fill.quinary)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .liquidGlassMaterial(cornerRadius: 16)
 
                 // Photo Section (Final Result)
                 VStack(alignment: .leading, spacing: 12) {
@@ -114,8 +113,7 @@ struct ManufacturingCompletedView: View {
                                         .font(.caption)
                                 }
                                 .frame(width: 150, height: 150)
-                                .background(.fill.quinary)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .liquidGlassMaterial(cornerRadius: 12)
                                 .overlay {
                                     RoundedRectangle(cornerRadius: 12)
                                         .strokeBorder(.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [5]))
@@ -174,8 +172,7 @@ struct ManufacturingCompletedView: View {
                             }
                         }
                         .padding()
-                        .background(.fill.quinary)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .liquidGlassMaterial(cornerRadius: 12)
                     }
                     .padding(.horizontal)
                 }
@@ -205,8 +202,7 @@ struct ManufacturingCompletedView: View {
                         }
                     }
                     .padding()
-                    .background(.fill.quinary)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .liquidGlassMaterial(cornerRadius: 12)
                     .padding(.horizontal)
                 }
 

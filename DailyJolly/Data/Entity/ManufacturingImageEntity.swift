@@ -3,6 +3,7 @@ import Foundation
 
 @Model
 final class ManufacturingImageEntity {
+    var backupId: String = ""
     @Attribute(.externalStorage)
     var imageData: Data
     var stepIndex: Int?        // Associated step index (nil for final work result)
