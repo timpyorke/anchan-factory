@@ -23,6 +23,8 @@
 "PINs do not match. Please try again." = "รหัส PIN ไม่ตรงกัน กรุณาลองใหม่อีกครั้ง";
 "Set a PIN to lock recipe editing. You will need this PIN to unlock later." = "ตั้งรหัส PIN เพื่อล็อกการแก้ไขสูตร คุณจะต้องใช้รหัสนี้ในการปลดล็อกภายหลัง";
 "Please enter your 4-digit PIN to unlock recipe editing." = "กรุณาใส่รหัส PIN 4 หลักเพื่อปลดล็อกการแก้ไขสูตร";
+"Welcome to Daily Jolly" = "ยินดีต้อนรับสู่ Daily Jolly";
+"Enter the access PIN to use this app." = "กรุณาใส่รหัส PIN เพื่อเข้าใช้งานแอป";
 
 "Restart Required" = "ต้องรีสตาร์ท";
 "Please restart the app to apply the language change." = "กรุณารีสตาร์ทแอปเพื่อใช้ภาษาใหม่";

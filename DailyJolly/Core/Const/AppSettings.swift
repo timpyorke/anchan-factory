@@ -45,6 +45,14 @@ final class AppSettings {
         }
     }
 
+    var isAppUnlocked: Bool {
+        didSet {
+            UserDefaults.standard.set(isAppUnlocked, forKey: "is_app_unlocked")
+        }
+    }
+
+    static let appUnlockPin = "2468"
+
     private init() {
         let themeRaw = UserDefaults.standard.string(forKey: "app_theme") ?? "system"
         self.theme = AppTheme(rawValue: themeRaw) ?? .system
@@ -58,6 +66,7 @@ final class AppSettings {
         let interval = UserDefaults.standard.double(forKey: "last_backup_date")
         self.lastBackupDate = interval > 0 ? Date(timeIntervalSince1970: interval) : nil
         self.autoBackupOnLaunch = UserDefaults.standard.bool(forKey: "auto_backup_on_launch")
+        self.isAppUnlocked = UserDefaults.standard.bool(forKey: "is_app_unlocked")
     }
 
     private func updateLanguage() {

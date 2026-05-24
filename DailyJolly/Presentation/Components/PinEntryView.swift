@@ -150,7 +150,7 @@ struct PinEntryView: View {
     }
 }
 
-private struct PinDigit: View {
+struct PinDigit: View {
     let digit: String?
     let isFocused: Bool
     
@@ -166,7 +166,7 @@ private struct PinDigit: View {
     }
 }
 
-private struct NumericKeypad: View {
+struct NumericKeypad: View {
     let onPress: (String) -> Void
     
     let buttons = [
@@ -206,7 +206,7 @@ private struct NumericKeypad: View {
     }
 }
 
-private struct KeypadButtonStyle: ButtonStyle {
+struct KeypadButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .frame(width: 80, height: 80)

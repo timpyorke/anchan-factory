@@ -23,6 +23,8 @@
 "PINs do not match. Please try again." = "PINs do not match. Please try again.";
 "Set a PIN to lock recipe editing. You will need this PIN to unlock later." = "Set a PIN to lock recipe editing. You will need this PIN to unlock later.";
 "Please enter your 4-digit PIN to unlock recipe editing." = "Please enter your 4-digit PIN to unlock recipe editing.";
+"Welcome to Daily Jolly" = "Welcome to Daily Jolly";
+"Enter the access PIN to use this app." = "Enter the access PIN to use this app.";
 "Restart Required" = "Restart Required";
 "Please restart the app to apply the language change." = "Please restart the app to apply the language change.";
 

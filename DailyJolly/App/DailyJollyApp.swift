@@ -9,11 +9,17 @@ struct DailyJollyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainView()
-                .preferredColorScheme(settings.theme.colorScheme)
-                .onOpenURL { url in
-                    GIDSignIn.sharedInstance.handle(url)
+            Group {
+                if settings.isAppUnlocked {
+                    MainView()
+                } else {
+                    AppLockView()
                 }
+            }
+            .preferredColorScheme(settings.theme.colorScheme)
+            .onOpenURL { url in
+                GIDSignIn.sharedInstance.handle(url)
+            }
         }
         .modelContainer(container)
     }
