@@ -107,6 +107,8 @@ jobs:
           agvtool new-version -all $BUILD_NUMBER
 
       - name: Archive app
+        env:
+          CI_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
         run: |
           set -o pipefail
           xcodebuild archive \
@@ -115,11 +117,7 @@ jobs:
             -configuration "$CONFIGURATION" \
             -archivePath "$RUNNER_TEMP/DailyJolly.xcarchive" \
             -destination "generic/platform=iOS" \
-            -allowProvisioningUpdates \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
-            PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PROVISIONING_PROFILE_NAME }}" \
+            CI_PROFILE_NAME="$CI_PROFILE_NAME" \
             2>&1 | tee "$RUNNER_TEMP/xcodebuild-archive.log"
 
       - name: Export IPA
