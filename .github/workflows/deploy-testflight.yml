@@ -55,7 +55,15 @@ jobs:
             -A -t cert -f pkcs12 \
             -k "$KEYCHAIN_PATH"
 
-          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+
+          security list-keychain -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          echo "Available signing identities:"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
 
       - name: Install provisioning profile
         env:
@@ -107,11 +115,12 @@ jobs:
             -configuration "$CONFIGURATION" \
             -archivePath "$RUNNER_TEMP/DailyJolly.xcarchive" \
             -destination "generic/platform=iOS" \
+            -allowProvisioningUpdates \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
             PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PROVISIONING_PROFILE_NAME }}" \
-            2>&1 | tee "$RUNNER_TEMP/xcodebuild-archive.log" | xcpretty
+            2>&1 | tee "$RUNNER_TEMP/xcodebuild-archive.log"
 
       - name: Export IPA
         run: |
@@ -120,7 +129,7 @@ jobs:
             -archivePath "$RUNNER_TEMP/DailyJolly.xcarchive" \
             -exportOptionsPlist "$EXPORT_OPTIONS_PLIST" \
             -exportPath "$RUNNER_TEMP/export" \
-            2>&1 | tee "$RUNNER_TEMP/xcodebuild-export.log" | xcpretty
+            2>&1 | tee "$RUNNER_TEMP/xcodebuild-export.log"
 
       - name: Upload xcodebuild logs (on failure)
         if: failure()
